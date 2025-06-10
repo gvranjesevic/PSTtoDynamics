@@ -1,0 +1,39 @@
+# PST files (Outlook email archives)
+*.pst
+*.PST
+
+# PST folder
+PST/
+
+# Common development files
+.vs/
+.vscode/
+*.log
+*.tmp
+*.temp
+
+# Windows specific
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Node.js (if applicable)
+node_modules/
+npm-debug.log*
+
+# Python (if applicable)
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.env
+
+# .NET (if applicable)
+bin/
+obj/
+*.user
+*.suo 
