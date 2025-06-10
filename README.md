@@ -33,10 +33,10 @@ A Python application for analyzing Microsoft Outlook PST (Personal Storage Table
    pip install -r requirements.txt
    ```
 
-   **Note**: Installing `pypff-python` on Windows can be challenging. If you encounter issues:
-   - Try using pre-compiled binaries
-   - Consider using Windows Subsystem for Linux (WSL)
-   - Alternative: Use `conda install -c conda-forge libpff-python`
+   **Note**: This project includes multiple implementations:
+   - `pst_analyzer_aspose.py` - **Recommended** - Uses Aspose.Email (works well on Windows)
+   - `pst_analyzer.py` - Uses pypff (may require compilation on Windows)
+   - `pst_analyzer_libratom.py` - Uses libratom (experimental)
 
 ## Usage
 
@@ -44,7 +44,12 @@ A Python application for analyzing Microsoft Outlook PST (Personal Storage Table
 
 2. **Run the analyzer**:
    ```bash
-   python pst_analyzer.py
+   # Recommended - Aspose.Email version (best Windows support)
+   python pst_analyzer_aspose.py
+   
+   # Alternative versions
+   python pst_analyzer.py          # pypff version
+   python pst_analyzer_libratom.py # libratom version
    ```
 
 3. **View the statistics** in the console output
@@ -52,46 +57,58 @@ A Python application for analyzing Microsoft Outlook PST (Personal Storage Table
 ## Sample Output
 
 ```
-🔍 PST File Analyzer
-==================================================
+🔍 PST File Analyzer (Aspose.Email version)
+=======================================================
 📁 Target PST file: C:\...\PST\gvranjesevic@dynamique.com.001.pst
-✅ Successfully opened PST file
+✅ PST file opened successfully
 📧 Starting email extraction...
-✅ Extracted 1,234 emails successfully
+✅ Extracted 387 emails successfully
 
 ============================================================
-📊 PST FILE STATISTICS
+📊 PST FILE STATISTICS (Aspose.Email version)
 ============================================================
-📧 Total Emails: 1,234
+📧 Total Emails: 387
 
 📁 Emails by Folder:
-┌─────────────────┬─────────────┐
-│ Folder          │ Email Count │
-├─────────────────┼─────────────┤
-│ Inbox           │         856 │
-│ Sent Items      │         234 │
-│ Deleted Items   │         144 │
-└─────────────────┴─────────────┘
+┌──────────────────────────────────────────────┬─────────────┐
+│ Folder                                       │ Email Count │
+├──────────────────────────────────────────────┼─────────────┤
+│ Top of Personal Folders/.../Contacts        │          50 │
+│ Top of Personal Folders/.../Deleted-Items   │          50 │
+│ Top of Personal Folders/.../Inbox/NotForMe  │          45 │
+└──────────────────────────────────────────────┴─────────────┘
 
-👤 Top 10 Senders:
-┌─────────────────────┬─────────────┐
-│ Sender              │ Email Count │
-├─────────────────────┼─────────────┤
-│ John Doe            │         45  │
-│ Jane Smith          │         32  │
-└─────────────────────┴─────────────┘
+👤 Top 15 Senders:
+┌─────────────────────────────┬─────────────┐
+│ Sender                      │ Email Count │
+├─────────────────────────────┼─────────────┤
+│ Djordje ("George")         │          85 │
+│ delprem@protective.com      │          42 │
+│ Jack LaLonde                │          33 │
+└─────────────────────────────┴─────────────┘
+
+🔤 Most Common Subject Words:
+┌─────────────┬───────┐
+│ Word        │ Count │
+├─────────────┼───────┤
+│ premium     │    43 │
+│ report      │    43 │
+│ delinquent  │    42 │
+└─────────────┴───────┘
 ```
 
 ## File Structure
 
 ```
 PSTtoDynamics/
-├── pst_analyzer.py      # Main application
-├── requirements.txt     # Python dependencies
-├── README.md           # This file
-├── .gitignore          # Git ignore rules (excludes PST files)
-└── PST/               # Directory for PST files (not tracked by git)
-    └── *.pst          # Your PST files go here
+├── pst_analyzer_aspose.py    # Main application (Aspose.Email - Recommended)
+├── pst_analyzer.py           # Alternative (pypff)
+├── pst_analyzer_libratom.py  # Alternative (libratom)
+├── requirements.txt          # Python dependencies
+├── README.md                 # This file
+├── .gitignore               # Git ignore rules (excludes PST files)
+└── PST/                     # Directory for PST files (not tracked by git)
+    └── *.pst                # Your PST files go here
 ```
 
 ## Configuration
