@@ -1,22 +1,13 @@
 email_address,first_name,last_name,display_name,count
-gvranjesevic@dynamique.com,Djordje,Vranjesevic,"Djordje (""George"") Vranjesevic",4152
-jlalonde@dynamique.com,Jack,LaLonde,Jack LaLonde,2056
 service@ringcentral.com,RingCentral,,RingCentral,273
-mmichaud@dynamique.com,Marc,Michaud,Marc Michaud,198
 delprem@protective.com,delprem@protective.com,,delprem@protective.com,158
-nbogavac@mvp4me.com,Nela,Bogavac,Nela Bogavac,133
-lerceg@dynamique.com,Luka,Erceg,Luka Erceg (Dynamique),90
-fguajardo@dynamique.com,Francetta,Guajardo,"Francetta ""Frenchie"" Guajardo",79
-adimitrijevic@dynamique.com,Alex,Dimitrijevic,Alex Dimitrijevic,60
-mazingale@mvp4me.com,Michael,Zingale,"Michael (""Mike"") A. Zingale",58
-mlalonde@mvp4me.com,Matt,LaLonde,Matt P. LaLonde,43
-jmcarey@mvp4me.com,Joseph,Carey,"Joseph (""Joe"") M. Carey",40
+lerceg@dynamique.com,Luka,Erceg,Luka Erceg (Dynamique),42
 vranjesevic@gmail.com,Djordje,Vranjesevic,Djordje Vranjesevic,36
 hvarona@hexure.com,Heather,Varona,Heather Varona,28
 microsoft-noreply@microsoft.com,Microsoft,,Microsoft,26
 tnp@protective.com,TNP@protective.com,,TNP@protective.com,24
 agent.commissionsemail@protective.com,Agent.CommissionsEmail@Protective.com,,Agent.CommissionsEmail@Protective.com,22
-ssimmons@mvp4me.com,Shaquilla,Simmons,Shaquilla S. Simmons,19
+jlalonde@dynamique.com,Jack,LaLonde,Jack LaLonde,21
 do-not-reply-auth@assurity.com,do-not-reply-auth,,do-not-reply-auth,18
 office365alerts@microsoft.com,Office365Alerts@microsoft.com,,Office365Alerts@microsoft.com,18
 noreply@email.teams.microsoft.com,Joseph,Teams,"Joseph (""Joe"") M. Carey in Teams",17
@@ -24,23 +15,21 @@ powerpages-noreplym@microsoft.com,Power,Pages,Power Pages,17
 ant@supabase.com,Ant,Wilson,Ant Wilson,16
 katherine.addy@salesforce.com,Katherine,Addy,Katherine Addy,15
 priteshv@getsprinto.com,Pritesh,Vora,Pritesh Vora,14
+gvranjesevic@dynamique.com,Djordje,Vranjesevic,"Djordje (""George"") Vranjesevic",14
 marketingteam@formassembly.com,FormAssembly,Strehle,Katrina Garza,12
 no-reply@1password.com,1Password,,1Password,12
 quarantine@messaging.microsoft.com,quarantine@messaging.microsoft.com,,quarantine@messaging.microsoft.com,11
 v-tooloyede@microsoft.com,tobi,Oloyede,tobi Oloyede (Tek Experts),11
-punit.b@biztechcs.co,Punit,Bhagchandani,Punit Bhagchandani,11
 notify@ringcentral.com,RingCentral,,RingCentral,10
 ericv@formtitan.com,Eric,Vodicska,Eric Vodicska,10
 punit.b@crmjetty.com,Punit,Bhagchandani,Punit Bhagchandani,10
 michael@riskindemnity.com,,,,10
 marketing@email.compliancygroup.com,Compliancy,Schwartz,Compliancy Group,9
-fthorbahn@mvp4me.com,Fred,Thorbahn,Fred S. Thorbahn,8
-kcarlsen@mvp4me.com,Kristie,Carlsen,Kristie A. Carlsen,8
-cmcarr@dynamique.com,Christine,Carr,Christine M. Carr,7
 powerapps-noreply@microsoft.com,Microsoft,Apps,Microsoft Power Apps,6
 support@mail.support.microsoft.com,Microsoft,Support,Microsoft Support,6
 punit.b@biztechcs.com,Punit,Bhagchandani,Punit Bhagchandani,6
 lukalerceg@dynamique.com,,,,6
+mmichaud@dynamique.com,Marc,Michaud,Marc Michaud,6
 nbrequirements@protective.com,NBRequirements@protective.com,,NBRequirements@protective.com,5
 accounts@1password.com,1Password,,1Password,5
 jcanas@compliancygroup.com,Jonathan,Canas,Jonathan Canas,5
@@ -56,16 +45,18 @@ voja.lalich@vicert.com,Voja,Lalich,Voja Lalich,4
 dynamique-support@itekako.com,Aleksandar,Stoiljković,Aleksandar Stoiljković,4
 terry.brower@aimcorgroup.com,Terry,Brower,Terry Ann Brower,4
 devsupport@devemail.ringcentral.com,Developer,Support,Developer Support,4
-dnelson@mvp4me.com,Dawn,Nelson,"Dawn B. Nelson, CLU®, ChFC®",4
+fguajardo@dynamique.com,Francetta,Guajardo,"Francetta ""Frenchie"" Guajardo",4
 noreply@github.com,GitHub,,GitHub,3
 telelife@protective.com,telelife@protective.com,,telelife@protective.com,3
 v-miheanacho@microsoft.com,Maurice,Iheanacho,Maurice Iheanacho (Tek Experts),3
 justin.ramirez@salesforce.com,Justin,Ramirez,Justin Ramirez,3
+punit.b@biztechcs.co,Punit,Bhagchandani,Punit Bhagchandani,3
 schlage@alerts.allegion.com,schlage@alerts.allegion.com,,schlage@alerts.allegion.com,3
 george.vranjesevic@riskindemnity.com,George,Vranjesevic,George Vranjesevic,3
 support@formassembly.com,FormAssembly,,FormAssembly,3
 korolia@yahoo.com,tony,korolia,tony korolia,3
 tayfun.bilsel@clinked.com,Tayfun,Bilsel,Tayfun Bilsel,3
+adimitrijevic@dynamique.com,Alex,Dimitrijevic,Alex Dimitrijevic,3
 keneca.king-taylor@protective.com,Keneca.King-Taylor@protective.com,,Keneca.King-Taylor@protective.com,2
 account-update@amazon.com,Amazon,,Amazon,2
 charlie@orcagrowth.io,Charlie,Hughes,Charlie Hughes,2
@@ -80,11 +71,12 @@ no-reply@hipaaguide.net,no-reply@hipaaguide.net,,no-reply@hipaaguide.net,2
 viral.lalan@gmail.com,Viral,Lalan,Viral Lalan,2
 melanie.martin@protective.com,Melanie.Martin@protective.com,,Melanie.Martin@protective.com,2
 joseph.russo@ideagen.com,Joseph,Russo,Joseph Russo,2
-ryan.gommesen@ideagen.com,Ryan,Gommesen,Ryan Gommesen,2
 euzoukwu@gmail.com,,,,2
 do-not-reply@aimcorgroup.net,AimcoR,Exchange,AimcoR Exchange,2
 azuredevops@microsoft.com,Azure,DevOps,Azure DevOps,2
 support.winflex@zinnia.com,WinFlex,Support,WinFlex Support,2
+jmcarey@mvp4me.com,Joseph,Carey,"Joseph (""Joe"") M. Carey",2
+nbogavac@mvp4me.com,Nela,Bogavac,Nela Bogavac,2
 help@goco.io,GoCo,,GoCo,1
 ladrevisions@protective.com,,,,1
 digital-noreply@amazon.com,Amazon.com,,Amazon.com,1
@@ -108,6 +100,7 @@ frenchieg@me.com,FRANCETTA,GUAJARDO,FRANCETTA GUAJARDO,1
 marlon.flores@salesforce.com,Marlon,Flores,Marlon Flores,1
 alex.dimi@gmail.com,alex.dimi@gmail.com,,alex.dimi@gmail.com,1
 oliver.cox@clinked.com,Oliver,Cox,Oliver Cox,1
+ryan.gommesen@ideagen.com,Ryan,Gommesen,Ryan Gommesen,1
 mlalonde@comcast.net,,,,1
 laura.ruge@equisoft.com,Laura,Ruge,Laura Ruge,1
 aleksandar.cabrilo@htecgroup.com,Aleksandar,Cabrilo,Aleksandar Cabrilo,1
@@ -122,4 +115,5 @@ success@e.docusign.com,Docusign,Success,Docusign Customer Success,1
 v-asaadtabet@microsoft.com,,,,1
 support@digitalowl.com,,,,1
 v-odanesmith@microsoft.com,,,,1
-bmwarja@mvp4me.com,Bryan,Warja,Bryan M. Warja,1
+dnelson@mvp4me.com,Dawn,Nelson,Dawn B. Nelson,1
+fthorbahn@mvp4me.com,Fred,Thorbahn,Fred S. Thorbahn,1

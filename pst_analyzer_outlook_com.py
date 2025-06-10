@@ -222,6 +222,11 @@ class PSTAnalyzerCOM:
         """Recursively extract messages from folders and subfolders."""
         current_path = f"{folder_path}/{folder.Name}" if folder_path else folder.Name
         
+        # Skip Microsoft Teams chat messages - these are not real emails
+        if "TeamsMessagesData" in current_path:
+            print(f"📂 Skipping Teams folder: {current_path} (Teams chat messages, not emails)")
+            return
+        
         print(f"📂 Processing folder: {current_path}")
         
         # Process messages in current folder
@@ -377,6 +382,10 @@ class PSTAnalyzerCOM:
             def count_folder_recursive(folder, path=""):
                 nonlocal total_count
                 current_path = f"{path}/{folder.Name}" if path else folder.Name
+                
+                # Skip Microsoft Teams chat messages - these are not real emails
+                if "TeamsMessagesData" in current_path:
+                    return
                 
                 # Count messages in this folder
                 try:
@@ -599,7 +608,6 @@ def main():
     """Main function to run the PST analyzer."""
     print("🔍 PST File Analyzer (Outlook COM version)")
     print("="*55)
-    print("💡 This version uses Windows Outlook COM - NO 50 message limit!")
     print("   Requires: Microsoft Outlook installed on this machine")
     print()
     
