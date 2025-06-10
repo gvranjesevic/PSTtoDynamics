@@ -3,6 +3,14 @@
 PST File Analyzer (Aspose.Email version)
 A Python application to analyze PST (Outlook Personal Storage) files
 using the Aspose.Email library for reliable Windows compatibility.
+
+NOTE: The evaluation version of Aspose.Email has a limitation of only 50 emails
+per folder. To extract all emails, you need either:
+1. A valid Aspose.Email license file
+2. A temporary license (free for 30 days) from: https://purchase.aspose.com/temporary-license
+3. Or use one of the alternative implementations (pypff or libratom versions)
+
+If you have a license file, place it in the same directory as this script.
 """
 
 import os
@@ -19,6 +27,34 @@ try:
 except ImportError:
     print("❌ Aspose.Email not found. Install it with: pip install aspose-email")
     sys.exit(1)
+
+
+def apply_license():
+    """Try to apply Aspose.Email license to remove evaluation limitations."""
+    license_files = [
+        "Aspose.Email.lic",
+        "Aspose.Email.Python.lic", 
+        "Aspose.Total.lic",
+        "Aspose.Total.Python.lic"
+    ]
+    
+    for license_file in license_files:
+        if os.path.exists(license_file):
+            try:
+                license = ae.License()
+                license.set_license(license_file)
+                print(f"✅ License applied successfully: {license_file}")
+                return True
+            except Exception as e:
+                print(f"⚠️  Error applying license {license_file}: {str(e)}")
+                continue
+    
+    print("⚠️  No valid license found. Using evaluation version (50 emails per folder limit)")
+    print("   To remove this limitation:")
+    print("   1. Get a free temporary license: https://purchase.aspose.com/temporary-license")
+    print("   2. Place license file in the same directory as this script")
+    print("   3. Or use the pypff/libratom alternatives for unlimited extraction")
+    return False
 
 
 class PSTAnalyzerAspose:
@@ -58,8 +94,15 @@ class PSTAnalyzerAspose:
         print(f"📂 Processing folder: {current_path}")
         
         # Process messages in current folder
+        folder_message_count = 0
         try:
             messages = folder.get_contents()
+            total_messages = len(list(messages))  # Get total count first
+            messages = folder.get_contents()  # Get fresh iterator
+            
+            if total_messages > 0:
+                print(f"  📧 Found {total_messages} messages in {current_path}")
+            
             for i, message_info in enumerate(messages):
                 try:
                     # Extract message from PST
@@ -67,14 +110,19 @@ class PSTAnalyzerAspose:
                     email_info = self.extract_message_info(message, current_path)
                     if email_info:
                         self.email_data.append(email_info)
+                        folder_message_count += 1
                         
                     # Progress indicator
-                    if (i + 1) % 50 == 0:
-                        print(f"  📧 Processed {i + 1} messages in {current_path}")
+                    if (i + 1) % 100 == 0:
+                        print(f"  📧 Processed {i + 1}/{total_messages} messages in {current_path}")
                         
                 except Exception as e:
-                    print(f"⚠️  Error processing message {i} in folder {current_path}: {str(e)}")
+                    print(f"⚠️  Error processing message {i+1}/{total_messages} in folder {current_path}: {str(e)}")
                     continue
+            
+            # Final count for this folder
+            if folder_message_count > 0:
+                print(f"  ✅ Completed folder {current_path}: {folder_message_count} messages extracted")
                     
         except Exception as e:
             print(f"⚠️  Error accessing messages in folder {current_path}: {str(e)}")
@@ -133,7 +181,7 @@ class PSTAnalyzerAspose:
                 if hasattr(message, 'message_size'):
                     size = message.message_size or 0
                 if hasattr(message, 'attachments') and message.attachments:
-                    attachment_count = message.attachments.count
+                    attachment_count = message.attachments.count()
             except:
                 pass
             
@@ -287,11 +335,15 @@ class PSTAnalyzerAspose:
 
 def main():
     """Main function to run the PST analyzer."""
-    # PST file path
-    pst_file_path = r"C:\GitHub-Repos\gvranjesevic@dynamique.com\PSTtoDynamics\PST\gvranjesevic@dynamique.com.001.pst"
-    
     print("🔍 PST File Analyzer (Aspose.Email version)")
     print("="*55)
+    
+    # Try to apply license to remove evaluation limitations
+    apply_license()
+    print()
+    
+    # PST file path
+    pst_file_path = r"C:\GitHub-Repos\gvranjesevic@dynamique.com\PSTtoDynamics\PST\gvranjesevic@dynamique.com.001.pst"
     print(f"📁 Target PST file: {pst_file_path}")
     
     # Create analyzer instance
