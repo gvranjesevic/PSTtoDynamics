@@ -131,11 +131,13 @@ class FeatureFlags:
     PST_READING = True
     BASIC_IMPORT = True
     
-    # Phase 2 Features (IN DEVELOPMENT)
+    # Phase 2 Features (COMPLETE)
     CONTACT_CREATION = True
     ADVANCED_COMPARISON = True
     BULK_PROCESSING = True
-    IMPORT_ANALYTICS = False
+    
+    # Phase 3 Features (NEW)
+    IMPORT_ANALYTICS = True
     
     # Phase 3 Features (PLANNED)
     ATTACHMENT_HANDLING = False

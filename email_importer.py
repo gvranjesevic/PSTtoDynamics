@@ -3,6 +3,7 @@ Email Import Engine
 ==================
 
 Main orchestrator for importing emails from PST to Dynamics 365.
+Now enhanced with Phase 3 Analytics for comprehensive import tracking and analysis.
 """
 
 from typing import Dict, List, Optional, Tuple
@@ -10,6 +11,20 @@ import config
 import pst_reader
 import dynamics_data
 from datetime import datetime
+
+# Phase 3 Analytics Integration
+try:
+    import sys
+    import os
+    phase3_path = os.path.join(os.path.dirname(__file__), 'Phase3_Analytics')
+    if phase3_path not in sys.path:
+        sys.path.append(phase3_path)
+    from phase3_integration import get_phase3_analytics
+    PHASE3_AVAILABLE = True
+    print("✅ Phase 3 Analytics enabled")
+except ImportError as e:
+    PHASE3_AVAILABLE = False
+    print(f"⚠️ Phase 3 Analytics not available: {e}")
 
 
 class EmailImporter:
@@ -29,6 +44,10 @@ class EmailImporter:
             'start_time': None,
             'end_time': None
         }
+        
+        # Phase 3 Analytics Integration
+        self.analytics = get_phase3_analytics() if PHASE3_AVAILABLE else None
+        self.current_session_id = None
     
     def get_pst_emails(self, pst_path: str = None) -> Dict[str, List[Dict]]:
         """
@@ -47,6 +66,13 @@ class EmailImporter:
         
         self.import_stats['total_senders'] = len(emails_by_sender)
         self.import_stats['total_emails_found'] = sum(len(emails) for emails in emails_by_sender.values())
+        
+        # Track PST scanning with Phase 3 Analytics
+        if self.analytics:
+            sender_counts = {sender: len(emails) for sender, emails in emails_by_sender.items()}
+            self.analytics.track_pst_scanning(pst_path or config.CURRENT_PST_PATH, 
+                                            self.import_stats['total_emails_found'], 
+                                            sender_counts)
         
         print(f"✅ PST scan complete:")
         print(f"   📧 Total emails: {self.import_stats['total_emails_found']}")
@@ -169,6 +195,10 @@ class EmailImporter:
         print("🚀 Starting Email Import Process")
         print("=" * 50)
         
+        # Start Phase 3 Analytics session
+        if self.analytics:
+            self.current_session_id = self.analytics.start_import_session()
+        
         if test_mode:
             print("🧪 Running in TEST MODE - Limited processing")
         
@@ -211,16 +241,27 @@ class EmailImporter:
         
         self.import_stats['end_time'] = datetime.now()
         
+        # Complete Phase 3 Analytics session
+        analytics_report = None
+        if self.analytics:
+            final_stats = self.analytics.complete_import_session()
+            
+            # Run comprehensive post-import analysis
+            if config.FeatureFlags.IMPORT_ANALYTICS:
+                print("\n🔍 Running comprehensive post-import analysis...")
+                analytics_report = self.analytics.analyze_imported_data(emails_by_sender)
+        
         # Print final summary
-        self._print_import_summary(sender_results)
+        self._print_import_summary(sender_results, analytics_report)
         
         return {
             'success': True,
             'stats': self.import_stats,
-            'sender_results': sender_results
+            'sender_results': sender_results,
+            'analytics_report': analytics_report
         }
     
-    def _print_import_summary(self, sender_results: Dict):
+    def _print_import_summary(self, sender_results: Dict, analytics_report=None):
         """Prints a summary of the import process."""
         print("\n" + "=" * 50)
         print("📊 IMPORT SUMMARY")
@@ -253,6 +294,36 @@ class EmailImporter:
             for sender in failed_senders[:5]:  # Show first 5
                 result = sender_results[sender]
                 print(f"   ❌ {sender}: {result.get('reason', 'unknown')}")
+        
+        # Show Phase 3 Analytics Summary
+        if analytics_report:
+            print(f"\n📊 PHASE 3 ANALYTICS SUMMARY")
+            print("-" * 30)
+            insights = analytics_report.summary_insights
+            
+            # Import performance
+            perf = insights.get('import_performance', {})
+            print(f"⚡ Processing Speed: {perf.get('processing_speed', 'N/A')}")
+            print(f"📧 Success Rate: {perf.get('success_rate', 0):.1%}")
+            print(f"🔍 Duplicates Found: {perf.get('duplicates_found', 0):,}")
+            
+            # Timeline insights
+            timeline = insights.get('timeline_insights', {})
+            print(f"📈 Timeline Completeness: {timeline.get('overall_completeness', 'N/A')}")
+            print(f"⚠️  Critical Gaps: {timeline.get('critical_gaps', 0)}")
+            
+            # Sender insights  
+            sender = insights.get('sender_insights', {})
+            print(f"👥 Total Senders: {sender.get('total_senders', 0):,}")
+            print(f"⭐ High-Value Contacts: {sender.get('high_value_contacts', 0)}")
+            
+            # Action items
+            if analytics_report.action_items:
+                print(f"\n💡 Key Action Items:")
+                for i, action in enumerate(analytics_report.action_items[:3], 1):
+                    print(f"   {i}. {action}")
+            
+            print(f"\n📋 Full analytics report: {analytics_report.report_id}")
     
     def quick_test_import(self, sender_email: str = "service@ringcentral.com") -> bool:
         """

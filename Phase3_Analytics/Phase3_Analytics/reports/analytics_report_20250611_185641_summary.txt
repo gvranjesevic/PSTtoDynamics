@@ -1,0 +1,44 @@
+================================================================================
+PHASE 3 ANALYTICS COMPREHENSIVE REPORT
+================================================================================
+Report ID: analytics_report_20250611_185641
+Generated: 2025-06-11 18:56:41.496250
+
+IMPORT PERFORMANCE
+----------------------------------------
+Total Emails Processed: 120
+Success Rate: 87.5%
+Processing Speed: 120 emails/min
+Duplicates Found: 9
+Contacts Created: 6
+
+TIMELINE ANALYSIS
+----------------------------------------
+Overall Completeness: 9.2%
+Contacts Analyzed: 2
+Critical Gaps: 2
+High Completeness Contacts: 0
+
+SENDER ANALYSIS
+----------------------------------------
+Total Senders: 2
+High-Value Contacts: 0
+Average Importance Score: 1.2/10
+Active Contacts: 0
+Automated Senders: 0
+
+RECOMMENDATIONS
+----------------------------------------
+1. Overall timeline completeness is below 70% - consider importing additional PST files or email archives
+2. Found 2 critical gaps - review these high-priority missing periods
+3. 2 contacts have very low email activity - verify these are important contacts
+4. 2 contacts need attention due to low completeness scores
+5. 2 contacts have suspicious gaps that may indicate missing data
+
+ACTION ITEMS
+----------------------------------------
+1. Investigate import failures (success rate: 87.5%)
+2. Investigate timeline gaps - completeness below 80%
+3. Review 2 critical timeline gaps
+
+================================================================================
