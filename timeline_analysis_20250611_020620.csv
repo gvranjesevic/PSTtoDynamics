@@ -1,0 +1,55 @@
+Contact ID,Contact Name,Primary Email,PST Email Count,CRM Activity Count,Matched Emails,Missing from CRM,Completeness %,Priority,Job Title,Phone,Analysis Date
+6a219814-dc41-f011-b4cb-7c1e52168e20,RingCentral,service@ringcentral.com,166,0,0,166,0.0,High,,,2025-06-11T02:06:20.815391
+6defcc3a-7645-f011-8779-002248223f38,delprem@protective.com,delprem@protective.com,158,0,0,158,0.0,High,,,2025-06-11T02:06:20.799256
+81e47b09-2642-f011-b4cb-000d3a9c4367,Heather Varona,HVarona@hexure.com,56,0,0,56,0.0,High,,,2025-06-11T02:06:20.799256
+71b50fb6-9041-f011-b4cb-7c1e52fd80a1,George Vranjesevic,vranjesevic@gmail.com,37,0,0,37,0.0,High,,,2025-06-11T02:06:20.815391
+5eea2a58-8045-f011-8779-002248223f38,Katherine Addy,katherine.addy@salesforce.com,20,0,0,20,0.0,High,,,2025-06-11T02:06:20.799256
+e2af9d00-8045-f011-8779-7c1e52168e20,Abderrahim Iazzaoui (International Supplier),v-aiazzaoui@microsoft.com,17,0,0,17,0.0,High,,,2025-06-11T02:06:20.815391
+99b36dbe-8045-f011-8779-002248223f38,Eric Vodicska,ericv@formtitan.com,16,0,0,16,0.0,High,,,2025-06-11T02:06:20.799256
+9818376d-ee41-f011-b4cb-000d3a9c4367,do-not-reply-auth,do-not-reply-auth@assurity.com,14,0,0,14,0.0,High,,,2025-06-11T02:06:20.799256
+e3e2cb7e-8045-f011-8779-7c1e52168e20,Power Pages,powerpages-noreplym@microsoft.com,14,0,0,14,0.0,High,,,2025-06-11T02:06:20.815391
+da1240f8-5a42-f011-b4cb-000d3a9c4367,Office365Alerts@microsoft.com,Office365Alerts@microsoft.com,13,0,0,13,0.0,High,,,2025-06-11T02:06:20.799256
+d5c685b9-ed41-f011-b4cb-7c1e52168e20,Punit Bhagchandani,punit.b@crmjetty.com,12,0,0,12,0.0,High,,,2025-06-11T02:06:20.815391
+d5c375bf-8045-f011-8779-000d3a155556,Remi Casier,remic@formtitan.com,11,0,0,11,0.0,High,,,2025-06-11T02:06:20.799256
+4aaf9d00-8045-f011-8779-7c1e52168e20,Pritesh Vora,priteshv@getsprinto.com,10,0,0,10,0.0,High,,,2025-06-11T02:06:20.815391
+f6e92a58-8045-f011-8779-002248223f38,Tayfun Bilsel,tayfun.bilsel@clinked.com,8,0,0,8,0.0,Medium,,,2025-06-11T02:06:20.799256
+b15e0592-9b43-f011-b4cb-7c1e52168e20,Ant Wilson,ant@supabase.com,8,0,0,8,0.0,Medium,,,2025-06-11T02:06:20.815391
+63d12747-9541-f011-b4cb-000d3a9c4367,RingCentral,notify@ringcentral.com,7,0,0,7,0.0,Medium,,,2025-06-11T02:06:20.799256
+1b175c06-8145-f011-8779-002248223f38,Compliancy Group,marketing@email.compliancygroup.com,7,0,0,7,0.0,Medium,,,2025-06-11T02:06:20.799256
+72021dc1-8045-f011-8779-7c1e52168e20,Matt Miller,miller.matthew.c@gmail.com,7,0,0,7,0.0,Medium,,,2025-06-11T02:06:20.815391
+94e22959-8045-f011-8779-000d3a155556,Oliver Cox,oliver.cox@clinked.com,6,0,0,6,0.0,Medium,,,2025-06-11T02:06:20.799256
+4b90dd4b-8145-f011-877a-000d3a9c4367,Arianna.Bastian@protective.com,Arianna.Bastian@protective.com,5,0,0,5,0.0,Medium,,,2025-06-11T02:06:20.799256
+60085324-8145-f011-8779-002248223f38,Djordje Vranjesevic,vranjesevic.backup@gmail.com,5,0,0,5,0.0,Medium,,,2025-06-11T02:06:20.799256
+a07fb90e-0343-f011-b4cb-7c1e52168e20,quarantine@messaging.microsoft.com,quarantine@messaging.microsoft.com,5,0,0,5,0.0,Medium,,,2025-06-11T02:06:20.815391
+64f1501e-8145-f011-8779-002248223f38,Josh Strehle,marketingteam@formassembly.com,4,0,0,4,0.0,Low,,,2025-06-11T02:06:20.799256
+d925be4c-8045-f011-8779-7c1e52168e20,Justin Ramirez,justin.ramirez@salesforce.com,4,0,0,4,0.0,Low,,,2025-06-11T02:06:20.815391
+fe5227b5-8045-f011-8779-7c1e52168e20,Ryan Gommesen,Ryan.Gommesen@Ideagen.com,4,0,0,4,0.0,Low,,,2025-06-11T02:06:20.815391
+91fa76df-8045-f011-877a-000d3a9c4367,FRANCETTA GUAJARDO,frenchieg@me.com,3,0,0,3,0.0,Low,,,2025-06-11T02:06:20.799256
+e25f76e8-8045-f011-8779-002248223f38,Marlon Flores,marlon.flores@salesforce.com,3,0,0,3,0.0,Low,,,2025-06-11T02:06:20.799256
+8e669678-8145-f011-8779-002248223f38,Viral Lalan,viral.lalan@gmail.com,3,0,0,3,0.0,Low,,,2025-06-11T02:06:20.799256
+9d53c860-e442-f011-b4cb-7c1e52168e20,telelife@protective.com,telelife@protective.com,3,0,0,3,0.0,Low,,,2025-06-11T02:06:20.815391
+98277679-8045-f011-877a-000d3a9c4367,Luka Erceg,lerceg@erceg.net,2,0,0,2,0.0,Low,,,2025-06-11T02:06:20.799256
+927473ee-8045-f011-8779-002248223f38,schlage@alerts.allegion.com,schlage@alerts.allegion.com,2,0,0,2,0.0,Low,,,2025-06-11T02:06:20.799256
+5c938d4e-8145-f011-8779-002248223f38,Melanie.Martin@protective.com,Melanie.Martin@protective.com,2,0,0,2,0.0,Low,,,2025-06-11T02:06:20.799256
+c0669678-8145-f011-8779-002248223f38,Keneca.King-Taylor@protective.com,Keneca.King-Taylor@protective.com,2,0,0,2,0.0,Low,,,2025-06-11T02:06:20.799256
+53d61e3a-8045-f011-8779-7c1e52168e20,Microsoft Support,support@mail.support.microsoft.com,2,0,0,2,0.0,Low,,,2025-06-11T02:06:20.815391
+f2db7dd1-8045-f011-8779-000d3a155556,Microsoft on behalf of Power Pages Plus,msonlineservicesteam@microsoftonline.com,1,0,0,1,0.0,Low,,,2025-06-11T02:06:20.799256
+4e79d851-8145-f011-877a-000d3a9c4367,Taylor Neilson,ship@pirateship.com,1,0,0,1,0.0,Low,,,2025-06-11T02:06:20.799256
+24dc004c-8045-f011-8779-002248223f38,alex.dimi@gmail.com,alex.dimi@gmail.com,1,0,0,1,0.0,Low,,,2025-06-11T02:06:20.799256
+2ba270b8-8045-f011-8779-002248223f38,Titan Demo (via Calendly),notifications@calendly.com,1,0,0,1,0.0,Low,,,2025-06-11T02:06:20.799256
+1f397d6c-5045-f011-8779-000d3a155556,PreExisting Nolasco,mfnolasco@dynamique.com,0,0,0,0,100,Low,,,2025-06-11T02:06:20.799256
+3f702045-8145-f011-8779-000d3a155556,Supabase,noreply@supabase.com,0,0,0,0,100,Low,,,2025-06-11T02:06:20.799256
+a9ab629d-2342-f011-b4cb-000d3a9c4367,Fred S. Thorbahn,fthorbahn@mvp4me.com,0,0,0,0,100,Low,,,2025-06-11T02:06:20.799256
+d14dcac0-2342-f011-b4cb-000d3a9c4367,Jack LaLonde in Teams,noreply@email.teams.microsoft.com,0,0,0,0,100,Low,,,2025-06-11T02:06:20.799256
+3a151c35-2442-f011-b4cb-000d3a9c4367,Matt P. LaLonde,mlalonde@mvp4me.com,0,0,0,0,100,Low,,,2025-06-11T02:06:20.799256
+9acf7391-a743-f011-b4cb-000d3a9c4367,GitHub,noreply@github.com,0,0,0,0,100,Low,,,2025-06-11T02:06:20.799256
+44e89248-8145-f011-8779-002248223f38,"Chukwuemeka (""Emeka"") Uzoukwu",cuzoukwu@dynamique.com,0,0,0,0,100,Low,,,2025-06-11T02:06:20.799256
+84dfdb93-0946-f011-8779-6045bddb196f,Luka Erceg,lerceg@dynamique.com,0,0,0,0,100,Low,,,2025-06-11T02:06:20.799256
+d19a5b34-5545-f011-8779-7c1e52168e20,"Michael (""Mike"") A. Zingale",mazingale@mvp4me.com,0,0,0,0,100,Low,,,2025-06-11T02:06:20.799256
+64af9d00-8045-f011-8779-7c1e52168e20,Kristie A. Carlsen,kcarlsen@mvp4me.com,0,0,0,0,100,Low,,,2025-06-11T02:06:20.815391
+f6dc8440-8045-f011-8779-7c1e52168e20,Marc Michaud,mmichaud@dynamique.com,0,0,0,0,100,Low,,,2025-06-11T02:06:20.815391
+2d922de0-ee45-f011-8779-7c1e52168e20,FIRM - Cyber Fraud,firm_fraud@metlife.com,0,0,0,0,100,Low,,,2025-06-11T02:06:20.815391
+27774455-f241-f011-b4cb-7c1e52168e20,Dawn B. Nelson,dnelson@mvp4me.com,0,0,0,0,100,Low,,,2025-06-11T02:06:20.815391
+c522d9d8-fb41-f011-b4cb-7c1e52168e20,Microsoft,microsoft-noreply@microsoft.com,0,0,0,0,100,Low,,,2025-06-11T02:06:20.815391
+1f888420-2142-f011-b4cb-7c1e52168e20,Jack LaLonde,jlalonde@dynamique.com,0,0,0,0,100,Low,,,2025-06-11T02:06:20.815391
+90bb7237-1143-f011-b4cb-7c1e52168e20,"Francetta ""Frenchie"" Guajardo",fguajardo@dynamique.com,0,0,0,0,100,Low,,,2025-06-11T02:06:20.815391
