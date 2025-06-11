@@ -404,6 +404,80 @@ class MainWindow(QMainWindow):
             QMainWindow {
                 background-color: #ffffff;
             }
+            
+            /* Menu Bar Styling */
+            QMenuBar {
+                background-color: #f8f9fa;
+                border-bottom: 1px solid #dee2e6;
+                padding: 4px 8px;
+                font-family: "Segoe UI";
+                font-size: 14px;
+                color: #2c3e50;
+            }
+            QMenuBar::item {
+                background-color: transparent;
+                padding: 6px 12px;
+                margin: 2px;
+                border-radius: 4px;
+            }
+            QMenuBar::item:selected {
+                background-color: #e9ecef;
+            }
+            QMenuBar::item:pressed {
+                background-color: #3498db;
+                color: white;
+            }
+            
+            /* Menu Dropdown Styling */
+            QMenu {
+                background-color: #ffffff;
+                border: 1px solid #bdc3c7;
+                border-radius: 6px;
+                padding: 6px 0px;
+                font-family: "Segoe UI";
+                font-size: 14px;
+            }
+            QMenu::item {
+                padding: 8px 20px;
+                margin: 1px;
+            }
+            QMenu::item:selected {
+                background-color: #3498db;
+                color: white;
+            }
+            QMenu::separator {
+                height: 1px;
+                background-color: #ecf0f1;
+                margin: 4px 10px;
+            }
+            
+            /* Toolbar Styling */
+            QToolBar {
+                background-color: #f8f9fa;
+                border: none;
+                border-bottom: 1px solid #dee2e6;
+                padding: 6px;
+                spacing: 4px;
+            }
+            QToolBar QToolButton {
+                background-color: transparent;
+                border: none;
+                padding: 8px 12px;
+                margin: 2px;
+                border-radius: 4px;
+                font-family: "Segoe UI";
+                font-size: 13px;
+                color: #2c3e50;
+            }
+            QToolBar QToolButton:hover {
+                background-color: #e9ecef;
+            }
+            QToolBar QToolButton:pressed {
+                background-color: #3498db;
+                color: white;
+            }
+            
+            /* Splitter Styling */
             QSplitter::handle {
                 background-color: #bdc3c7;
                 width: 1px;
