@@ -1,0 +1,291 @@
+{
+  "report_id": "analytics_report_20250611_193517",
+  "generated_at": "2025-06-11 19:35:17.207740",
+  "import_session": {
+    "analytics_enabled": true,
+    "session_id": "import_20250611_193517",
+    "elapsed_time_minutes": 0.0012217166666666666,
+    "total_emails": 120,
+    "processed_emails": 120,
+    "successful_imports": 105,
+    "failed_imports": 15,
+    "duplicates_detected": 9,
+    "contacts_created": 6,
+    "contacts_found": 0,
+    "batch_count": 3,
+    "current_success_rate": 0.875,
+    "estimated_completion_minutes": 0.0
+  },
+  "timeline_analysis": {
+    "analysis_date": "2025-06-11 19:35:17.207740",
+    "total_contacts": 2,
+    "contacts_analyzed": 2,
+    "overall_completeness": 9.25,
+    "contact_timelines": [
+      {
+        "contact_email": "john.doe@client.com",
+        "contact_id": null,
+        "first_email": "2024-01-15",
+        "last_email": "2024-03-15",
+        "total_timeline_days": 61,
+        "email_count": 3,
+        "coverage_days": 3,
+        "completeness_score": 13.7,
+        "gaps": [
+          {
+            "contact_email": "john.doe@client.com",
+            "contact_id": null,
+            "start_date": "2024-01-16",
+            "end_date": "2024-01-31",
+            "gap_days": 16,
+            "severity": "major",
+            "gap_type": "vacation",
+            "context": {
+              "before_gap_emails": 1,
+              "after_gap_emails": 2,
+              "gap_percentage": 26.666666666666668
+            },
+            "suggested_action": "Possible vacation period - check for out-of-office emails"
+          },
+          {
+            "contact_email": "john.doe@client.com",
+            "contact_id": null,
+            "start_date": "2024-02-02",
+            "end_date": "2024-03-14",
+            "gap_days": 42,
+            "severity": "critical",
+            "gap_type": "suspicious",
+            "context": {
+              "before_gap_emails": 2,
+              "after_gap_emails": 1,
+              "gap_percentage": 70.0
+            },
+            "suggested_action": "Significant 42-day gap - check additional PST files or email archives"
+          }
+        ],
+        "email_frequency": {
+          "2024-01": 1,
+          "2024-02": 1,
+          "2024-03": 1
+        },
+        "communication_pattern": {
+          "pattern_detected": false,
+          "reason": "insufficient_data"
+        }
+      },
+      {
+        "contact_email": "jane.smith@vendor.com",
+        "contact_id": null,
+        "first_email": "2024-01-10",
+        "last_email": "2024-02-20",
+        "total_timeline_days": 42,
+        "email_count": 2,
+        "coverage_days": 2,
+        "completeness_score": 4.8,
+        "gaps": [
+          {
+            "contact_email": "jane.smith@vendor.com",
+            "contact_id": null,
+            "start_date": "2024-01-11",
+            "end_date": "2024-02-19",
+            "gap_days": 40,
+            "severity": "critical",
+            "gap_type": "suspicious",
+            "context": {
+              "before_gap_emails": 1,
+              "after_gap_emails": 1,
+              "gap_percentage": 97.5609756097561
+            },
+            "suggested_action": "Significant 40-day gap - check additional PST files or email archives"
+          }
+        ],
+        "email_frequency": {
+          "2024-01": 1,
+          "2024-02": 1
+        },
+        "communication_pattern": {
+          "pattern_detected": false,
+          "reason": "insufficient_data"
+        }
+      }
+    ],
+    "summary_stats": {
+      "total_contacts_analyzed": 2,
+      "contacts_with_emails": 2,
+      "overall_completeness_score": 9.2,
+      "total_gaps_found": 3,
+      "critical_gaps": 2,
+      "avg_emails_per_contact": 2.5,
+      "contacts_with_high_completeness": 0,
+      "contacts_needing_attention": 2
+    },
+    "recommendations": [
+      "Overall timeline completeness is below 70% - consider importing additional PST files or email archives",
+      "Found 2 critical gaps - review these high-priority missing periods",
+      "2 contacts have very low email activity - verify these are important contacts",
+      "2 contacts need attention due to low completeness scores",
+      "2 contacts have suspicious gaps that may indicate missing data"
+    ]
+  },
+  "sender_analysis": {
+    "analysis_date": "2025-06-11 19:35:17.207740",
+    "total_senders": 2,
+    "sender_profiles": [
+      {
+        "sender_email": "john.doe@client.com",
+        "sender_name": "John Doe",
+        "classification": "external_contact",
+        "confidence_score": 0.6,
+        "metrics": {
+          "total_emails": 3,
+          "date_range": [
+            "2024-01-15",
+            "2024-03-15"
+          ],
+          "timeline_days": 61,
+          "avg_emails_per_month": 1.4754098360655736,
+          "first_contact": "2024-01-15",
+          "last_contact": "2024-03-15",
+          "days_since_last_contact": 453,
+          "has_personal_name": true,
+          "sender_type": "external_contact",
+          "domain": "client.com"
+        },
+        "trends": {
+          "communication_trend": "stable",
+          "response_time_trend": "unknown",
+          "volume_trend": "stable"
+        },
+        "relationship_strength": 0.1075081967213115,
+        "importance_score": 1.2425409836065573,
+        "communication_pattern": {
+          "pattern_type": "irregular",
+          "consistency_score": 0.39,
+          "avg_interval_days": 30,
+          "median_interval_days": 30.0,
+          "total_span_days": 60,
+          "most_active_day": "Monday",
+          "weekend_ratio": 0.0,
+          "email_frequency": "low"
+        },
+        "contact_info": {
+          "email": "john.doe@client.com",
+          "name": "John Doe",
+          "domain": "client.com"
+        }
+      },
+      {
+        "sender_email": "jane.smith@vendor.com",
+        "sender_name": "Jane Smith",
+        "classification": "external_contact",
+        "confidence_score": 0.6,
+        "metrics": {
+          "total_emails": 2,
+          "date_range": [
+            "2024-01-10",
+            "2024-02-20"
+          ],
+          "timeline_days": 42,
+          "avg_emails_per_month": 1.4285714285714284,
+          "first_contact": "2024-01-10",
+          "last_contact": "2024-02-20",
+          "days_since_last_contact": 477,
+          "has_personal_name": true,
+          "sender_type": "external_contact",
+          "domain": "vendor.com"
+        },
+        "trends": {
+          "communication_trend": "stable",
+          "response_time_trend": "unknown",
+          "volume_trend": "stable"
+        },
+        "relationship_strength": 0.22857142857142856,
+        "importance_score": 1.2228571428571429,
+        "communication_pattern": {
+          "pattern_type": "irregular",
+          "consistency_score": 1.0,
+          "avg_interval_days": 41,
+          "median_interval_days": 41,
+          "total_span_days": 41,
+          "most_active_day": "Wednesday",
+          "weekend_ratio": 0.0,
+          "email_frequency": "low"
+        },
+        "contact_info": {
+          "email": "jane.smith@vendor.com",
+          "name": "Jane Smith",
+          "domain": "vendor.com"
+        }
+      }
+    ],
+    "communication_relationships": [],
+    "network_statistics": {
+      "total_senders": 2,
+      "total_emails_analyzed": 5,
+      "classification_distribution": {
+        "external_contact": 2
+      },
+      "importance_distribution": {
+        "high": 0,
+        "medium": 0,
+        "low": 2
+      },
+      "pattern_distribution": {
+        "irregular": 2
+      },
+      "top_domains": {
+        "client.com": 1,
+        "vendor.com": 1
+      },
+      "avg_importance_score": 1.23,
+      "avg_relationship_strength": 0.17,
+      "high_value_contacts": 0,
+      "active_contacts": 0
+    },
+    "top_senders": [
+      [
+        "john.doe@client.com",
+        3
+      ],
+      [
+        "jane.smith@vendor.com",
+        2
+      ]
+    ],
+    "recommendations": []
+  },
+  "summary_insights": {
+    "import_performance": {
+      "total_emails_processed": 120,
+      "success_rate": 0.875,
+      "processing_speed": "120 emails/min",
+      "duplicates_found": 9,
+      "contacts_created": 6
+    },
+    "timeline_insights": {
+      "overall_completeness": "9.2%",
+      "contacts_analyzed": 2,
+      "critical_gaps": 2,
+      "high_completeness_contacts": 0
+    },
+    "sender_insights": {
+      "total_senders": 2,
+      "high_value_contacts": 0,
+      "avg_importance_score": 1.23,
+      "active_contacts": 0,
+      "automated_senders": 0
+    }
+  },
+  "recommendations": [
+    "Overall timeline completeness is below 70% - consider importing additional PST files or email archives",
+    "Found 2 critical gaps - review these high-priority missing periods",
+    "2 contacts have very low email activity - verify these are important contacts",
+    "2 contacts need attention due to low completeness scores",
+    "2 contacts have suspicious gaps that may indicate missing data"
+  ],
+  "action_items": [
+    "Investigate import failures (success rate: 87.5%)",
+    "Investigate timeline gaps - completeness below 80%",
+    "Review 2 critical timeline gaps"
+  ]
+}

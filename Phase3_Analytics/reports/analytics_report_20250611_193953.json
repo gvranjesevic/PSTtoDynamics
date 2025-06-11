@@ -1,0 +1,174 @@
+{
+  "report_id": "analytics_report_20250611_193953",
+  "generated_at": "2025-06-11 19:39:53.342625",
+  "import_session": {
+    "analytics_enabled": true,
+    "session_id": "import_20250611_193532",
+    "elapsed_time_minutes": 4.3403225333333335,
+    "total_emails": 7276,
+    "processed_emails": 0,
+    "successful_imports": 0,
+    "failed_imports": 0,
+    "duplicates_detected": 0,
+    "contacts_created": 0,
+    "contacts_found": 0,
+    "batch_count": 0,
+    "current_success_rate": 0,
+    "estimated_completion_minutes": 0
+  },
+  "timeline_analysis": {
+    "analysis_date": "2025-06-11 19:39:53.341527",
+    "total_contacts": 1,
+    "contacts_analyzed": 1,
+    "overall_completeness": 0,
+    "contact_timelines": [
+      {
+        "contact_email": "service@ringcentral.com",
+        "contact_id": null,
+        "first_email": "2025-06-11",
+        "last_email": "2025-06-11",
+        "total_timeline_days": 0,
+        "email_count": 0,
+        "coverage_days": 0,
+        "completeness_score": 0.0,
+        "gaps": [],
+        "email_frequency": {},
+        "communication_pattern": {
+          "pattern_detected": false
+        }
+      }
+    ],
+    "summary_stats": {
+      "total_contacts_analyzed": 1,
+      "contacts_with_emails": 0,
+      "overall_completeness_score": 0,
+      "total_gaps_found": 0,
+      "critical_gaps": 0,
+      "avg_emails_per_contact": 0,
+      "contacts_with_high_completeness": 0,
+      "contacts_needing_attention": 1
+    },
+    "recommendations": [
+      "Overall timeline completeness is below 70% - consider importing additional PST files or email archives",
+      "1 contacts need attention due to low completeness scores"
+    ]
+  },
+  "sender_analysis": {
+    "analysis_date": "2025-06-11 19:39:53.342625",
+    "total_senders": 1,
+    "sender_profiles": [
+      {
+        "sender_email": "service@ringcentral.com",
+        "sender_name": "RingCentral",
+        "classification": "service",
+        "confidence_score": 0.8,
+        "metrics": {
+          "total_emails": 273,
+          "date_range": [
+            "2025-06-11",
+            "2025-06-11"
+          ],
+          "timeline_days": 1,
+          "avg_emails_per_month": 8190.0,
+          "first_contact": "2025-06-11",
+          "last_contact": "2025-06-11",
+          "days_since_last_contact": 365,
+          "has_personal_name": false,
+          "sender_type": "service",
+          "domain": "ringcentral.com"
+        },
+        "trends": {
+          "communication_trend": "stable",
+          "response_time_trend": "unknown",
+          "volume_trend": "stable"
+        },
+        "relationship_strength": 1.1,
+        "importance_score": 3.0999999999999996,
+        "communication_pattern": {
+          "pattern_type": "no_data"
+        },
+        "contact_info": {
+          "email": "service@ringcentral.com",
+          "name": "RingCentral",
+          "domain": "ringcentral.com"
+        }
+      }
+    ],
+    "communication_relationships": [
+      {
+        "sender_email": "service@ringcentral.com",
+        "recipient_email": "current_user",
+        "total_emails": 273,
+        "date_range": [
+          "2025-06-11",
+          "2025-06-11"
+        ],
+        "avg_emails_per_month": 8190.0,
+        "response_patterns": {
+          "estimated_response_rate": 0.5
+        },
+        "relationship_type": "service",
+        "strength_score": 1.1
+      }
+    ],
+    "network_statistics": {
+      "total_senders": 1,
+      "total_emails_analyzed": 273,
+      "classification_distribution": {
+        "service": 1
+      },
+      "importance_distribution": {
+        "high": 0,
+        "medium": 0,
+        "low": 1
+      },
+      "pattern_distribution": {
+        "no_data": 1
+      },
+      "top_domains": {
+        "ringcentral.com": 1
+      },
+      "avg_importance_score": 3.1,
+      "avg_relationship_strength": 1.1,
+      "high_value_contacts": 0,
+      "active_contacts": 0
+    },
+    "top_senders": [
+      [
+        "service@ringcentral.com",
+        273
+      ]
+    ],
+    "recommendations": []
+  },
+  "summary_insights": {
+    "import_performance": {
+      "total_emails_processed": 0,
+      "success_rate": 0,
+      "processing_speed": "0 emails/min",
+      "duplicates_found": 0,
+      "contacts_created": 0
+    },
+    "timeline_insights": {
+      "overall_completeness": "0.0%",
+      "contacts_analyzed": 1,
+      "critical_gaps": 0,
+      "high_completeness_contacts": 0
+    },
+    "sender_insights": {
+      "total_senders": 1,
+      "high_value_contacts": 0,
+      "avg_importance_score": 3.1,
+      "active_contacts": 0,
+      "automated_senders": 0
+    }
+  },
+  "recommendations": [
+    "Overall timeline completeness is below 70% - consider importing additional PST files or email archives",
+    "1 contacts need attention due to low completeness scores"
+  ],
+  "action_items": [
+    "Investigate import failures (success rate: 0.0%)",
+    "Investigate timeline gaps - completeness below 80%"
+  ]
+}
