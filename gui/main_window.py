@@ -1,0 +1,616 @@
+"""
+PST-to-Dynamics 365 Main GUI Window
+===================================
+
+Phase 5.1 Foundation: Main Application Window
+Professional desktop interface for email import system with AI intelligence.
+"""
+
+import sys
+import os
+from datetime import datetime
+from typing import Optional, Dict, Any
+
+from PyQt6.QtWidgets import (
+    QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
+    QSplitter, QStatusBar, QMenuBar, QToolBar, QLabel, QPushButton,
+    QFrame, QScrollArea, QMessageBox, QProgressBar, QSizePolicy
+)
+from PyQt6.QtCore import Qt, QTimer, pyqtSignal, QThread, QSize
+from PyQt6.QtGui import QIcon, QFont, QPixmap, QAction
+
+# Import qtawesome for professional icons
+try:
+    import qtawesome as qta
+    ICONS_AVAILABLE = True
+except ImportError:
+    ICONS_AVAILABLE = False
+    print("⚠️ QtAwesome not available - using default icons")
+
+# Import existing backend modules (Phase 1-4 remain unchanged)
+try:
+    sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+    import config
+    from email_importer import EmailImporter
+    try:
+        from phase4_integration import Phase4IntelligentSystem
+        PHASE4_AVAILABLE = True
+    except ImportError:
+        PHASE4_AVAILABLE = False
+        print("⚠️ Phase 4 AI not available in GUI mode")
+    
+    BACKEND_AVAILABLE = True
+except ImportError as e:
+    BACKEND_AVAILABLE = False
+    print(f"⚠️ Backend modules not available: {e}")
+
+
+class NavigationSidebar(QFrame):
+    """Professional navigation sidebar with module selection"""
+    
+    # Signal emitted when navigation item is clicked
+    navigate_to = pyqtSignal(str)
+    
+    def __init__(self):
+        super().__init__()
+        self.setup_ui()
+        
+    def setup_ui(self):
+        """Setup the navigation sidebar interface"""
+        self.setFixedWidth(220)
+        self.setFrameStyle(QFrame.Shape.StyledPanel)
+        
+        layout = QVBoxLayout(self)
+        layout.setSpacing(2)
+        layout.setContentsMargins(10, 10, 10, 10)
+        
+        # Application title/logo area
+        title_frame = QFrame()
+        title_layout = QVBoxLayout(title_frame)
+        
+        app_title = QLabel("PST to Dynamics 365")
+        app_title.setFont(QFont("Segoe UI", 14, QFont.Weight.Bold))
+        app_title.setStyleSheet("color: #2c3e50; margin: 10px 0px;")
+        app_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        
+        app_subtitle = QLabel("AI-Powered Email Import")
+        app_subtitle.setFont(QFont("Segoe UI", 9))
+        app_subtitle.setStyleSheet("color: #7f8c8d; margin-bottom: 20px;")
+        app_subtitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        
+        title_layout.addWidget(app_title)
+        title_layout.addWidget(app_subtitle)
+        layout.addWidget(title_frame)
+        
+        # Navigation buttons
+        self.nav_buttons = {}
+        nav_items = [
+            ("dashboard", "📊", "Dashboard", "System overview and status"),
+            ("import", "📧", "Import Wizard", "Guided email import process"),
+            ("analytics", "📈", "Analytics", "Import analytics and reports"),
+            ("ai", "🧠", "AI Intelligence", "Machine learning insights"),
+            ("contacts", "👥", "Contacts", "Contact management"),
+            ("settings", "⚙️", "Settings", "System configuration")
+        ]
+        
+        for nav_id, icon, title, description in nav_items:
+            btn = self.create_nav_button(nav_id, icon, title, description)
+            self.nav_buttons[nav_id] = btn
+            layout.addWidget(btn)
+        
+        # Spacer to push content to top
+        layout.addStretch()
+        
+        # Status indicator at bottom
+        status_frame = QFrame()
+        status_layout = QVBoxLayout(status_frame)
+        
+        self.status_label = QLabel("System Ready")
+        self.status_label.setFont(QFont("Segoe UI", 8))
+        self.status_label.setStyleSheet("color: #27ae60; padding: 5px;")
+        self.status_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        
+        status_layout.addWidget(self.status_label)
+        layout.addWidget(status_frame)
+        
+        # Set initial selection
+        self.select_nav_item("dashboard")
+        
+    def create_nav_button(self, nav_id: str, icon: str, title: str, description: str) -> QPushButton:
+        """Create a professional navigation button"""
+        btn = QPushButton()
+        btn.setFixedHeight(60)
+        btn.setToolTip(description)
+        btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        
+        # Button text with icon
+        btn.setText(f"{icon}  {title}")
+        btn.setFont(QFont("Segoe UI", 10, QFont.Weight.Medium))
+        
+        # Style the button
+        btn.setStyleSheet("""
+            QPushButton {
+                text-align: left;
+                padding: 10px 15px;
+                border: none;
+                border-radius: 8px;
+                background-color: transparent;
+                color: #2c3e50;
+            }
+            QPushButton:hover {
+                background-color: #ecf0f1;
+            }
+            QPushButton:pressed {
+                background-color: #d5dbdb;
+            }
+        """)
+        
+        # Connect click event
+        btn.clicked.connect(lambda: self.on_nav_click(nav_id))
+        
+        return btn
+    
+    def on_nav_click(self, nav_id: str):
+        """Handle navigation button click"""
+        self.select_nav_item(nav_id)
+        self.navigate_to.emit(nav_id)
+    
+    def select_nav_item(self, nav_id: str):
+        """Visually select a navigation item"""
+        # Reset all buttons
+        for btn in self.nav_buttons.values():
+            btn.setStyleSheet("""
+                QPushButton {
+                    text-align: left;
+                    padding: 10px 15px;
+                    border: none;
+                    border-radius: 8px;
+                    background-color: transparent;
+                    color: #2c3e50;
+                }
+                QPushButton:hover {
+                    background-color: #ecf0f1;
+                }
+                QPushButton:pressed {
+                    background-color: #d5dbdb;
+                }
+            """)
+        
+        # Highlight selected button
+        if nav_id in self.nav_buttons:
+            self.nav_buttons[nav_id].setStyleSheet("""
+                QPushButton {
+                    text-align: left;
+                    padding: 10px 15px;
+                    border: none;
+                    border-radius: 8px;
+                    background-color: #3498db;
+                    color: white;
+                    font-weight: bold;
+                }
+                QPushButton:hover {
+                    background-color: #2980b9;
+                }
+                QPushButton:pressed {
+                    background-color: #1f618d;
+                }
+            """)
+    
+    def update_status(self, status: str, color: str = "#27ae60"):
+        """Update the status indicator"""
+        self.status_label.setText(status)
+        self.status_label.setStyleSheet(f"color: {color}; padding: 5px;")
+
+
+class ContentArea(QWidget):
+    """Main content area that displays different modules"""
+    
+    def __init__(self):
+        super().__init__()
+        self.setup_ui()
+        self.current_module = None
+        
+    def setup_ui(self):
+        """Setup the content area"""
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(20, 20, 20, 20)
+        
+        # Content header
+        self.header_label = QLabel("Welcome to PST-to-Dynamics 365")
+        self.header_label.setFont(QFont("Segoe UI", 18, QFont.Weight.Bold))
+        self.header_label.setStyleSheet("color: #2c3e50; margin-bottom: 10px;")
+        
+        self.subtitle_label = QLabel("AI-powered email import system")
+        self.subtitle_label.setFont(QFont("Segoe UI", 12))
+        self.subtitle_label.setStyleSheet("color: #7f8c8d; margin-bottom: 30px;")
+        
+        layout.addWidget(self.header_label)
+        layout.addWidget(self.subtitle_label)
+        
+        # Content body (placeholder for now)
+        self.content_body = QLabel("Select a module from the sidebar to get started.")
+        self.content_body.setFont(QFont("Segoe UI", 11))
+        self.content_body.setStyleSheet("color: #34495e; padding: 20px;")
+        self.content_body.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        
+        layout.addWidget(self.content_body)
+        layout.addStretch()
+        
+    def show_module(self, module_id: str):
+        """Display a specific module"""
+        self.current_module = module_id
+        
+        module_info = {
+            "dashboard": ("System Dashboard", "Overview and system status"),
+            "import": ("Import Wizard", "Guided email import process"),
+            "analytics": ("Analytics Dashboard", "Import analytics and reports"),
+            "ai": ("AI Intelligence", "Machine learning insights and optimization"),
+            "contacts": ("Contact Management", "Manage Dynamics 365 contacts"),
+            "settings": ("System Settings", "Configure application settings")
+        }
+        
+        if module_id in module_info:
+            title, description = module_info[module_id]
+            self.header_label.setText(title)
+            self.subtitle_label.setText(description)
+            
+            # Module-specific content (placeholder for Phase 5.2+)
+            if module_id == "dashboard":
+                self.show_dashboard()
+            elif module_id == "import":
+                self.show_import_placeholder()
+            elif module_id == "analytics":
+                self.show_analytics_placeholder()
+            elif module_id == "ai":
+                self.show_ai_placeholder()
+            elif module_id == "contacts":
+                self.show_contacts_placeholder()
+            elif module_id == "settings":
+                self.show_settings_placeholder()
+    
+    def show_dashboard(self):
+        """Show the dashboard module (Phase 5.1 basic version)"""
+        import sys
+        dashboard_info = f"""
+        <div style="font-family: Segoe UI; color: #2c3e50;">
+        <h3>System Status</h3>
+        <p><b>✅ Phase 1-4 Backend:</b> {"Available" if BACKEND_AVAILABLE else "Not Available"}</p>
+        <p><b>🧠 AI Intelligence:</b> {"Available" if PHASE4_AVAILABLE else "Not Available"}</p>
+        <p><b>🎨 GUI Framework:</b> PyQt6 Loaded</p>
+        
+        <h3>Quick Actions</h3>
+        <p>• Use the Import Wizard to start importing emails</p>
+        <p>• View Analytics for import insights</p>
+        <p>• Access AI Intelligence for smart recommendations</p>
+        <p>• Manage Contacts in Dynamics 365</p>
+        
+        <h3>Phase 5.1 Foundation Complete</h3>
+        <p>✅ Main window framework</p>
+        <p>✅ Navigation sidebar</p>
+        <p>✅ Status monitoring</p>
+        <p>✅ Menu system</p>
+        </div>
+        """
+        
+        self.content_body.setText(dashboard_info)
+        self.content_body.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
+    
+    def show_import_placeholder(self):
+        """Placeholder for import wizard (Phase 5.2)"""
+        self.content_body.setText("📧 Import Wizard will be implemented in Phase 5.2\n\nFeatures coming:\n• Step-by-step import process\n• Real-time progress tracking\n• AI optimization recommendations\n• Error handling and recovery")
+        self.content_body.setAlignment(Qt.AlignmentFlag.AlignCenter)
+    
+    def show_analytics_placeholder(self):
+        """Placeholder for analytics dashboard (Phase 5.4)"""
+        self.content_body.setText("📈 Analytics Dashboard will be implemented in Phase 5.4\n\nFeatures coming:\n• Interactive charts and graphs\n• Import performance metrics\n• Sender behavior analysis\n• Export capabilities")
+        self.content_body.setAlignment(Qt.AlignmentFlag.AlignCenter)
+    
+    def show_ai_placeholder(self):
+        """Placeholder for AI intelligence (Phase 5.5)"""
+        self.content_body.setText("🧠 AI Intelligence Panel will be implemented in Phase 5.5\n\nFeatures coming:\n• Real-time ML insights\n• Smart optimization\n• Predictive analytics\n• Model training interface")
+        self.content_body.setAlignment(Qt.AlignmentFlag.AlignCenter)
+    
+    def show_contacts_placeholder(self):
+        """Placeholder for contact management (Phase 5.6)"""
+        self.content_body.setText("👥 Contact Management will be implemented in Phase 5.6\n\nFeatures coming:\n• Contact browser and search\n• Bulk operations\n• Relationship mapping\n• Import history tracking")
+        self.content_body.setAlignment(Qt.AlignmentFlag.AlignCenter)
+    
+    def show_settings_placeholder(self):
+        """Placeholder for settings (Phase 5.3)"""
+        self.content_body.setText("⚙️ Settings Interface will be implemented in Phase 5.3\n\nFeatures coming:\n• Visual configuration editor\n• Authentication setup\n• Import behavior settings\n• Phase 2-4 advanced options")
+        self.content_body.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+
+class SystemStatusMonitor(QThread):
+    """Background thread to monitor system status"""
+    
+    status_updated = pyqtSignal(str, str)  # message, color
+    
+    def __init__(self):
+        super().__init__()
+        self.running = True
+        
+    def run(self):
+        """Monitor system status in background"""
+        while self.running:
+            try:
+                # Check backend availability
+                if BACKEND_AVAILABLE:
+                    self.status_updated.emit("System Ready", "#27ae60")
+                else:
+                    self.status_updated.emit("Backend Unavailable", "#e74c3c")
+                
+                # Sleep for 5 seconds before next check
+                self.msleep(5000)
+                
+            except Exception as e:
+                self.status_updated.emit("Status Error", "#e74c3c")
+                self.msleep(10000)  # Wait longer if error
+    
+    def stop(self):
+        """Stop the monitoring thread"""
+        self.running = False
+        self.wait()
+
+
+class MainWindow(QMainWindow):
+    """Main application window for PST-to-Dynamics 365 GUI"""
+    
+    def __init__(self):
+        super().__init__()
+        self.status_monitor = None
+        self.setup_ui()
+        self.setup_menu_bar()
+        self.setup_toolbar()
+        self.setup_status_bar()
+        self.start_monitoring()
+        
+    def setup_ui(self):
+        """Setup the main window interface"""
+        self.setWindowTitle("PST to Dynamics 365 - AI Email Import System")
+        self.setMinimumSize(1200, 800)
+        self.resize(1400, 900)
+        
+        # Central widget with splitter
+        central_widget = QWidget()
+        self.setCentralWidget(central_widget)
+        
+        layout = QHBoxLayout(central_widget)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+        
+        # Create splitter for resizable panels
+        splitter = QSplitter(Qt.Orientation.Horizontal)
+        
+        # Navigation sidebar
+        self.sidebar = NavigationSidebar()
+        self.sidebar.navigate_to.connect(self.on_navigate)
+        
+        # Main content area
+        self.content_area = ContentArea()
+        
+        # Add to splitter
+        splitter.addWidget(self.sidebar)
+        splitter.addWidget(self.content_area)
+        
+        # Set splitter proportions (sidebar: content = 1:4)
+        splitter.setSizes([220, 980])
+        splitter.setCollapsible(0, False)  # Don't allow sidebar to collapse
+        
+        layout.addWidget(splitter)
+        
+        # Apply professional styling
+        self.setStyleSheet("""
+            QMainWindow {
+                background-color: #ffffff;
+            }
+            QSplitter::handle {
+                background-color: #bdc3c7;
+                width: 1px;
+            }
+            QSplitter::handle:hover {
+                background-color: #95a5a6;
+            }
+        """)
+    
+    def setup_menu_bar(self):
+        """Setup the menu bar"""
+        menubar = self.menuBar()
+        
+        # File menu
+        file_menu = menubar.addMenu("&File")
+        
+        new_import_action = QAction("&New Import...", self)
+        new_import_action.setShortcut("Ctrl+N")
+        new_import_action.setStatusTip("Start a new email import")
+        new_import_action.triggered.connect(lambda: self.on_navigate("import"))
+        file_menu.addAction(new_import_action)
+        
+        file_menu.addSeparator()
+        
+        exit_action = QAction("E&xit", self)
+        exit_action.setShortcut("Alt+F4")
+        exit_action.setStatusTip("Exit the application")
+        exit_action.triggered.connect(self.close)
+        file_menu.addAction(exit_action)
+        
+        # View menu
+        view_menu = menubar.addMenu("&View")
+        
+        dashboard_action = QAction("&Dashboard", self)
+        dashboard_action.setShortcut("Ctrl+1")
+        dashboard_action.triggered.connect(lambda: self.on_navigate("dashboard"))
+        view_menu.addAction(dashboard_action)
+        
+        analytics_action = QAction("&Analytics", self)
+        analytics_action.setShortcut("Ctrl+2")
+        analytics_action.triggered.connect(lambda: self.on_navigate("analytics"))
+        view_menu.addAction(analytics_action)
+        
+        ai_action = QAction("&AI Intelligence", self)
+        ai_action.setShortcut("Ctrl+3")
+        ai_action.triggered.connect(lambda: self.on_navigate("ai"))
+        view_menu.addAction(ai_action)
+        
+        # Tools menu
+        tools_menu = menubar.addMenu("&Tools")
+        
+        settings_action = QAction("&Settings...", self)
+        settings_action.setShortcut("Ctrl+,")
+        settings_action.triggered.connect(lambda: self.on_navigate("settings"))
+        tools_menu.addAction(settings_action)
+        
+        # Help menu
+        help_menu = menubar.addMenu("&Help")
+        
+        about_action = QAction("&About", self)
+        about_action.triggered.connect(self.show_about)
+        help_menu.addAction(about_action)
+    
+    def setup_toolbar(self):
+        """Setup the toolbar"""
+        toolbar = self.addToolBar("Main Toolbar")
+        toolbar.setMovable(False)
+        toolbar.setFloatable(False)
+        
+        # Quick action buttons with text labels
+        import_action = QAction("📧 Import", self)
+        import_action.setStatusTip("Start email import")
+        import_action.triggered.connect(lambda: self.on_navigate("import"))
+        toolbar.addAction(import_action)
+        
+        analytics_action = QAction("📈 Analytics", self)
+        analytics_action.setStatusTip("View analytics")
+        analytics_action.triggered.connect(lambda: self.on_navigate("analytics"))
+        toolbar.addAction(analytics_action)
+        
+        ai_action = QAction("🧠 AI", self)
+        ai_action.setStatusTip("AI Intelligence")
+        ai_action.triggered.connect(lambda: self.on_navigate("ai"))
+        toolbar.addAction(ai_action)
+        
+        toolbar.addSeparator()
+        
+        settings_action = QAction("⚙️ Settings", self)
+        settings_action.setStatusTip("Application settings")
+        settings_action.triggered.connect(lambda: self.on_navigate("settings"))
+        toolbar.addAction(settings_action)
+        
+        # Add stretch to push items to the left
+        spacer = QWidget()
+        spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        toolbar.addWidget(spacer)
+    
+    def setup_status_bar(self):
+        """Setup the status bar"""
+        self.status_bar = self.statusBar()
+        
+        # Main status message
+        self.status_label = QLabel("Ready")
+        self.status_bar.addWidget(self.status_label)
+        
+        # Add spacer
+        self.status_bar.addPermanentWidget(QLabel(""), 1)
+        
+        # Backend status
+        self.backend_status = QLabel("Backend: Checking...")
+        self.status_bar.addPermanentWidget(self.backend_status)
+        
+        # Phase indicator
+        phase_label = QLabel("Phase 5.1 Foundation")
+        phase_label.setStyleSheet("font-weight: bold; color: #3498db; padding: 0 10px;")
+        self.status_bar.addPermanentWidget(phase_label)
+    
+    def start_monitoring(self):
+        """Start system status monitoring"""
+        self.status_monitor = SystemStatusMonitor()
+        self.status_monitor.status_updated.connect(self.update_status)
+        self.status_monitor.start()
+    
+    def update_status(self, message: str, color: str):
+        """Update the status display"""
+        self.sidebar.update_status(message, color)
+        self.backend_status.setText(f"Backend: {message}")
+        self.backend_status.setStyleSheet(f"color: {color};")
+    
+    def on_navigate(self, module_id: str):
+        """Handle navigation to different modules"""
+        self.content_area.show_module(module_id)
+        self.status_label.setText(f"Viewing {module_id.title()}")
+    
+    def show_about(self):
+        """Show about dialog"""
+        about_text = """
+        <h3>PST to Dynamics 365</h3>
+        <p><b>Version:</b> Phase 5.1 Foundation</p>
+        <p><b>AI-Powered Email Import System</b></p>
+        <br>
+        <p>A comprehensive solution for importing emails from PST files 
+        into Microsoft Dynamics 365 with advanced AI intelligence.</p>
+        <br>
+        <p><b>Features:</b></p>
+        <ul>
+        <li>Phase 1-4: Complete backend functionality</li>
+        <li>Phase 5: Professional desktop GUI</li>
+        <li>AI-powered pattern recognition</li>
+        <li>Smart import optimization</li>
+        <li>Predictive analytics</li>
+        <li>Enterprise-grade interface</li>
+        </ul>
+        <br>
+        <p><b>Developer:</b> gvranjesevic@dynamique.com</p>
+        """
+        
+        QMessageBox.about(self, "About PST to Dynamics 365", about_text)
+    
+    def closeEvent(self, event):
+        """Handle application close"""
+        if self.status_monitor:
+            self.status_monitor.stop()
+        event.accept()
+
+
+class PSTDynamicsApp(QApplication):
+    """Main application class"""
+    
+    def __init__(self):
+        super().__init__(sys.argv)
+        self.setup_app()
+        self.main_window = None
+        
+    def setup_app(self):
+        """Setup application properties"""
+        self.setApplicationName("PST to Dynamics 365")
+        self.setApplicationVersion("Phase 5.1")
+        self.setOrganizationName("Dynamique Solutions")
+        self.setOrganizationDomain("dynamique.com")
+    
+    def run(self):
+        """Run the application"""
+        self.main_window = MainWindow()
+        self.main_window.show()
+        
+        print("🚀 PST-to-Dynamics 365 GUI Application Started")
+        print("📊 Phase 5.1 Foundation - Main Window Framework")
+        print("✅ All systems ready for testing and review")
+        
+        return self.exec()
+
+
+def main():
+    """Main entry point"""
+    print("=" * 60)
+    print("🎯 PST-to-Dynamics 365 Phase 5.1 Foundation")
+    print("🖥️ Professional Desktop GUI Application")
+    print("=" * 60)
+    
+    try:
+        app = PSTDynamicsApp()
+        return app.run()
+    except Exception as e:
+        print(f"❌ Application startup error: {e}")
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main()) 

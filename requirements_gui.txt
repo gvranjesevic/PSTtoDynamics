@@ -1,0 +1,22 @@
+# Phase 5 GUI Requirements
+# PyQt6 Desktop Application Dependencies
+
+# Core GUI Framework
+PyQt6>=6.6.0
+PyQt6-tools>=6.4.2
+
+# Advanced Charts and Visualizations
+pyqtgraph>=0.13.0
+
+# Professional Icons and Resources
+qtawesome>=1.2.0
+
+# GUI Testing (for automated testing)
+pytest-qt>=4.2.0
+
+# Build and Distribution
+pyinstaller>=6.0.0
+
+# Additional GUI utilities
+pillow>=10.0.0  # Image processing for icons/graphics
+darkdetect>=0.8.0  # System theme detection 
