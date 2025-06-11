@@ -296,9 +296,62 @@ class ContentArea(QWidget):
         self.content_body.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
     
     def show_import_placeholder(self):
-        """Placeholder for import wizard (Phase 5.2)"""
-        self.content_body.setText("📧 Import Wizard will be implemented in Phase 5.2\n\nFeatures coming:\n• Step-by-step import process\n• Real-time progress tracking\n• AI optimization recommendations\n• Error handling and recovery")
+        """Show the Import Wizard (Phase 5.2)"""
+        # Clear existing content
+        if hasattr(self, 'import_wizard'):
+            return  # Already showing
+        
+        # Import the wizard
+        try:
+            from gui.widgets.import_wizard import ImportWizard
+            
+            # Replace content body with import wizard
+            self.content_body.hide()
+            
+            # Create and add import wizard
+            self.import_wizard = ImportWizard()
+            self.import_wizard.wizard_completed.connect(self.on_import_completed)
+            self.import_wizard.wizard_cancelled.connect(self.on_import_cancelled)
+            
+            # Add to layout
+            layout = self.layout()
+            layout.insertWidget(2, self.import_wizard)  # Insert after subtitle
+            
+        except ImportError as e:
+            self.content_body.setText(f"❌ Import Wizard not available: {e}\n\nFeatures:\n• Step-by-step import process\n• Real-time progress tracking\n• AI optimization recommendations\n• Error handling and recovery")
+            self.content_body.setAlignment(Qt.AlignmentFlag.AlignCenter)
+    
+    def on_import_completed(self, success: bool, data: dict):
+        """Handle import wizard completion"""
+        if success:
+            message = f"✅ Import completed successfully!\n\nFile: {data.get('file_name', 'Unknown')}\nStatus: {data.get('final_status', 'Completed')}"
+        else:
+            message = f"❌ Import was not completed.\n\nStatus: {data.get('final_status', 'Failed')}"
+        
+        # Show result and return to dashboard
+        self.content_body.setText(message)
         self.content_body.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.content_body.show()
+        
+        # Remove wizard
+        if hasattr(self, 'import_wizard'):
+            self.import_wizard.hide()
+            self.layout().removeWidget(self.import_wizard)
+            self.import_wizard.deleteLater()
+            del self.import_wizard
+    
+    def on_import_cancelled(self):
+        """Handle import wizard cancellation"""
+        self.content_body.setText("📧 Import cancelled by user.\n\nYou can start a new import anytime using the Import Wizard.")
+        self.content_body.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.content_body.show()
+        
+        # Remove wizard
+        if hasattr(self, 'import_wizard'):
+            self.import_wizard.hide()
+            self.layout().removeWidget(self.import_wizard)
+            self.import_wizard.deleteLater()
+            del self.import_wizard
     
     def show_analytics_placeholder(self):
         """Placeholder for analytics dashboard (Phase 5.4)"""
