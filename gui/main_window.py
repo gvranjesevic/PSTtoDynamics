@@ -436,10 +436,13 @@ class MainWindow(QMainWindow):
                 padding: 6px 0px;
                 font-family: "Segoe UI";
                 font-size: 14px;
+                color: #2c3e50;
             }
             QMenu::item {
                 padding: 8px 20px;
                 margin: 1px;
+                color: #2c3e50;
+                background-color: transparent;
             }
             QMenu::item:selected {
                 background-color: #3498db;
