@@ -1,4 +1,8 @@
 aspose.email-for-python-via-net>=25.5
 pandas>=2.0.3
 python-dateutil>=2.8.2
-tabulate>=0.9.0 
+tabulate>=0.9.0
+scikit-learn>=1.3.0
+numpy>=1.24.0
+scipy>=1.10.0
+psutil>=5.9.0 
