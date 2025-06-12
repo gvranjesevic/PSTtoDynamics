@@ -238,6 +238,9 @@ class ContentArea(QWidget):
         
     def show_module(self, module_id: str):
         """Display a specific module"""
+        # Clean up any active widgets first
+        self.cleanup_active_widgets()
+        
         self.current_module = module_id
         
         module_info = {
@@ -332,38 +335,42 @@ class ContentArea(QWidget):
         else:
             message = f"❌ Import was not completed.\n\nStatus: {data.get('final_status', 'Failed')}"
         
-        # Show header and subtitle again
-        self.header_label.show()
-        self.subtitle_label.show()
+        # Clean up any active widgets
+        self.cleanup_active_widgets()
         
         # Show result and return to dashboard
         self.content_body.setText(message)
         self.content_body.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.content_body.show()
-        
-        # Remove wizard
-        if hasattr(self, 'import_wizard'):
-            self.import_wizard.hide()
-            self.layout().removeWidget(self.import_wizard)
-            self.import_wizard.deleteLater()
-            del self.import_wizard
     
     def on_import_cancelled(self):
         """Handle import wizard cancellation"""
-        # Show header and subtitle again
-        self.header_label.show()
-        self.subtitle_label.show()
+        # Clean up any active widgets
+        self.cleanup_active_widgets()
         
         self.content_body.setText("📧 Import cancelled by user.\n\nYou can start a new import anytime using the Import Wizard.")
         self.content_body.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.content_body.show()
+    
+    def cleanup_active_widgets(self):
+        """Clean up any active widgets (wizard, config manager, etc.)"""
+        # Show header and subtitle again
+        self.header_label.show()
+        self.subtitle_label.show()
         
-        # Remove wizard
+        # Remove import wizard
         if hasattr(self, 'import_wizard'):
             self.import_wizard.hide()
             self.layout().removeWidget(self.import_wizard)
             self.import_wizard.deleteLater()
             del self.import_wizard
+        
+        # Remove configuration manager
+        if hasattr(self, 'config_manager'):
+            self.config_manager.hide()
+            self.layout().removeWidget(self.config_manager)
+            self.config_manager.deleteLater()
+            del self.config_manager
     
     def show_analytics_placeholder(self):
         """Placeholder for analytics dashboard (Phase 5.4)"""
@@ -381,9 +388,42 @@ class ContentArea(QWidget):
         self.content_body.setAlignment(Qt.AlignmentFlag.AlignCenter)
     
     def show_settings_placeholder(self):
-        """Placeholder for settings (Phase 5.3)"""
-        self.content_body.setText("⚙️ Settings Interface will be implemented in Phase 5.3\n\nFeatures coming:\n• Visual configuration editor\n• Authentication setup\n• Import behavior settings\n• Phase 2-4 advanced options")
-        self.content_body.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        """Show the Configuration Manager (Phase 5.3)"""
+        # Clear existing content
+        if hasattr(self, 'config_manager'):
+            return  # Already showing
+        
+        # Hide the header and subtitle to free up space
+        self.header_label.hide()
+        self.subtitle_label.hide()
+        
+        # Import the configuration manager
+        try:
+            from gui.widgets.configuration_manager import ConfigurationManager
+            
+            # Replace content body with configuration manager
+            self.content_body.hide()
+            
+            # Create and add configuration manager
+            self.config_manager = ConfigurationManager()
+            self.config_manager.configuration_changed.connect(self.on_configuration_changed)
+            
+            # Add to layout
+            layout = self.layout()
+            layout.insertWidget(2, self.config_manager)  # Insert after subtitle
+            
+        except ImportError as e:
+            self.content_body.setText(f"❌ Configuration Manager not available: {e}\n\nFeatures:\n• Visual configuration editor\n• Authentication setup\n• Import behavior settings\n• Phase 2-4 advanced options")
+            self.content_body.setAlignment(Qt.AlignmentFlag.AlignCenter)
+    
+    def on_configuration_changed(self, config_data: dict):
+        """Handle configuration changes"""
+        print("Configuration updated:")
+        for section, data in config_data.items():
+            print(f"  {section}: {data}")
+        
+        # Update status to indicate configuration was saved
+        self.update_status("Configuration updated successfully", "#27ae60")
 
 
 class SystemStatusMonitor(QThread):
