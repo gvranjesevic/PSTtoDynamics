@@ -388,6 +388,13 @@ class ContentArea(QWidget):
             self.layout().removeWidget(self.ai_dashboard)
             self.ai_dashboard.deleteLater()
             del self.ai_dashboard
+        
+        # Remove contact management dashboard
+        if hasattr(self, 'contact_dashboard'):
+            self.contact_dashboard.hide()
+            self.layout().removeWidget(self.contact_dashboard)
+            self.contact_dashboard.deleteLater()
+            del self.contact_dashboard
     
     def show_analytics_placeholder(self):
         """Show Analytics Dashboard (Phase 5.4)"""
@@ -456,9 +463,37 @@ class ContentArea(QWidget):
             self.content_body.setAlignment(Qt.AlignmentFlag.AlignCenter)
     
     def show_contacts_placeholder(self):
-        """Placeholder for contact management (Phase 5.6)"""
-        self.content_body.setText("👥 Contact Management will be implemented in Phase 5.6\n\nFeatures coming:\n• Contact browser and search\n• Bulk operations\n• Relationship mapping\n• Import history tracking")
-        self.content_body.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        """Show Contact Management Dashboard (Phase 5.6)"""
+        try:
+            from gui.widgets.contact_management_dashboard import ContactManagementDashboard
+            
+            # Clean up any existing widgets
+            self.cleanup_active_widgets()
+            
+            # Hide the header and subtitle to free up space
+            self.header_label.hide()
+            self.subtitle_label.hide()
+            
+            # Create and show contact management dashboard
+            self.contact_dashboard = ContactManagementDashboard()
+            
+            # Replace content with contact dashboard
+            self.content_body.hide()
+            
+            # Add to layout
+            layout = self.layout()
+            layout.insertWidget(2, self.contact_dashboard)  # Insert after subtitle
+            
+            print("👥 Phase 5.6 Contact Management Dashboard loaded successfully")
+            
+        except ImportError as e:
+            print(f"⚠️ Contact Management Dashboard not available: {e}")
+            self.content_body.setText("👥 Contact Management Dashboard\n\nError loading contact dashboard module.\nPlease check contact management components installation.")
+            self.content_body.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        except Exception as e:
+            print(f"❌ Error loading Contact Management Dashboard: {e}")
+            self.content_body.setText(f"👥 Contact Management Dashboard\n\nError: {str(e)}")
+            self.content_body.setAlignment(Qt.AlignmentFlag.AlignCenter)
     
     def show_settings_placeholder(self):
         """Show the Configuration Manager (Phase 5.3)"""
