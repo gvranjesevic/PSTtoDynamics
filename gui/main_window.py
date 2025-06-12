@@ -10,11 +10,13 @@ import sys
 import os
 from datetime import datetime
 from typing import Optional, Dict, Any
+import json
 
 from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QSplitter, QStatusBar, QMenuBar, QToolBar, QLabel, QPushButton,
-    QFrame, QScrollArea, QMessageBox, QProgressBar, QSizePolicy
+    QFrame, QScrollArea, QMessageBox, QProgressBar, QSizePolicy, QTextEdit,
+    QDialog, QDialogButtonBox, QLineEdit, QToolButton
 )
 from PyQt6.QtCore import Qt, QTimer, pyqtSignal, QThread, QSize
 from PyQt6.QtGui import QIcon, QFont, QPixmap, QAction
@@ -47,6 +49,7 @@ except ImportError as e:
 # Add import for the sync monitoring dashboard
 from gui.widgets.sync_monitoring_dashboard import SyncMonitoringDashboard
 from sync.sync_engine import SyncEngine
+from gui.widgets.welcome_dialog import WelcomeDialog
 
 
 class NavigationSidebar(QFrame):
@@ -555,8 +558,14 @@ class ContentArea(QWidget):
         self.content_body.hide()
         self.sync_engine = SyncEngine()
         self.sync_monitoring_dashboard = SyncMonitoringDashboard(self.sync_engine)
+        # Add inline help button
+        help_btn = QToolButton()
+        help_btn.setText("?")
+        help_btn.setToolTip("Learn more about sync monitoring and conflict resolution.")
+        help_btn.clicked.connect(lambda: QMessageBox.information(self, "Sync Monitor Help", "The Sync Monitoring Dashboard provides real-time sync metrics, conflict resolution, and logs. Use the tabs to view metrics, resolve conflicts, and review logs."))
         layout = self.layout()
-        layout.insertWidget(2, self.sync_monitoring_dashboard)
+        layout.insertWidget(2, help_btn)
+        layout.insertWidget(3, self.sync_monitoring_dashboard)
 
 
 class SystemStatusMonitor(QThread):
@@ -602,6 +611,7 @@ class MainWindow(QMainWindow):
         self.setup_toolbar()
         self.setup_status_bar()
         self.start_monitoring()
+        self.show_welcome_if_first_run()
         
     def setup_ui(self):
         """Setup the main window interface"""
@@ -785,6 +795,19 @@ class MainWindow(QMainWindow):
         about_action = QAction("&About", self)
         about_action.triggered.connect(self.show_about)
         help_menu.addAction(about_action)
+        help_menu.addSeparator()
+        welcome_action = QAction("Show Welcome Screen", self)
+        welcome_action.triggered.connect(self.show_welcome_dialog)
+        help_menu.addAction(welcome_action)
+        manual_action = QAction("User Manual", self)
+        manual_action.triggered.connect(self.show_user_manual)
+        help_menu.addAction(manual_action)
+        faq_action = QAction("FAQ", self)
+        faq_action.triggered.connect(self.show_faq_dialog)
+        help_menu.addAction(faq_action)
+        feedback_action = QAction("Send Feedback", self)
+        feedback_action.triggered.connect(self.show_feedback_dialog)
+        help_menu.addAction(feedback_action)
     
     def setup_toolbar(self):
         """Setup the toolbar"""
@@ -861,7 +884,8 @@ class MainWindow(QMainWindow):
         """Show about dialog"""
         about_text = """
         <h3>PST to Dynamics 365</h3>
-        <p><b>Version:</b> Phase 5.1 Foundation</p>
+        <p><b>Version:</b> 1.0.0 (Production Release)</p>
+        <p><b>Company:</b> Dynamique Solutions</p>
         <p><b>AI-Powered Email Import System</b></p>
         <br>
         <p>A comprehensive solution for importing emails from PST files 
@@ -869,8 +893,8 @@ class MainWindow(QMainWindow):
         <br>
         <p><b>Features:</b></p>
         <ul>
-        <li>Phase 1-4: Complete backend functionality</li>
-        <li>Phase 5: Professional desktop GUI</li>
+        <li>Bidirectional sync and conflict resolution</li>
+        <li>Professional desktop GUI</li>
         <li>AI-powered pattern recognition</li>
         <li>Smart import optimization</li>
         <li>Predictive analytics</li>
@@ -879,9 +903,101 @@ class MainWindow(QMainWindow):
         <br>
         <p><b>Developer:</b> gvranjesevic@dynamique.com</p>
         """
-        
         QMessageBox.about(self, "About PST to Dynamics 365", about_text)
     
+    def show_welcome_if_first_run(self):
+        config_path = os.path.join(os.path.expanduser('~'), '.psttodyn_config.json')
+        first_run = True
+        if os.path.exists(config_path):
+            try:
+                with open(config_path, 'r') as f:
+                    cfg = json.load(f)
+                    first_run = cfg.get('first_run', True)
+            except Exception:
+                first_run = True
+        if first_run:
+            dlg = WelcomeDialog(self)
+            dlg.exec()
+            # Mark as not first run
+            try:
+                with open(config_path, 'w') as f:
+                    json.dump({'first_run': False}, f)
+            except Exception:
+                pass
+
+    def show_welcome_dialog(self):
+        dlg = WelcomeDialog(self)
+        dlg.exec()
+    
+    def show_user_manual(self):
+        dlg = QDialog(self)
+        dlg.setWindowTitle("User Manual")
+        dlg.setMinimumSize(700, 600)
+        layout = QVBoxLayout(dlg)
+        text = QTextEdit()
+        text.setReadOnly(True)
+        try:
+            with open("USER_MANUAL.md", "r", encoding="utf-8") as f:
+                text.setPlainText(f.read())
+        except Exception as e:
+            text.setPlainText(f"Could not load user manual: {e}")
+        layout.addWidget(text)
+        btns = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok)
+        btns.accepted.connect(dlg.accept)
+        layout.addWidget(btns)
+        dlg.exec()
+
+    def show_faq_dialog(self):
+        dlg = QDialog(self)
+        dlg.setWindowTitle("Frequently Asked Questions (FAQ)")
+        dlg.setMinimumSize(500, 400)
+        layout = QVBoxLayout(dlg)
+        faq_text = QTextEdit()
+        faq_text.setReadOnly(True)
+        faq_text.setPlainText("""
+Q: How do I import emails from a PST file?
+A: Use the Import Wizard from the navigation sidebar.
+
+Q: How do I resolve sync conflicts?
+A: Go to the Sync Monitor and use the Conflict Resolution tab.
+
+Q: Where can I find logs and metrics?
+A: The Sync Monitoring Dashboard provides real-time logs and metrics.
+
+Q: How do I get help?
+A: Use this Help menu or contact support.
+        """)
+        layout.addWidget(faq_text)
+        btns = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok)
+        btns.accepted.connect(dlg.accept)
+        layout.addWidget(btns)
+        dlg.exec()
+
+    def show_feedback_dialog(self):
+        dlg = QDialog(self)
+        dlg.setWindowTitle("Send Feedback")
+        dlg.setMinimumSize(400, 300)
+        layout = QVBoxLayout(dlg)
+        label = QLabel("We value your feedback! Please enter your comments below:")
+        layout.addWidget(label)
+        feedback_edit = QTextEdit()
+        layout.addWidget(feedback_edit)
+        email_label = QLabel("Your email (optional):")
+        layout.addWidget(email_label)
+        email_edit = QLineEdit()
+        layout.addWidget(email_edit)
+        btns = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
+        btns.accepted.connect(lambda: self.submit_feedback(feedback_edit.toPlainText(), email_edit.text(), dlg))
+        btns.rejected.connect(dlg.reject)
+        layout.addWidget(btns)
+        dlg.exec()
+
+    def submit_feedback(self, feedback, email, dlg):
+        # Placeholder: In production, send to server or save locally
+        print(f"Feedback received: {feedback}\nFrom: {email}")
+        QMessageBox.information(self, "Thank you!", "Your feedback has been received.")
+        dlg.accept()
+
     def closeEvent(self, event):
         """Handle application close"""
         if self.status_monitor:
