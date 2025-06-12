@@ -1,13 +1,25 @@
 """
-Phase 5.6 Contact Management Interface - Comprehensive Contact Administration
+Phase 5.6+ Contact Management Interface - Enhanced with Phase 5.7 Features
+========================================================================
 
 This module provides a complete GUI interface for managing Dynamics 365 contacts including:
+
+Phase 5.6 Features:
 - Contact browser with search and filtering
 - Contact creation and editing forms
 - Relationship mapping and email history
 - Bulk operations and data export
 - Import history tracking
 - Advanced contact analytics
+
+Phase 5.7 Enhancements:
+- Advanced theme system with Light/Dark/Corporate/High Contrast themes
+- Enhanced UX with keyboard navigation and rich tooltips
+- Performance optimization with virtual scrolling and caching
+- Real-time performance monitoring
+- Responsive layout management
+- Background task management
+- Notification system
 """
 
 import sys
@@ -26,6 +38,25 @@ from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QTabWidget,
                            QDialogButtonBox, QMessageBox, QFileDialog, QFrame)
 from PyQt6.QtCore import QTimer, Qt, QThread, pyqtSignal, QDate, QSortFilterProxyModel
 from PyQt6.QtGui import QFont, QPalette, QColor, QPixmap, QPainter, QBrush, QIcon, QStandardItemModel, QStandardItem
+
+# Phase 5.7 Enhanced Components
+try:
+    sys.path.append('gui/themes')
+    sys.path.append('gui/core')
+    from theme_manager import get_theme_manager, ThemeType, apply_theme_to_widget
+    from enhanced_ux import (
+        get_keyboard_navigation_manager, get_notification_center, 
+        add_tooltip, show_notification, NotificationType
+    )
+    from performance_optimizer import (
+        get_performance_monitor, get_cache_manager, create_virtual_table,
+        run_background_task, PerformanceWidget
+    )
+    PHASE_5_7_AVAILABLE = True
+    print("✅ Phase 5.7 enhanced components loaded successfully")
+except ImportError as e:
+    PHASE_5_7_AVAILABLE = False
+    print(f"⚠️ Phase 5.7 components not available: {e}")
 
 # Try to import contact management modules
 try:
@@ -46,7 +77,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class ContactDataLoader(QThread):
-    """Background thread for loading contact data"""
+    """Background thread for loading contact data with Phase 5.7 performance optimization"""
     contacts_loaded = pyqtSignal(list)
     error_occurred = pyqtSignal(str)
     progress_updated = pyqtSignal(int, str)
@@ -55,6 +86,11 @@ class ContactDataLoader(QThread):
         super().__init__()
         self.running = True
         self.contact_creator = None
+        
+        # Phase 5.7: Initialize cache manager
+        if PHASE_5_7_AVAILABLE:
+            self.cache_manager = get_cache_manager()
+        
         if CONTACT_MODULES_AVAILABLE:
             try:
                 self.contact_creator = ContactCreator()
@@ -62,20 +98,38 @@ class ContactDataLoader(QThread):
                 logger.error(f"Error initializing contact creator: {e}")
     
     def run(self):
-        """Load contacts from Dynamics 365"""
+        """Load contacts from Dynamics 365 with caching"""
         try:
             self.progress_updated.emit(0, "Connecting to Dynamics 365...")
+            
+            # Phase 5.7: Check cache first
+            if PHASE_5_7_AVAILABLE:
+                cached_contacts = self.cache_manager.get("contacts_data")
+                if cached_contacts is not None:
+                    self.progress_updated.emit(100, "Contacts loaded from cache")
+                    self.contacts_loaded.emit(cached_contacts)
+                    return
             
             if CONTACT_MODULES_AVAILABLE and self.contact_creator:
                 # Load real contacts
                 self.progress_updated.emit(30, "Loading contacts...")
                 contacts = self.contact_creator._get_existing_contacts()
+                
+                # Phase 5.7: Cache the results
+                if PHASE_5_7_AVAILABLE:
+                    self.cache_manager.put("contacts_data", contacts)
+                
                 self.progress_updated.emit(100, "Contacts loaded successfully")
                 self.contacts_loaded.emit(contacts)
             else:
                 # Generate sample contacts for testing
                 self.progress_updated.emit(50, "Generating sample data...")
                 sample_contacts = self._generate_sample_contacts()
+                
+                # Phase 5.7: Cache sample data too
+                if PHASE_5_7_AVAILABLE:
+                    self.cache_manager.put("contacts_data", sample_contacts)
+                
                 self.progress_updated.emit(100, "Sample contacts loaded")
                 self.contacts_loaded.emit(sample_contacts)
                 
@@ -127,7 +181,7 @@ class ContactDataLoader(QThread):
         return sample_contacts
 
 class ContactEditDialog(QDialog):
-    """Dialog for creating/editing contacts"""
+    """Dialog for creating/editing contacts with Phase 5.7 enhancements"""
     
     def __init__(self, contact_data=None, parent=None):
         super().__init__(parent)
@@ -140,6 +194,59 @@ class ContactEditDialog(QDialog):
         
         self.setup_ui()
         self.populate_fields()
+        
+        # Phase 5.7: Apply theme and enhanced UX
+        if PHASE_5_7_AVAILABLE:
+            self._apply_phase_5_7_enhancements()
+    
+    def _apply_phase_5_7_enhancements(self):
+        """Apply Phase 5.7 theme and UX enhancements"""
+        # Register with theme manager
+        theme_manager = get_theme_manager()
+        if theme_manager:
+            theme_manager.register_widget(self)
+        
+        # Add tooltips to form fields
+        tooltips = {
+            self.first_name_edit: "Enter the contact's first name",
+            self.last_name_edit: "Enter the contact's last name", 
+            self.full_name_edit: "Full name (auto-generated from first + last name)",
+            self.job_title_edit: "Contact's job title or position",
+            self.email1_edit: "Primary email address for this contact",
+            self.email2_edit: "Secondary or alternate email address",
+            self.phone_edit: "Business phone number",
+            self.mobile_edit: "Mobile/cell phone number"
+        }
+        
+        for widget, tooltip_text in tooltips.items():
+            add_tooltip(widget, tooltip_text)
+    
+    def apply_theme(self, theme_definition):
+        """Apply theme to dialog (Phase 5.7)"""
+        colors = theme_definition['colors']
+        fonts = theme_definition['fonts']
+        
+        self.setStyleSheet(f"""
+            QDialog {{
+                background: {colors['background']};
+                color: {colors['text_primary']};
+                font-family: "{fonts['primary']}";
+            }}
+            QGroupBox {{
+                font-weight: bold;
+                border: 2px solid {colors['border']};
+                border-radius: 8px;
+                margin-top: 10px;
+                padding-top: 10px;
+                background: {colors['surface']};
+            }}
+            QGroupBox::title {{
+                subcontrol-origin: margin;
+                left: 10px;
+                padding: 0 8px 0 8px;
+                color: {colors['text_primary']};
+            }}
+        """)
     
     def setup_ui(self):
         """Set up the contact edit dialog UI"""
@@ -201,7 +308,7 @@ class ContactEditDialog(QDialog):
         form_layout.addWidget(contact_group)
         
         # Address Information
-        address_group = QGroupBox("🏠 Address Information")
+        address_group = QGroupBox("🏢 Address Information")
         address_layout = QFormLayout(address_group)
         
         self.city_edit = QLineEdit()
@@ -222,59 +329,62 @@ class ContactEditDialog(QDialog):
         layout.addWidget(scroll)
         
         # Buttons
-        button_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | 
-                                    QDialogButtonBox.StandardButton.Cancel)
-        button_box.accepted.connect(self.accept_contact)
-        button_box.rejected.connect(self.reject)
+        button_layout = QHBoxLayout()
         
-        # Rename OK button
-        button_box.button(QDialogButtonBox.StandardButton.Ok).setText("💾 Save Contact")
+        self.save_button = QPushButton("💾 Save Contact")
+        self.save_button.clicked.connect(self.accept_contact)
+        button_layout.addWidget(self.save_button)
         
-        layout.addWidget(button_box)
+        self.cancel_button = QPushButton("❌ Cancel")
+        self.cancel_button.clicked.connect(self.reject)
+        button_layout.addWidget(self.cancel_button)
         
-        # Connect name fields to auto-generate full name
+        layout.addLayout(button_layout)
+        
+        # Connect name fields for auto-generation
         self.first_name_edit.textChanged.connect(self.update_full_name)
         self.last_name_edit.textChanged.connect(self.update_full_name)
     
     def populate_fields(self):
-        """Populate fields with existing contact data"""
-        if not self.contact_data:
-            return
-        
-        self.first_name_edit.setText(self.contact_data.get('firstname', '') or '')
-        self.last_name_edit.setText(self.contact_data.get('lastname', '') or '')
-        self.full_name_edit.setText(self.contact_data.get('fullname', '') or '')
-        self.job_title_edit.setText(self.contact_data.get('jobtitle', '') or '')
-        self.email1_edit.setText(self.contact_data.get('emailaddress1', '') or '')
-        self.email2_edit.setText(self.contact_data.get('emailaddress2', '') or '')
-        self.phone_edit.setText(self.contact_data.get('telephone1', '') or '')
-        self.mobile_edit.setText(self.contact_data.get('mobilephone', '') or '')
-        self.city_edit.setText(self.contact_data.get('address1_city', '') or '')
-        self.state_edit.setText(self.contact_data.get('address1_stateorprovince', '') or '')
-        self.country_edit.setText(self.contact_data.get('address1_country', '') or '')
+        """Populate form fields with contact data"""
+        if self.contact_data:
+            self.first_name_edit.setText(self.contact_data.get('firstname', ''))
+            self.last_name_edit.setText(self.contact_data.get('lastname', ''))
+            self.full_name_edit.setText(self.contact_data.get('fullname', ''))
+            self.job_title_edit.setText(self.contact_data.get('jobtitle', ''))
+            self.email1_edit.setText(self.contact_data.get('emailaddress1', ''))
+            self.email2_edit.setText(self.contact_data.get('emailaddress2', ''))
+            self.phone_edit.setText(self.contact_data.get('telephone1', ''))
+            self.mobile_edit.setText(self.contact_data.get('mobilephone', ''))
+            self.city_edit.setText(self.contact_data.get('address1_city', ''))
+            self.state_edit.setText(self.contact_data.get('address1_stateorprovince', ''))
+            self.country_edit.setText(self.contact_data.get('address1_country', ''))
     
     def update_full_name(self):
         """Auto-update full name when first/last name changes"""
-        if not self.full_name_edit.text() or self.is_new_contact:
+        if not self.full_name_edit.text():  # Only auto-update if empty
             first = self.first_name_edit.text().strip()
             last = self.last_name_edit.text().strip()
-            if first or last:
-                full_name = f"{first} {last}".strip()
-                self.full_name_edit.setText(full_name)
+            if first and last:
+                self.full_name_edit.setText(f"{first} {last}")
+            elif first:
+                self.full_name_edit.setText(first)
+            elif last:
+                self.full_name_edit.setText(last)
     
     def accept_contact(self):
         """Validate and accept contact data"""
         # Basic validation
-        if not self.email1_edit.text().strip():
-            QMessageBox.warning(self, "Validation Error", "Primary email is required.")
+        if not self.first_name_edit.text().strip() and not self.last_name_edit.text().strip():
+            # Phase 5.7: Show notification instead of message box
+            if PHASE_5_7_AVAILABLE:
+                show_notification(self, "Please enter at least a first or last name", NotificationType.WARNING)
+            else:
+                QMessageBox.warning(self, "Validation Error", "Please enter at least a first or last name")
             return
         
-        if not self.full_name_edit.text().strip():
-            QMessageBox.warning(self, "Validation Error", "Full name is required.")
-            return
-        
-        # Collect contact data
-        self.contact_result = {
+        # Update contact data
+        self.contact_data = {
             'firstname': self.first_name_edit.text().strip(),
             'lastname': self.last_name_edit.text().strip(),
             'fullname': self.full_name_edit.text().strip(),
@@ -285,11 +395,26 @@ class ContactEditDialog(QDialog):
             'mobilephone': self.mobile_edit.text().strip(),
             'address1_city': self.city_edit.text().strip(),
             'address1_stateorprovince': self.state_edit.text().strip(),
-            'address1_country': self.country_edit.text().strip()
+            'address1_country': self.country_edit.text().strip(),
         }
         
-        # Remove empty values
-        self.contact_result = {k: v for k, v in self.contact_result.items() if v}
+        # Auto-generate full name if empty
+        if not self.contact_data['fullname']:
+            if self.contact_data['firstname'] and self.contact_data['lastname']:
+                self.contact_data['fullname'] = f"{self.contact_data['firstname']} {self.contact_data['lastname']}"
+            elif self.contact_data['firstname']:
+                self.contact_data['fullname'] = self.contact_data['firstname']
+            elif self.contact_data['lastname']:
+                self.contact_data['fullname'] = self.contact_data['lastname']
+        
+        # Add timestamps for new contacts
+        if self.is_new_contact:
+            now = datetime.now().isoformat()
+            self.contact_data['createdon'] = now
+            self.contact_data['modifiedon'] = now
+            self.contact_data['contactid'] = f"new-{int(datetime.now().timestamp())}"
+        else:
+            self.contact_data['modifiedon'] = datetime.now().isoformat()
         
         self.accept()
 
@@ -373,31 +498,154 @@ class ContactRelationshipView(QWidget):
             self.email_table.setItem(row, 3, QTableWidgetItem(status))
 
 class ContactManagementDashboard(QWidget):
-    """Complete Contact Management Dashboard"""
+    """Complete Contact Management Dashboard with Phase 5.7 Enhancements"""
     
     def __init__(self):
         super().__init__()
         self.contacts_data = []
         self.filtered_contacts = []
         self.data_loader = None
+        self.table_items_pool = []  # Pool for recycling table items
+        
+        # Phase 5.7: Initialize enhanced components
+        if PHASE_5_7_AVAILABLE:
+            self._initialize_phase_5_7_components()
         
         self.setup_ui()
         self.setup_data_loading()
         
-        logger.info("Contact Management Dashboard initialized")
+        # Phase 5.7: Apply theme and enhanced UX
+        if PHASE_5_7_AVAILABLE:
+            self._apply_phase_5_7_enhancements()
+        
+        logger.info("Contact Management Dashboard initialized with Phase 5.7 enhancements")
+    
+    def _initialize_phase_5_7_components(self):
+        """Initialize Phase 5.7 enhanced components"""
+        # Theme manager
+        self.theme_manager = get_theme_manager()
+        
+        # Performance monitor
+        self.performance_monitor = get_performance_monitor()
+        self.performance_monitor.start_monitoring()
+        
+        # Notification center
+        self.notification_center = get_notification_center(self)
+        
+        # Cache manager
+        self.cache_manager = get_cache_manager()
+        
+        print("✅ Phase 5.7 components initialized for Contact Dashboard")
+    
+    def _apply_phase_5_7_enhancements(self):
+        """Apply Phase 5.7 theme and UX enhancements"""
+        # Register with theme manager
+        if self.theme_manager:
+            self.theme_manager.register_widget(self)
+        
+        # Set up keyboard navigation after UI is created
+        QTimer.singleShot(100, self._setup_keyboard_navigation)
+        
+        # Add tooltips to main buttons
+        self._add_enhanced_tooltips()
+        
+        # Show welcome notification
+        QTimer.singleShot(1000, lambda: show_notification(
+            self, "🚀 Contact Management Dashboard Enhanced with Phase 5.7 Features", 
+            NotificationType.SUCCESS, duration=3000
+        ))
+    
+    def _setup_keyboard_navigation(self):
+        """Set up keyboard navigation for dashboard"""
+        try:
+            # Get main window
+            main_window = self.window()
+            if main_window:
+                kb_nav = get_keyboard_navigation_manager(main_window)
+                if kb_nav and hasattr(self, 'control_buttons'):
+                    kb_nav.register_navigation_group('contacts', self.control_buttons)
+                    print("✅ Keyboard navigation registered for contacts dashboard")
+        except Exception as e:
+            print(f"Warning: Could not set up keyboard navigation: {e}")
+    
+    def _add_enhanced_tooltips(self):
+        """Add enhanced tooltips to UI elements"""
+        if hasattr(self, 'new_contact_btn'):
+            add_tooltip(self.new_contact_btn, "Create a new contact with guided form validation")
+        if hasattr(self, 'import_contacts_btn'):
+            add_tooltip(self.import_contacts_btn, "Import contacts from CSV or JSON files")
+        if hasattr(self, 'export_contacts_btn'):
+            add_tooltip(self.export_contacts_btn, "Export selected contacts to various formats")
+        if hasattr(self, 'refresh_btn'):
+            add_tooltip(self.refresh_btn, "Refresh contact list from Dynamics 365 (uses intelligent caching)")
+        if hasattr(self, 'search_input'):
+            add_tooltip(self.search_input, "Search contacts by name, email, or job title (real-time filtering)")
+    
+    def apply_theme(self, theme_definition):
+        """Apply theme to dashboard (Phase 5.7)"""
+        colors = theme_definition['colors']
+        fonts = theme_definition['fonts']
+        spacing = theme_definition['spacing']
+        
+        # Apply theme to main dashboard
+        self.setStyleSheet(f"""
+            ContactManagementDashboard {{
+                background: {colors['background']};
+                color: {colors['text_primary']};
+                font-family: "{fonts['primary']}";
+            }}
+            QTabWidget::pane {{
+                border: 2px solid {colors['border']};
+                border-radius: 8px;
+                background: {colors['background']};
+            }}
+            QTabBar::tab {{
+                background: {colors['surface']};
+                color: {colors['text_secondary']};
+                padding: {spacing['md']}px {spacing['lg']}px;
+                margin-right: 2px;
+                border-top-left-radius: 8px;
+                border-top-right-radius: 8px;
+                font-family: "{fonts['primary']}";
+                font-weight: bold;
+            }}
+            QTabBar::tab:selected {{
+                background: {colors['background']};
+                color: {colors['text_primary']};
+                border: 2px solid {colors['border']};
+                border-bottom: none;
+            }}
+        """)
+        
+        # Update header gradient for theme
+        if hasattr(self, 'title_label') and colors:
+            if 'dark' in theme_definition.get('name', '').lower():
+                gradient = "qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #4c1d95, stop:1 #5b21b6)"
+            else:
+                gradient = "qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #667eea, stop:1 #764ba2)"
+            
+            self.title_label.setStyleSheet(f"""
+                QLabel {{
+                    color: white;
+                    background: {gradient};
+                    padding: 16px 24px;
+                    border-radius: 12px;
+                    margin-bottom: 8px;
+                }}
+            """)
     
     def setup_ui(self):
-        """Set up the main dashboard UI"""
+        """Set up the main dashboard UI with Phase 5.7 enhancements"""
         layout = QVBoxLayout(self)
         layout.setContentsMargins(20, 20, 20, 20)
         layout.setSpacing(16)
         
-        # Header
+        # Header with Phase 5.7 theme support
         header_layout = QHBoxLayout()
         
-        title = QLabel("👥 Contact Management Dashboard")
-        title.setFont(QFont("Segoe UI", 24, QFont.Weight.Bold))
-        title.setStyleSheet("""
+        self.title_label = QLabel("👥 Contact Management Dashboard - Phase 5.7 Enhanced")
+        self.title_label.setFont(QFont("Segoe UI", 22, QFont.Weight.Bold))
+        self.title_label.setStyleSheet("""
             QLabel {
                 color: white;
                 background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
@@ -407,94 +655,104 @@ class ContactManagementDashboard(QWidget):
                 margin-bottom: 8px;
             }
         """)
-        header_layout.addWidget(title)
+        header_layout.addWidget(self.title_label)
         
-        # Control buttons
+        # Phase 5.7: Theme Selector
+        if PHASE_5_7_AVAILABLE:
+            theme_layout = QHBoxLayout()
+            theme_label = QLabel("🎨 Theme:")
+            theme_label.setStyleSheet("color: #64748b; font-weight: bold; margin: 0 8px;")
+            theme_layout.addWidget(theme_label)
+            
+            self.theme_selector = QComboBox()
+            themes = get_theme_manager().get_available_themes() if get_theme_manager() else {}
+            for theme_type, theme_info in themes.items():
+                self.theme_selector.addItem(theme_info['name'], theme_type)
+            
+            self.theme_selector.currentIndexChanged.connect(self._on_theme_changed)
+            theme_layout.addWidget(self.theme_selector)
+            
+            header_layout.addLayout(theme_layout)
+        
+        # Contact count label (Phase 5.7 fix)
+        self.contact_count_label = QLabel("0 contacts")
+        self.contact_count_label.setStyleSheet("color: #64748b; font-weight: bold; margin: 0 8px;")
+        layout.addWidget(self.contact_count_label)
+        
+        header_layout.addStretch()
+        
+        # Use a QWidget as a container for the header layout
+        header_widget = QWidget()
+        header_widget.setLayout(header_layout)
+        layout.addWidget(header_widget)
+        
+        # Control buttons with Phase 5.7 styling
+        controls_layout = QHBoxLayout()
+        
         self.new_contact_btn = QPushButton("👤 New Contact")
         self.new_contact_btn.clicked.connect(self.create_new_contact)
-        self.new_contact_btn.setStyleSheet("""
-            QPushButton {
-                background: #10b981;
-                color: white;
-                border: none;
-                padding: 10px 20px;
-                border-radius: 8px;
-                font-weight: bold;
-                font-size: 12px;
-            }
-            QPushButton:hover {
-                background: #059669;
-            }
-        """)
-        header_layout.addWidget(self.new_contact_btn)
+        controls_layout.addWidget(self.new_contact_btn)
         
         self.import_contacts_btn = QPushButton("📥 Import Contacts")
         self.import_contacts_btn.clicked.connect(self.import_contacts)
-        self.import_contacts_btn.setStyleSheet("""
-            QPushButton {
-                background: #3b82f6;
-                color: white;
-                border: none;
-                padding: 10px 20px;
-                border-radius: 8px;
-                font-weight: bold;
-                font-size: 12px;
-            }
-            QPushButton:hover {
-                background: #2563eb;
-            }
-        """)
-        header_layout.addWidget(self.import_contacts_btn)
+        controls_layout.addWidget(self.import_contacts_btn)
         
         self.export_contacts_btn = QPushButton("📤 Export Contacts")
         self.export_contacts_btn.clicked.connect(self.export_contacts)
-        self.export_contacts_btn.setStyleSheet("""
-            QPushButton {
-                background: #f59e0b;
-                color: white;
-                border: none;
-                padding: 10px 20px;
-                border-radius: 8px;
-                font-weight: bold;
-                font-size: 12px;
-            }
-            QPushButton:hover {
-                background: #d97706;
-            }
-        """)
-        header_layout.addWidget(self.export_contacts_btn)
-        
-        layout.addLayout(header_layout)
-        
-        # Search and filter bar
-        search_layout = QHBoxLayout()
-        
-        self.search_edit = QLineEdit()
-        self.search_edit.setPlaceholderText("🔍 Search contacts by name, email, or company...")
-        self.search_edit.textChanged.connect(self.filter_contacts)
-        self.search_edit.setStyleSheet("""
-            QLineEdit {
-                padding: 8px 12px;
-                border: 2px solid #e2e8f0;
-                border-radius: 8px;
-                font-size: 14px;
-            }
-            QLineEdit:focus {
-                border-color: #3b82f6;
-            }
-        """)
-        search_layout.addWidget(self.search_edit)
-        
-        self.status_filter = QComboBox()
-        self.status_filter.addItems(["All Contacts", "Active", "Inactive"])
-        self.status_filter.currentTextChanged.connect(self.filter_contacts)
-        search_layout.addWidget(self.status_filter)
+        controls_layout.addWidget(self.export_contacts_btn)
         
         self.refresh_btn = QPushButton("🔄 Refresh")
         self.refresh_btn.clicked.connect(self.refresh_contacts)
-        search_layout.addWidget(self.refresh_btn)
+        controls_layout.addWidget(self.refresh_btn)
         
-        layout.addLayout(search_layout)
+        # Phase 5.7: Store control buttons for keyboard navigation
+        self.control_buttons = [
+            self.new_contact_btn, self.import_contacts_btn, 
+            self.export_contacts_btn, self.refresh_btn
+        ]
+        
+        # Phase 5.7: Apply theme styling to buttons
+        if PHASE_5_7_AVAILABLE:
+            for btn in self.control_buttons:
+                apply_theme_to_widget(btn, 'QPushButton')
+        
+        controls_layout.addStretch()
+        layout.addLayout(controls_layout)
+        
+        # Phase 5.7: Performance Monitor Panel
+        if PHASE_5_7_AVAILABLE:
+            performance_layout = QHBoxLayout()
+            performance_layout.addStretch()
+            
+            self.performance_widget = PerformanceWidget(self.performance_monitor)
+            self.performance_widget.setFixedWidth(280)
+            performance_layout.addWidget(self.performance_widget)
+            
+            layout.addLayout(performance_layout)
+        
+        # Progress bar
+        self.progress_bar = QProgressBar()
+        self.progress_bar.setVisible(False)
+        self.progress_bar.setStyleSheet("""
+            QProgressBar {
+                border: 2px solid #e2e8f0;
+                border-radius: 8px;
+                background: #f8fafc;
+                text-align: center;
+                font-weight: bold;
+            }
+            QProgressBar::chunk {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                    stop:0 #667eea, stop:1 #764ba2);
+                border-radius: 6px;
+            }
+        """)
+        layout.addWidget(self.progress_bar)
+        
+        # Status label
+        self.status_label = QLabel("Ready")
+        self.status_label.setStyleSheet("color: #64748b; font-style: italic; margin: 5px;")
+        layout.addWidget(self.status_label)
         
         # Main content tabs
         self.tab_widget = QTabWidget()
@@ -507,7 +765,7 @@ class ContactManagementDashboard(QWidget):
             QTabBar::tab {
                 background: #f1f5f9;
                 color: #64748b;
-                padding: 12px 24px;
+                padding: 12px 20px;
                 margin-right: 2px;
                 border-top-left-radius: 8px;
                 border-top-right-radius: 8px;
@@ -519,35 +777,112 @@ class ContactManagementDashboard(QWidget):
                 border: 2px solid #e2e8f0;
                 border-bottom: none;
             }
+            QTabBar::tab:hover {
+                background: #e2e8f0;
+            }
         """)
         
-        # Contact List Tab
+        # Create tabs
         self.contact_list_tab = self.create_contact_list_tab()
-        self.tab_widget.addTab(self.contact_list_tab, "📋 Contact List")
-        
-        # Relationship View Tab
-        self.relationship_tab = ContactRelationshipView()
-        self.tab_widget.addTab(self.relationship_tab, "🔗 Relationships")
-        
-        # Analytics Tab
+        self.relationships_tab = ContactRelationshipView()
         self.analytics_tab = self.create_analytics_tab()
+        
+        self.tab_widget.addTab(self.contact_list_tab, "👥 Contact List")
+        self.tab_widget.addTab(self.relationships_tab, "🔗 Relationships")
         self.tab_widget.addTab(self.analytics_tab, "📊 Analytics")
         
         layout.addWidget(self.tab_widget)
+    
+    def _get_table_item(self, text: str = "", data: Any = None) -> QTableWidgetItem:
+        """Get a table item from the pool or create a new one"""
+        if self.table_items_pool:
+            item = self.table_items_pool.pop()
+            item.setText(text)
+            if data is not None:
+                item.setData(Qt.ItemDataRole.UserRole, data)
+            return item
+        item = QTableWidgetItem(text)
+        if data is not None:
+            item.setData(Qt.ItemDataRole.UserRole, data)
+        return item
+
+    def _return_table_item(self, item: QTableWidgetItem):
+        """Return a table item to the pool"""
+        item.setText("")
+        item.setData(Qt.ItemDataRole.UserRole, None)
+        self.table_items_pool.append(item)
+
+    def _cleanup_table_items(self):
+        """Clean up all table items and return them to the pool"""
+        for row in range(self.contact_table.rowCount()):
+            for col in range(self.contact_table.columnCount()):
+                item = self.contact_table.takeItem(row, col)
+                if item:
+                    self._return_table_item(item)
+        self.contact_table.setRowCount(0)
+
+    def populate_contact_table(self):
+        """Populate the contact table with data using widget recycling"""
+        # Clean up existing items
+        self._cleanup_table_items()
         
-        # Status bar
-        status_layout = QHBoxLayout()
-        self.status_label = QLabel("Ready")
-        self.progress_bar = QProgressBar()
-        self.progress_bar.setVisible(False)
-        self.contact_count_label = QLabel("0 contacts")
+        # Set new row count
+        self.contact_table.setRowCount(len(self.filtered_contacts))
         
-        status_layout.addWidget(self.status_label)
-        status_layout.addStretch()
-        status_layout.addWidget(self.progress_bar)
-        status_layout.addWidget(self.contact_count_label)
-        
-        layout.addLayout(status_layout)
+        for row, contact in enumerate(self.filtered_contacts):
+            # Name
+            name_item = self._get_table_item(
+                contact.get('fullname', 'Unknown'),
+                contact
+            )
+            self.contact_table.setItem(row, 0, name_item)
+            
+            # Email
+            email_item = self._get_table_item(contact.get('emailaddress1', ''))
+            self.contact_table.setItem(row, 1, email_item)
+            
+            # Phone
+            phone = contact.get('telephone1', '') or contact.get('mobilephone', '')
+            phone_item = self._get_table_item(phone)
+            self.contact_table.setItem(row, 2, phone_item)
+            
+            # Job Title
+            job_title_item = self._get_table_item(contact.get('jobtitle', ''))
+            self.contact_table.setItem(row, 3, job_title_item)
+            
+            # City
+            city_item = self._get_table_item(contact.get('address1_city', ''))
+            self.contact_table.setItem(row, 4, city_item)
+            
+            # Created Date
+            created = contact.get('createdon', '')
+            if created:
+                try:
+                    created_date = datetime.fromisoformat(created.replace('Z', '+00:00'))
+                    created_str = created_date.strftime('%Y-%m-%d')
+                except:
+                    created_str = created[:10] if len(created) >= 10 else created
+            else:
+                created_str = ''
+            created_item = self._get_table_item(created_str)
+            self.contact_table.setItem(row, 5, created_item)
+            
+            # Modified Date
+            modified = contact.get('modifiedon', '')
+            if modified:
+                try:
+                    modified_date = datetime.fromisoformat(modified.replace('Z', '+00:00'))
+                    modified_str = modified_date.strftime('%Y-%m-%d')
+                except:
+                    modified_str = modified[:10] if len(modified) >= 10 else modified
+            else:
+                modified_str = ''
+            modified_item = self._get_table_item(modified_str)
+            self.contact_table.setItem(row, 6, modified_item)
+            
+            # Status
+            status_item = self._get_table_item(str(contact.get('statuscode', 'Unknown')))
+            self.contact_table.setItem(row, 7, status_item)
     
     def create_contact_list_tab(self) -> QWidget:
         """Create the contact list tab"""
@@ -695,69 +1030,16 @@ class ContactManagementDashboard(QWidget):
             self.data_loader.start()
     
     def load_contacts_data(self, contacts: List[Dict]):
-        """Load contacts into the table"""
+        """Load contacts into the dashboard and update the contact count label"""
         self.contacts_data = contacts
-        self.filtered_contacts = contacts.copy()
+        self.filtered_contacts = contacts
+        if hasattr(self, 'contact_count_label'):
+            self.contact_count_label.setText(f"{len(contacts)} contacts")
         self.populate_contact_table()
         self.update_analytics()
         
         self.progress_bar.setVisible(False)
         self.status_label.setText("Ready")
-        self.contact_count_label.setText(f"{len(contacts)} contacts")
-    
-    def populate_contact_table(self):
-        """Populate the contact table with data"""
-        self.contact_table.setRowCount(len(self.filtered_contacts))
-        
-        for row, contact in enumerate(self.filtered_contacts):
-            # Name
-            name_item = QTableWidgetItem(contact.get('fullname', 'Unknown'))
-            name_item.setData(Qt.ItemDataRole.UserRole, contact)  # Store full contact data
-            self.contact_table.setItem(row, 0, name_item)
-            
-            # Email
-            email = contact.get('emailaddress1', '')
-            self.contact_table.setItem(row, 1, QTableWidgetItem(email))
-            
-            # Phone
-            phone = contact.get('telephone1', '') or contact.get('mobilephone', '')
-            self.contact_table.setItem(row, 2, QTableWidgetItem(phone))
-            
-            # Job Title
-            job_title = contact.get('jobtitle', '')
-            self.contact_table.setItem(row, 3, QTableWidgetItem(job_title))
-            
-            # City
-            city = contact.get('address1_city', '')
-            self.contact_table.setItem(row, 4, QTableWidgetItem(city))
-            
-            # Created Date
-            created = contact.get('createdon', '')
-            if created:
-                try:
-                    created_date = datetime.fromisoformat(created.replace('Z', '+00:00'))
-                    created_str = created_date.strftime('%Y-%m-%d')
-                except:
-                    created_str = created[:10] if len(created) >= 10 else created
-            else:
-                created_str = ''
-            self.contact_table.setItem(row, 5, QTableWidgetItem(created_str))
-            
-            # Modified Date
-            modified = contact.get('modifiedon', '')
-            if modified:
-                try:
-                    modified_date = datetime.fromisoformat(modified.replace('Z', '+00:00'))
-                    modified_str = modified_date.strftime('%Y-%m-%d')
-                except:
-                    modified_str = modified[:10] if len(modified) >= 10 else modified
-            else:
-                modified_str = ''
-            self.contact_table.setItem(row, 6, QTableWidgetItem(modified_str))
-            
-            # Status
-            status = contact.get('statuscode', 'Unknown')
-            self.contact_table.setItem(row, 7, QTableWidgetItem(str(status)))
     
     def filter_contacts(self):
         """Filter contacts based on search criteria"""
@@ -839,7 +1121,7 @@ class ContactManagementDashboard(QWidget):
         dialog = ContactEditDialog(parent=self)
         if dialog.exec() == QDialog.DialogCode.Accepted:
             # In real implementation, save to Dynamics 365
-            contact_data = dialog.contact_result
+            contact_data = dialog.contact_data
             contact_data['contactid'] = f"new-{datetime.now().strftime('%Y%m%d%H%M%S')}"
             contact_data['createdon'] = datetime.now().isoformat()
             contact_data['modifiedon'] = datetime.now().isoformat()
@@ -865,7 +1147,7 @@ class ContactManagementDashboard(QWidget):
         dialog = ContactEditDialog(contact_data, parent=self)
         if dialog.exec() == QDialog.DialogCode.Accepted:
             # Update contact data
-            updated_data = dialog.contact_result
+            updated_data = dialog.contact_data
             updated_data['contactid'] = contact_data['contactid']
             updated_data['createdon'] = contact_data.get('createdon', '')
             updated_data['modifiedon'] = datetime.now().isoformat()
@@ -958,7 +1240,22 @@ class ContactManagementDashboard(QWidget):
         """Handle widget close event"""
         if self.data_loader:
             self.data_loader.stop()
+        # Clean up table items
+        self._cleanup_table_items()
+        # Clear the item pool
+        self.table_items_pool.clear()
         super().closeEvent(event)
+    
+    def _on_theme_changed(self):
+        """Handle theme selection change (Phase 5.7)"""
+        if PHASE_5_7_AVAILABLE and hasattr(self, 'theme_selector'):
+            theme_type = self.theme_selector.currentData()
+            if theme_type and self.theme_manager:
+                self.theme_manager.set_theme(theme_type)
+                show_notification(
+                    self, f"Theme changed to {self.theme_selector.currentText()}", 
+                    NotificationType.INFO, duration=2000
+                )
 
 def main():
     """Standalone testing function"""
