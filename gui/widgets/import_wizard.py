@@ -174,18 +174,20 @@ class Step1FileSelection(WizardStep):
         scroll_widget = QWidget()
         scroll_widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         
-        # Main layout for scroll widget
+        # Main layout for scroll widget - adjusted for symmetry
         main_layout = QVBoxLayout(scroll_widget)
         main_layout.setContentsMargins(20, 20, 20, 20)
-        main_layout.setSpacing(30)
+        main_layout.setSpacing(20) # Standardized spacing
         
         # File selection section - make it expand to fill space
         file_section = self.create_file_selection_section()
-        main_layout.addWidget(file_section, 1)  # Add stretch factor to expand
+        main_layout.addWidget(file_section) # Removed stretch factor to allow natural sizing
         
         # Tips section
         tips_section = self.create_tips_section()
         main_layout.addWidget(tips_section)
+        
+        main_layout.addStretch() # Add stretch at the end to push content to the top
         
         # Set the scroll widget
         scroll_area.setWidget(scroll_widget)
@@ -197,32 +199,24 @@ class Step1FileSelection(WizardStep):
     
     def create_file_selection_section(self):
         """Create the file selection section"""
-        # File selection group
-        file_group = QGroupBox("📁 PST File Selection")
+        # File selection group - no title to save space
+        file_group = QGroupBox("")  # Removed title
         file_group.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
         file_group.setStyleSheet("""
             QGroupBox {
                 font-weight: bold;
                 border: 2px solid #3498db;
                 border-radius: 10px;
-                margin-top: 20px;
+                margin-top: 0px; /* Controlled by layout spacing */
                 padding-top: 15px;
                 background-color: white;
-            }
-            QGroupBox::title {
-                subcontrol-origin: margin;
-                left: 25px;
-                padding: 0 10px 0 10px;
-                color: #2c3e50;
-                background-color: white;
-                font-size: 14px;
             }
         """)
         
         # Layout for file group - make it expand vertically
         file_layout = QVBoxLayout(file_group)
-        file_layout.setContentsMargins(30, 35, 30, 30)
-        file_layout.setSpacing(25)
+        file_layout.setContentsMargins(20, 25, 20, 25) # Symmetrical vertical margins
+        file_layout.setSpacing(20) # Standardized spacing
         
         # File path section
         path_container = QWidget()
@@ -230,15 +224,15 @@ class Step1FileSelection(WizardStep):
         path_layout.setContentsMargins(0, 0, 0, 0)
         path_layout.setSpacing(15)
         
-        # File path input
+        # File path input - Standardized padding and height
         self.file_path_edit = QLineEdit()
         self.file_path_edit.setPlaceholderText("Click 'Browse...' to select a PST file")
         self.file_path_edit.setReadOnly(True)
-        self.file_path_edit.setMinimumHeight(50)
+        self.file_path_edit.setMinimumHeight(60) # Standardized height
         self.file_path_edit.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         self.file_path_edit.setStyleSheet("""
             QLineEdit {
-                padding: 15px 20px;
+                padding: 20px;
                 border: 2px solid #bdc3c7;
                 border-radius: 8px;
                 font-size: 13px;
@@ -251,9 +245,9 @@ class Step1FileSelection(WizardStep):
             }
         """)
         
-        # Browse button
+        # Browse button - Standardized padding and height
         self.browse_button = QPushButton("📂 Browse...")
-        self.browse_button.setMinimumHeight(50)
+        self.browse_button.setMinimumHeight(60) # Standardized height
         self.browse_button.setMinimumWidth(150)
         self.browse_button.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         self.browse_button.setStyleSheet("""
@@ -265,7 +259,7 @@ class Step1FileSelection(WizardStep):
                 border-radius: 8px;
                 font-size: 13px;
                 font-weight: bold;
-                padding: 15px 25px;
+                padding: 20px 25px;
             }
             QPushButton:hover {
                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
@@ -279,21 +273,21 @@ class Step1FileSelection(WizardStep):
         self.browse_button.clicked.connect(self.browse_file)
         
         # Add to path layout
-        path_layout.addWidget(self.file_path_edit, 3)  # 75% width
-        path_layout.addWidget(self.browse_button, 1)   # 25% width
+        path_layout.addWidget(self.file_path_edit)
+        path_layout.addWidget(self.browse_button)
         
         file_layout.addWidget(path_container)
         
-        # File info display - dramatically increased to fill all available space
+        # File info display - Standardized padding and height
         self.file_info_label = QLabel("📄 No file selected yet. Choose a PST file to see detailed information.")
-        self.file_info_label.setMinimumHeight(400)  # Dramatically increased from 200 to 400
+        self.file_info_label.setMinimumHeight(60) # Standardized height
         self.file_info_label.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
         self.file_info_label.setWordWrap(True)
-        self.file_info_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        self.file_info_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         self.file_info_label.setStyleSheet("""
             QLabel {
                 color: #6c757d; 
-                padding: 25px; 
+                padding: 20px; 
                 border: 2px dashed #dee2e6; 
                 border-radius: 10px; 
                 background-color: #f8f9fa;
@@ -302,39 +296,31 @@ class Step1FileSelection(WizardStep):
             }
         """)
         
-        # Add with stretch factor to make it expand
-        file_layout.addWidget(self.file_info_label, 1)  # Add stretch factor
+        # Add without stretch factor - let it size to content
+        file_layout.addWidget(self.file_info_label)  # Removed stretch factor
         
         return file_group
     
     def create_tips_section(self):
         """Create the tips and guidelines section"""
-        # Tips group
-        tips_group = QGroupBox("💡 Tips & Guidelines")
+        # Tips group - no title to save space
+        tips_group = QGroupBox("")  # Removed title
         tips_group.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
         tips_group.setStyleSheet("""
             QGroupBox {
                 font-weight: bold;
                 border: 2px solid #17a2b8;
                 border-radius: 10px;
-                margin-top: 20px;
+                margin-top: 0px; /* Controlled by layout spacing */
                 padding-top: 15px;
                 background-color: #e7f8ff;
-            }
-            QGroupBox::title {
-                subcontrol-origin: margin;
-                left: 25px;
-                padding: 0 10px 0 10px;
-                color: #0c5460;
-                background-color: #e7f8ff;
-                font-size: 14px;
             }
         """)
         
         # Layout for tips
         tips_layout = QVBoxLayout(tips_group)
-        tips_layout.setContentsMargins(30, 35, 30, 30)
-        tips_layout.setSpacing(15)
+        tips_layout.setContentsMargins(20, 25, 20, 25) # Symmetrical vertical margins
+        tips_layout.setSpacing(15) # Keep tip spacing a bit tighter for readability
         
         tips_items = [
             "📂 PST files are typically located in: C:\\Users\\[username]\\Documents\\Outlook Files\\",
@@ -439,10 +425,7 @@ class Step2ImportSettings(WizardStep):
     """Step 2: Import Configuration"""
     
     def __init__(self):
-        super().__init__(
-            "Import Settings",
-            "Configure how emails should be imported and processed."
-        )
+        super().__init__("", "") # Remove redundant title and description
         self.setup_settings()
     
     def setup_settings(self):
@@ -496,14 +479,16 @@ class Step2ImportSettings(WizardStep):
                 font-weight: bold;
                 border: 2px solid #8e44ad;
                 border-radius: 10px;
-                margin-top: 20px;
-                padding-top: 15px;
+                margin-top: 25px; /* Increased margin-top to make space for title */
+                padding-top: 15px; /* Normal content padding */
                 background-color: #faf9ff;
             }
             QGroupBox::title {
-                subcontrol-origin: margin;
+                subcontrol-origin: margin; /* Position relative to the margin box */
+                subcontrol-position: top left;
                 left: 25px;
-                padding: 0 10px 0 10px;
+                top: 8px; /* Nudge title down into the border */
+                padding: 0 10px;
                 color: #6c3483;
                 background-color: #faf9ff;
                 font-size: 14px;
@@ -548,14 +533,16 @@ class Step2ImportSettings(WizardStep):
                 font-weight: bold;
                 border: 2px solid #e67e22;
                 border-radius: 10px;
-                margin-top: 20px;
-                padding-top: 15px;
+                margin-top: 25px; /* Increased margin-top to make space for title */
+                padding-top: 15px; /* Normal content padding */
                 background-color: #fef9e7;
             }
             QGroupBox::title {
-                subcontrol-origin: margin;
+                subcontrol-origin: margin; /* Position relative to the margin box */
+                subcontrol-position: top left;
                 left: 25px;
-                padding: 0 10px 0 10px;
+                top: 8px; /* Nudge title down into the border */
+                padding: 0 10px;
                 color: #d68910;
                 background-color: #fef9e7;
                 font-size: 14px;
@@ -568,47 +555,80 @@ class Step2ImportSettings(WizardStep):
         
         # Batch size setting
         batch_container = QWidget()
-        batch_layout = QVBoxLayout(batch_container)
+        batch_layout = QHBoxLayout(batch_container) # Use QHBoxLayout for horizontal alignment
         batch_layout.setContentsMargins(0, 0, 0, 0)
-        batch_layout.setSpacing(10)
+        batch_layout.setSpacing(15)
+        
+        # Left side: Label and description
+        batch_text_layout = QVBoxLayout()
+        batch_text_layout.setSpacing(5)
         
         batch_label = QLabel("📦 Batch Size")
         batch_label.setStyleSheet("color: #2c3e50; font-size: 14px; font-weight: bold;")
-        batch_layout.addWidget(batch_label)
         
-        batch_control_layout = QHBoxLayout()
-        batch_control_layout.setSpacing(15)
+        batch_info = QLabel("Emails per batch (recommended: 100)")
+        batch_info.setStyleSheet("color: #6c757d; font-size: 12px;")
+
+        batch_text_layout.addWidget(batch_label)
+        batch_text_layout.addWidget(batch_info)
         
+        # Right side: Spinbox
         self.batch_size_spinner = QSpinBox()
+        self.batch_size_spinner.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.batch_size_spinner.setMinimum(10)
         self.batch_size_spinner.setMaximum(1000)
         self.batch_size_spinner.setValue(100)
-        self.batch_size_spinner.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
-        self.batch_size_spinner.setMinimumWidth(150)
-        self.batch_size_spinner.setMinimumHeight(40)
+        self.batch_size_spinner.setMinimumWidth(120)
+        self.batch_size_spinner.setMinimumHeight(45)
         self.batch_size_spinner.setStyleSheet("""
             QSpinBox {
-                padding: 10px 15px;
                 border: 2px solid #bdc3c7;
                 border-radius: 8px;
                 font-size: 13px;
                 background-color: white;
+                padding-right: 20px; /* Make room for buttons */
+                padding-left: 10px;
             }
             QSpinBox:focus {
                 border-color: #e67e22;
             }
+            QSpinBox::up-button, QSpinBox::down-button {
+                subcontrol-origin: border;
+                background: #f8f9fa;
+                width: 20px;
+                border-left-width: 1px;
+                border-left-color: #bdc3c7;
+                border-left-style: solid;
+                border-radius: 0;
+            }
+            QSpinBox::up-button {
+                subcontrol-position: top right;
+                border-top-right-radius: 6px;
+                height: 21px;
+            }
+            QSpinBox::down-button {
+                subcontrol-position: bottom right;
+                border-bottom-right-radius: 6px;
+                height: 20px;
+            }
+            QSpinBox::up-button:hover, QSpinBox::down-button:hover {
+                background: #e9ecef;
+            }
+            QSpinBox::up-arrow {
+                image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="%236c757d"><path d="m5 3l-4 4h8z"/></svg>');
+                width: 10px;
+                height: 10px;
+            }
+            QSpinBox::down-arrow {
+                image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="%236c757d"><path d="m5 7l4-4h-8z"/></svg>');
+                width: 10px;
+                height: 10px;
+            }
         """)
         
-        batch_info = QLabel("emails per batch (recommended: 100 for optimal performance)")
-        batch_info.setStyleSheet("color: #6c757d; font-size: 12px;")
-        batch_info.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        batch_info.setWordWrap(True)
+        batch_layout.addLayout(batch_text_layout, 1) # Add text with stretch
+        batch_layout.addWidget(self.batch_size_spinner) # Add spinner without stretch
         
-        batch_control_layout.addWidget(self.batch_size_spinner)
-        batch_control_layout.addWidget(batch_info)
-        batch_control_layout.addStretch()
-        
-        batch_layout.addLayout(batch_control_layout)
         processing_layout.addWidget(batch_container)
         
         # Processing checkboxes
@@ -638,14 +658,16 @@ class Step2ImportSettings(WizardStep):
                 font-weight: bold;
                 border: 2px solid #27ae60;
                 border-radius: 10px;
-                margin-top: 20px;
-                padding-top: 15px;
+                margin-top: 25px; /* Increased margin-top to make space for title */
+                padding-top: 15px; /* Normal content padding */
                 background-color: #e8f8f5;
             }
             QGroupBox::title {
-                subcontrol-origin: margin;
+                subcontrol-origin: margin; /* Position relative to the margin box */
+                subcontrol-position: top left;
                 left: 25px;
-                padding: 0 10px 0 10px;
+                top: 8px; /* Nudge title down into the border */
+                padding: 0 10px;
                 color: #196f3d;
                 background-color: #e8f8f5;
                 font-size: 14px;
