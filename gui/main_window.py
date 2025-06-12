@@ -44,6 +44,10 @@ except ImportError as e:
     BACKEND_AVAILABLE = False
     print(f"⚠️ Backend modules not available: {e}")
 
+# Add import for the sync monitoring dashboard
+from gui.widgets.sync_monitoring_dashboard import SyncMonitoringDashboard
+from sync.sync_engine import SyncEngine
+
 
 class NavigationSidebar(QFrame):
     """Professional navigation sidebar with module selection"""
@@ -90,6 +94,7 @@ class NavigationSidebar(QFrame):
             ("analytics", "📈", "Analytics", "Import analytics and reports"),
             ("ai", "🧠", "AI Intelligence", "Machine learning insights"),
             ("contacts", "👥", "Contacts", "Contact management"),
+            ("sync_monitor", "🔄", "Sync Monitor", "Monitor sync operations"),
             ("settings", "⚙️", "Settings", "System configuration")
         ]
         
@@ -249,6 +254,7 @@ class ContentArea(QWidget):
             "analytics": ("Analytics Dashboard", "Import analytics and reports"),
             "ai": ("AI Intelligence", "Machine learning insights and optimization"),
             "contacts": ("Contact Management", "Manage Dynamics 365 contacts"),
+            "sync_monitor": ("Sync Monitoring", "Monitor sync operations and resolve conflicts"),
             "settings": ("System Settings", "Configure application settings")
         }
         
@@ -268,6 +274,8 @@ class ContentArea(QWidget):
                 self.show_ai_placeholder()
             elif module_id == "contacts":
                 self.show_contacts_placeholder()
+            elif module_id == "sync_monitor":
+                self.show_sync_monitoring_dashboard()
             elif module_id == "settings":
                 self.show_settings_placeholder()
     
@@ -395,6 +403,13 @@ class ContentArea(QWidget):
             self.layout().removeWidget(self.contact_dashboard)
             self.contact_dashboard.deleteLater()
             del self.contact_dashboard
+        
+        # Remove sync monitoring dashboard
+        if hasattr(self, 'sync_monitoring_dashboard'):
+            self.sync_monitoring_dashboard.hide()
+            self.layout().removeWidget(self.sync_monitoring_dashboard)
+            self.sync_monitoring_dashboard.deleteLater()
+            del self.sync_monitoring_dashboard
     
     def show_analytics_placeholder(self):
         """Show Analytics Dashboard (Phase 5.4)"""
@@ -532,6 +547,16 @@ class ContentArea(QWidget):
         
         # Update status to indicate configuration was saved
         self.update_status("Configuration updated successfully", "#27ae60")
+
+    def show_sync_monitoring_dashboard(self):
+        self.cleanup_active_widgets()
+        self.header_label.hide()
+        self.subtitle_label.hide()
+        self.content_body.hide()
+        self.sync_engine = SyncEngine()
+        self.sync_monitoring_dashboard = SyncMonitoringDashboard(self.sync_engine)
+        layout = self.layout()
+        layout.insertWidget(2, self.sync_monitoring_dashboard)
 
 
 class SystemStatusMonitor(QThread):
@@ -740,6 +765,11 @@ class MainWindow(QMainWindow):
         ai_action.setShortcut("Ctrl+3")
         ai_action.triggered.connect(lambda: self.on_navigate("ai"))
         view_menu.addAction(ai_action)
+        
+        sync_monitor_action = QAction("&Sync Monitor", self)
+        sync_monitor_action.setShortcut("Ctrl+4")
+        sync_monitor_action.triggered.connect(lambda: self.on_navigate("sync_monitor"))
+        view_menu.addAction(sync_monitor_action)
         
         # Tools menu
         tools_menu = menubar.addMenu("&Tools")
