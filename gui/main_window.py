@@ -381,6 +381,13 @@ class ContentArea(QWidget):
             self.layout().removeWidget(self.analytics_dashboard)
             self.analytics_dashboard.deleteLater()
             del self.analytics_dashboard
+        
+        # Remove AI intelligence dashboard
+        if hasattr(self, 'ai_dashboard'):
+            self.ai_dashboard.hide()
+            self.layout().removeWidget(self.ai_dashboard)
+            self.ai_dashboard.deleteLater()
+            del self.ai_dashboard
     
     def show_analytics_placeholder(self):
         """Show Analytics Dashboard (Phase 5.4)"""
@@ -416,9 +423,37 @@ class ContentArea(QWidget):
             self.content_body.setAlignment(Qt.AlignmentFlag.AlignCenter)
     
     def show_ai_placeholder(self):
-        """Placeholder for AI intelligence (Phase 5.5)"""
-        self.content_body.setText("🧠 AI Intelligence Panel will be implemented in Phase 5.5\n\nFeatures coming:\n• Real-time ML insights\n• Smart optimization\n• Predictive analytics\n• Model training interface")
-        self.content_body.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        """Show AI Intelligence Dashboard (Phase 5.5)"""
+        try:
+            from gui.widgets.ai_intelligence_dashboard import AIIntelligenceDashboard
+            
+            # Clean up any existing widgets
+            self.cleanup_active_widgets()
+            
+            # Hide the header and subtitle to free up space
+            self.header_label.hide()
+            self.subtitle_label.hide()
+            
+            # Create and show AI intelligence dashboard
+            self.ai_dashboard = AIIntelligenceDashboard()
+            
+            # Replace content with AI dashboard
+            self.content_body.hide()
+            
+            # Add to layout
+            layout = self.layout()
+            layout.insertWidget(2, self.ai_dashboard)  # Insert after subtitle
+            
+            print("🤖 Phase 5.5 AI Intelligence Dashboard loaded successfully")
+            
+        except ImportError as e:
+            print(f"⚠️ AI Intelligence Dashboard not available: {e}")
+            self.content_body.setText("🤖 AI Intelligence Dashboard\n\nError loading AI dashboard module.\nPlease check Phase 4 components installation.")
+            self.content_body.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        except Exception as e:
+            print(f"❌ Error loading AI Intelligence Dashboard: {e}")
+            self.content_body.setText(f"🤖 AI Intelligence Dashboard\n\nError: {str(e)}")
+            self.content_body.setAlignment(Qt.AlignmentFlag.AlignCenter)
     
     def show_contacts_placeholder(self):
         """Placeholder for contact management (Phase 5.6)"""
