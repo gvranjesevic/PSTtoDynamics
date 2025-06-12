@@ -105,7 +105,7 @@ class ImportProgressThread(QThread):
 class WizardStep(QWidget):
     """Base class for wizard steps"""
     
-    def __init__(self, title: str, description: str):
+    def __init__(self, title: str = "", description: str = ""):
         super().__init__()
         self.title = title
         self.description = description
@@ -115,24 +115,26 @@ class WizardStep(QWidget):
         """Setup the step interface"""
         layout = QVBoxLayout(self)
         layout.setSpacing(20)
-        layout.setContentsMargins(30, 30, 30, 30)
+        layout.setContentsMargins(5, 10, 5, 10)  # Ultra-minimal horizontal margins for maximum space
         
-        # Step header
-        header_layout = QVBoxLayout()
-        
-        title_label = QLabel(self.title)
-        title_label.setFont(QFont("Segoe UI", 16, QFont.Weight.Bold))
-        title_label.setStyleSheet("color: #2c3e50; margin-bottom: 5px;")
-        
-        desc_label = QLabel(self.description)
-        desc_label.setFont(QFont("Segoe UI", 11))
-        desc_label.setStyleSheet("color: #7f8c8d; margin-bottom: 20px;")
-        desc_label.setWordWrap(True)
-        
-        header_layout.addWidget(title_label)
-        header_layout.addWidget(desc_label)
-        
-        layout.addLayout(header_layout)
+        # Step header - only add if title or description exist
+        if self.title or self.description:
+            header_layout = QVBoxLayout()
+            
+            if self.title:
+                title_label = QLabel(self.title)
+                title_label.setFont(QFont("Segoe UI", 16, QFont.Weight.Bold))
+                title_label.setStyleSheet("color: #2c3e50; margin-bottom: 5px;")
+                header_layout.addWidget(title_label)
+            
+            if self.description:
+                desc_label = QLabel(self.description)
+                desc_label.setFont(QFont("Segoe UI", 11))
+                desc_label.setStyleSheet("color: #7f8c8d; margin-bottom: 20px;")
+                desc_label.setWordWrap(True)
+                header_layout.addWidget(desc_label)
+            
+            layout.addLayout(header_layout)
         
         # Content area (to be overridden by subclasses)
         self.content_area = QWidget()
@@ -153,10 +155,7 @@ class Step1FileSelection(WizardStep):
     """Step 1: PST File Selection"""
     
     def __init__(self):
-        super().__init__(
-            "Select PST File",
-            "Choose the Outlook PST file you want to import emails from."
-        )
+        super().__init__("", "")  # Empty strings to save horizontal space
         self.selected_file_path = ""
         self.setup_file_selection()
     
