@@ -473,8 +473,7 @@ class MainWindow(QMainWindow):
     def setup_ui(self):
         """Setup the main window interface"""
         self.setWindowTitle("PST to Dynamics 365 - AI Email Import System")
-        self.setMinimumSize(1200, 800)
-        self.resize(1400, 900)
+        self.setGeometry(100, 100, 1400, 900)
         
         # Central widget with splitter
         central_widget = QWidget()
@@ -504,7 +503,7 @@ class MainWindow(QMainWindow):
         
         layout.addWidget(splitter)
         
-        # Apply professional styling
+        # Apply dark theme
         self.setStyleSheet("""
             QMainWindow {
                 background-color: #ffffff;

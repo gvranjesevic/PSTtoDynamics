@@ -39,13 +39,14 @@ class Phase53TestSuite:
         try:
             config_manager = ConfigurationManager()
             
-            assert config_manager.tab_widget is not None, "Tab widget should exist"
             assert config_manager.auth_widget is not None, "Auth widget should exist"
             assert config_manager.status_label is not None, "Status label should exist"
             assert config_manager.save_button is not None, "Save button should exist"
             
-            assert config_manager.tab_widget.count() >= 1, "Should have at least 1 tab"
-            assert config_manager.tab_widget.tabText(0) == "🔐 Authentication", "First tab should be Authentication"
+            # Verify auth widget is properly integrated (show first, then check visibility)
+            config_manager.show()
+            QTest.qWait(100)  # Allow time for widget to be shown
+            assert config_manager.auth_widget.isVisible(), "Auth widget should be visible"
             
             self.log_test("Configuration Manager Initialization", "PASS")
             config_manager.close()

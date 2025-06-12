@@ -21,7 +21,7 @@ from PyQt6.QtWidgets import (
     QSizePolicy, QSpacerItem, QSlider, QFormLayout
 )
 from PyQt6.QtCore import Qt, pyqtSignal, QThread, QTimer, QSettings
-from PyQt6.QtGui import QFont, QPixmap, QIcon, QPalette
+from PyQt6.QtGui import QFont, QPixmap, QIcon, QPalette, QFontMetrics
 
 # Import backend configuration modules
 try:
@@ -111,6 +111,7 @@ class DynamicsAuthWidget(QWidget):
         super().__init__()
         self.setup_ui()
         self.load_settings()
+        self.setMinimumHeight(550)  # Ensure minimum height for all content
     
     def setup_ui(self):
         """Setup authentication configuration UI"""
@@ -118,84 +119,109 @@ class DynamicsAuthWidget(QWidget):
         layout.setSpacing(20)
         layout.setContentsMargins(20, 20, 20, 20)
         
-        # Header
+        # Header with improved spacing
         header_label = QLabel("🔐 Dynamics 365 Authentication")
-        header_label.setFont(QFont("Segoe UI", 14, QFont.Weight.Bold))
+        header_label.setFont(QFont("Segoe UI", 16, QFont.Weight.Bold))
         header_label.setStyleSheet("color: #2c3e50; margin-bottom: 10px;")
         layout.addWidget(header_label)
         
-        # Description
-        desc_label = QLabel("Configure your Microsoft Dynamics 365 authentication credentials for secure access.")
-        desc_label.setStyleSheet("color: #7f8c8d; font-size: 11px; margin-bottom: 15px;")
-        desc_label.setWordWrap(True)
-        layout.addWidget(desc_label)
-        
-        # Configuration form
+        # Configuration form with improved design using grid layout
         form_group = QGroupBox("Authentication Credentials")
         form_group.setStyleSheet("""
             QGroupBox {
                 font-weight: bold;
                 border: 2px solid #3498db;
-                border-radius: 10px;
-                margin-top: 15px;
+                border-radius: 12px;
+                margin-top: 10px;
                 padding-top: 25px;
                 background-color: #f8faff;
+                font-size: 14px;
             }
             QGroupBox::title {
                 subcontrol-origin: margin;
                 subcontrol-position: top left;
-                left: 25px;
+                left: 30px;
                 top: 8px;
-                padding: 0 10px;
+                padding: 0 15px;
                 color: #2980b9;
                 background-color: #f8faff;
-                font-size: 12px;
+                font-size: 14px;
+                font-weight: bold;
             }
         """)
         
-        form_layout = QFormLayout(form_group)
+        # Use grid layout for better control
+        form_layout = QGridLayout(form_group)
         form_layout.setSpacing(15)
-        form_layout.setContentsMargins(30, 35, 30, 30)
+        form_layout.setContentsMargins(30, 30, 30, 25)
+        form_layout.setColumnStretch(1, 1)  # Make input column expandable
         
-        # Tenant ID
+        # Calculate minimum width for the label column to prevent text clipping
+        label_font = QFont("Segoe UI")
+        label_font.setPixelSize(14)
+        label_font.setWeight(QFont.Weight.Bold)
+        metrics = QFontMetrics(label_font)
+        labels = ["Tenant ID:", "Client ID:", "Client Secret:", "Organization URL:"]
+        longest_label_text = max(labels, key=len)
+        min_width = metrics.horizontalAdvance(longest_label_text) + 20  # Add padding
+        form_layout.setColumnMinimumWidth(0, min_width)
+        
+        # Tenant ID with enhanced styling
+        tenant_label = QLabel("Tenant ID:")
+        tenant_label.setStyleSheet("font-weight: bold; color: #2c3e50; font-size: 14px;")
+        tenant_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
         self.tenant_id_edit = QLineEdit()
         self.tenant_id_edit.setPlaceholderText("xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx")
         self.tenant_id_edit.setStyleSheet(self.get_input_style())
-        form_layout.addRow("Tenant ID:", self.tenant_id_edit)
+        form_layout.addWidget(tenant_label, 0, 0)
+        form_layout.addWidget(self.tenant_id_edit, 0, 1)
         
-        # Client ID
+        # Client ID with enhanced styling
+        client_label = QLabel("Client ID:")
+        client_label.setStyleSheet("font-weight: bold; color: #2c3e50; font-size: 14px;")
+        client_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
         self.client_id_edit = QLineEdit()
         self.client_id_edit.setPlaceholderText("xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx")
         self.client_id_edit.setStyleSheet(self.get_input_style())
-        form_layout.addRow("Client ID:", self.client_id_edit)
+        form_layout.addWidget(client_label, 1, 0)
+        form_layout.addWidget(self.client_id_edit, 1, 1)
         
-        # Client Secret
+        # Client Secret with enhanced styling
+        secret_label = QLabel("Client Secret:")
+        secret_label.setStyleSheet("font-weight: bold; color: #2c3e50; font-size: 14px;")
+        secret_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
         self.client_secret_edit = QLineEdit()
         self.client_secret_edit.setEchoMode(QLineEdit.EchoMode.Password)
         self.client_secret_edit.setPlaceholderText("Enter client secret...")
         self.client_secret_edit.setStyleSheet(self.get_input_style())
-        form_layout.addRow("Client Secret:", self.client_secret_edit)
+        form_layout.addWidget(secret_label, 2, 0)
+        form_layout.addWidget(self.client_secret_edit, 2, 1)
         
-        # Organization URL
+        # Organization URL with enhanced styling
+        url_label = QLabel("Organization URL:")
+        url_label.setStyleSheet("font-weight: bold; color: #2c3e50; font-size: 14px;")
+        url_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
         self.org_url_edit = QLineEdit()
         self.org_url_edit.setPlaceholderText("https://your-org.crm.dynamics.com")
         self.org_url_edit.setStyleSheet(self.get_input_style())
-        form_layout.addRow("Organization URL:", self.org_url_edit)
+        form_layout.addWidget(url_label, 3, 0)
+        form_layout.addWidget(self.org_url_edit, 3, 1)
         
         layout.addWidget(form_group)
         
-        # Test connection button
+        # Test connection button with enhanced styling
         self.test_button = QPushButton("🔍 Test Connection")
-        self.test_button.setMinimumHeight(40)
+        self.test_button.setMinimumHeight(45)
         self.test_button.setStyleSheet("""
             QPushButton {
                 background-color: #27ae60;
                 color: white;
                 border: none;
-                border-radius: 6px;
-                font-size: 12px;
+                border-radius: 8px;
+                font-size: 14px;
                 font-weight: bold;
-                padding: 10px 20px;
+                padding: 12px 20px;
+                margin: 15px 0px 10px 0px;
             }
             QPushButton:hover {
                 background-color: #229954;
@@ -206,25 +232,29 @@ class DynamicsAuthWidget(QWidget):
         """)
         self.test_button.clicked.connect(self.test_connection)
         layout.addWidget(self.test_button)
-        
-        layout.addStretch()
     
     def get_input_style(self):
-        """Get standardized input field styling"""
+        """Get standardized input field styling with enhanced design"""
         return """
             QLineEdit {
-                padding: 10px 15px;
+                padding: 12px 18px;
                 border: 2px solid #bdc3c7;
-                border-radius: 8px;
-                font-size: 12px;
+                border-radius: 10px;
+                font-size: 14px;
                 background-color: white;
                 min-height: 20px;
+                font-family: 'Segoe UI', Arial, sans-serif;
             }
             QLineEdit:focus {
                 border-color: #3498db;
+                border-width: 3px;
+            }
+            QLineEdit:hover {
+                border-color: #7fb3d3;
             }
             QLineEdit:placeholder {
                 color: #95a5a6;
+                font-style: italic;
             }
         """
     
@@ -296,42 +326,35 @@ class ConfigurationManager(QWidget):
         header = self.create_header()
         layout.addWidget(header)
         
-        # Main content area
+        # Main content area - direct integration without tabs
         main_content = QWidget()
         main_layout = QVBoxLayout(main_content)
-        main_layout.setContentsMargins(20, 20, 20, 20)
-        main_layout.setSpacing(20)
+        main_layout.setContentsMargins(0, 10, 0, 10)
+        main_layout.setSpacing(0)
         
-        # Configuration tabs
-        self.tab_widget = QTabWidget()
-        self.tab_widget.setStyleSheet("""
-            QTabWidget::pane {
-                border: none;
-                background-color: white;
-            }
-            QTabBar::tab {
-                background-color: #ecf0f1;
-                color: #2c3e50;
-                padding: 12px 24px;
-                margin-right: 2px;
-                font-weight: bold;
-                border-top-left-radius: 8px;
-                border-top-right-radius: 8px;
-            }
-            QTabBar::tab:selected {
-                background-color: #3498db;
-                color: white;
-            }
-            QTabBar::tab:hover {
-                background-color: #bdc3c7;
-            }
-        """)
-        
-        # Add configuration tab
+        # Use a scroll area to handle different window sizes gracefully
+        scroll_area = QScrollArea()
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setFrameShape(QFrame.Shape.NoFrame)
+        scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        main_layout.addWidget(scroll_area)
+
+        # Create a container widget to hold the auth widget and a stretch
+        container_widget = QWidget()
+        container_layout = QVBoxLayout(container_widget)
+        container_layout.setContentsMargins(0, 0, 0, 0)
+        container_layout.setSpacing(0)
+
+        # Direct authentication widget integration
         self.auth_widget = DynamicsAuthWidget()
-        self.tab_widget.addTab(self.auth_widget, "🔐 Authentication")
+        container_layout.addWidget(self.auth_widget)
         
-        main_layout.addWidget(self.tab_widget)
+        # Set minimum size to ensure all content is visible
+        container_widget.setMinimumHeight(600)
+
+        scroll_area.setWidget(container_widget)
+        
         layout.addWidget(main_content, 1)
         
         # Footer
@@ -459,7 +482,7 @@ def main():
     
     config_manager = ConfigurationManager()
     config_manager.show()
-    config_manager.resize(1000, 700)
+    config_manager.resize(1000, 800)
     
     sys.exit(app.exec())
 
