@@ -138,9 +138,7 @@ class WizardStep(QWidget):
         
         # Content area (to be overridden by subclasses)
         self.content_area = QWidget()
-        layout.addWidget(self.content_area)
-        
-        layout.addStretch()
+        layout.addWidget(self.content_area, 1)
     
     def validate_step(self) -> tuple[bool, str]:
         """Validate the step data - to be overridden"""
@@ -481,9 +479,6 @@ class Step2ImportSettings(WizardStep):
         analytics_section = self.create_analytics_section()
         main_layout.addWidget(analytics_section)
         
-        # Add stretch to push content to top
-        main_layout.addStretch()
-        
         # Set the scroll widget
         scroll_area.setWidget(scroll_widget)
         
@@ -761,10 +756,7 @@ class Step3ImportProgress(WizardStep):
     """Step 3: Import Progress and Monitoring"""
     
     def __init__(self):
-        super().__init__(
-            "Import Progress",
-            "Monitor the email import process in real-time."
-        )
+        super().__init__()
         self.import_thread = None
         self.setup_progress_ui()
     
