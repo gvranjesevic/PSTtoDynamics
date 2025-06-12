@@ -150,3 +150,48 @@ This project is open source. Feel free to modify and distribute.
 2. Create a feature branch
 3. Make your changes
 4. Submit a pull request 
+
+# PST to Dynamics 365
+
+## Overview
+A professional desktop application for importing, synchronizing, and managing contacts and emails between PST files and Microsoft Dynamics 365, with advanced AI, analytics, and a modern GUI.
+
+---
+
+## Phase 6: Advanced Sync & Monitoring (NEW)
+
+### Features
+- **Bidirectional Sync Engine**: Robust, real-time synchronization between PST and Dynamics 365.
+- **Advanced Conflict Resolution**: Last-write-wins, manual, and merge strategies with conflict history.
+- **Data Integrity**: Checksums, consistency checks, and recovery mechanisms.
+- **Sync Monitoring Dashboard**: Real-time metrics, conflict resolution UI, and detailed logs.
+- **Full Integration**: Dashboard accessible from the main navigation sidebar and View menu ("Sync Monitor").
+
+### How to Launch the Sync Monitoring Dashboard
+- Start the main application (`python gui/main_window.py` or packaged executable).
+- Use the sidebar or View menu to select **Sync Monitor**.
+- The dashboard provides:
+  - Live sync metrics (syncs, conflicts, errors)
+  - Conflict resolution interface
+  - Log viewing and export
+
+### Developer Notes
+- All new features are unit tested (`tests/test_sync_engine.py`, `tests/test_sync_monitoring_dashboard.py`).
+- Modular design for easy extension and integration.
+
+---
+
+## Getting Started
+- Install requirements: `pip install -r requirements.txt`
+- Run the app: `python gui/main_window.py`
+
+---
+
+## Upcoming: Phase 7 (Deployment & User Experience)
+- Windows installer
+- Automated deployment
+- User onboarding/help
+- Feedback and telemetry (optional)
+- Production polish
+
+See `PHASE7_PLANNING.md` for details. 
