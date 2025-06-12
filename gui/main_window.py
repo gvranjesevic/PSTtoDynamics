@@ -358,6 +358,9 @@ class ContentArea(QWidget):
         self.header_label.show()
         self.subtitle_label.show()
         
+        # Show content body again
+        self.content_body.show()
+        
         # Remove import wizard
         if hasattr(self, 'import_wizard'):
             self.import_wizard.hide()
@@ -371,11 +374,46 @@ class ContentArea(QWidget):
             self.layout().removeWidget(self.config_manager)
             self.config_manager.deleteLater()
             del self.config_manager
+        
+        # Remove analytics dashboard
+        if hasattr(self, 'analytics_dashboard'):
+            self.analytics_dashboard.hide()
+            self.layout().removeWidget(self.analytics_dashboard)
+            self.analytics_dashboard.deleteLater()
+            del self.analytics_dashboard
     
     def show_analytics_placeholder(self):
-        """Placeholder for analytics dashboard (Phase 5.4)"""
-        self.content_body.setText("📈 Analytics Dashboard will be implemented in Phase 5.4\n\nFeatures coming:\n• Interactive charts and graphs\n• Import performance metrics\n• Sender behavior analysis\n• Export capabilities")
-        self.content_body.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        """Show Analytics Dashboard (Phase 5.4)"""
+        try:
+            from gui.widgets.analytics_dashboard import AnalyticsDashboard
+            
+            # Clean up any existing widgets
+            self.cleanup_active_widgets()
+            
+            # Hide the header and subtitle to free up space
+            self.header_label.hide()
+            self.subtitle_label.hide()
+            
+            # Create and show analytics dashboard
+            self.analytics_dashboard = AnalyticsDashboard()
+            
+            # Replace content with analytics dashboard
+            self.content_body.hide()
+            
+            # Add to layout
+            layout = self.layout()
+            layout.insertWidget(2, self.analytics_dashboard)  # Insert after subtitle
+            
+            print("📈 Phase 5.4 Analytics Dashboard loaded successfully")
+            
+        except ImportError as e:
+            print(f"⚠️ Analytics Dashboard not available: {e}")
+            self.content_body.setText("📈 Analytics Dashboard\n\nError loading dashboard module.\nPlease check installation.")
+            self.content_body.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        except Exception as e:
+            print(f"❌ Error loading Analytics Dashboard: {e}")
+            self.content_body.setText(f"📈 Analytics Dashboard\n\nError: {str(e)}")
+            self.content_body.setAlignment(Qt.AlignmentFlag.AlignCenter)
     
     def show_ai_placeholder(self):
         """Placeholder for AI intelligence (Phase 5.5)"""
