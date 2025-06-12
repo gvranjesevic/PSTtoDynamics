@@ -174,31 +174,28 @@ class Step1FileSelection(WizardStep):
         
         # Create scroll widget
         scroll_widget = QWidget()
-        scroll_widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        scroll_widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         
         # Main layout for scroll widget
         main_layout = QVBoxLayout(scroll_widget)
         main_layout.setContentsMargins(20, 20, 20, 20)
         main_layout.setSpacing(30)
         
-        # File selection section
+        # File selection section - make it expand to fill space
         file_section = self.create_file_selection_section()
-        main_layout.addWidget(file_section)
+        main_layout.addWidget(file_section, 1)  # Add stretch factor to expand
         
         # Tips section
         tips_section = self.create_tips_section()
         main_layout.addWidget(tips_section)
         
-        # Add stretch to push content to top
-        main_layout.addStretch()
-        
         # Set the scroll widget
         scroll_area.setWidget(scroll_widget)
         
-        # Layout for content area
+        # Layout for content area - ensure scroll area expands to fill space
         content_layout = QVBoxLayout(self.content_area)
         content_layout.setContentsMargins(0, 0, 0, 0)
-        content_layout.addWidget(scroll_area)
+        content_layout.addWidget(scroll_area, 1)  # Added stretch factor to expand
     
     def create_file_selection_section(self):
         """Create the file selection section"""
@@ -224,7 +221,7 @@ class Step1FileSelection(WizardStep):
             }
         """)
         
-        # Layout for file group
+        # Layout for file group - make it expand vertically
         file_layout = QVBoxLayout(file_group)
         file_layout.setContentsMargins(30, 35, 30, 30)
         file_layout.setSpacing(25)
@@ -289,9 +286,9 @@ class Step1FileSelection(WizardStep):
         
         file_layout.addWidget(path_container)
         
-        # File info display
+        # File info display - dramatically increased to fill all available space
         self.file_info_label = QLabel("📄 No file selected yet. Choose a PST file to see detailed information.")
-        self.file_info_label.setMinimumHeight(120)
+        self.file_info_label.setMinimumHeight(400)  # Dramatically increased from 200 to 400
         self.file_info_label.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
         self.file_info_label.setWordWrap(True)
         self.file_info_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
@@ -307,7 +304,8 @@ class Step1FileSelection(WizardStep):
             }
         """)
         
-        file_layout.addWidget(self.file_info_label)
+        # Add with stretch factor to make it expand
+        file_layout.addWidget(self.file_info_label, 1)  # Add stretch factor
         
         return file_group
     
@@ -464,7 +462,7 @@ class Step2ImportSettings(WizardStep):
         
         # Create scroll widget
         scroll_widget = QWidget()
-        scroll_widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        scroll_widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         
         # Main layout for scroll widget
         main_layout = QVBoxLayout(scroll_widget)
