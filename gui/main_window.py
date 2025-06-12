@@ -301,6 +301,10 @@ class ContentArea(QWidget):
         if hasattr(self, 'import_wizard'):
             return  # Already showing
         
+        # Hide the header and subtitle to free up space
+        self.header_label.hide()
+        self.subtitle_label.hide()
+        
         # Import the wizard
         try:
             from gui.widgets.import_wizard import ImportWizard
@@ -328,6 +332,10 @@ class ContentArea(QWidget):
         else:
             message = f"❌ Import was not completed.\n\nStatus: {data.get('final_status', 'Failed')}"
         
+        # Show header and subtitle again
+        self.header_label.show()
+        self.subtitle_label.show()
+        
         # Show result and return to dashboard
         self.content_body.setText(message)
         self.content_body.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -342,6 +350,10 @@ class ContentArea(QWidget):
     
     def on_import_cancelled(self):
         """Handle import wizard cancellation"""
+        # Show header and subtitle again
+        self.header_label.show()
+        self.subtitle_label.show()
+        
         self.content_body.setText("📧 Import cancelled by user.\n\nYou can start a new import anytime using the Import Wizard.")
         self.content_body.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.content_body.show()

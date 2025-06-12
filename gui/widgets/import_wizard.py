@@ -17,7 +17,8 @@ from PyQt6.QtWidgets import (
     QLabel, QPushButton, QProgressBar, QTextEdit, QFileDialog,
     QLineEdit, QComboBox, QCheckBox, QGroupBox, QFrame,
     QStackedWidget, QScrollArea, QMessageBox, QSplitter,
-    QListWidget, QListWidgetItem, QTableWidget, QTableWidgetItem
+    QListWidget, QListWidgetItem, QTableWidget, QTableWidgetItem,
+    QSizePolicy, QSpacerItem, QSpinBox
 )
 from PyQt6.QtCore import Qt, QTimer, pyqtSignal, QThread, QSize
 from PyQt6.QtGui import QFont, QPixmap, QIcon, QPalette
@@ -160,84 +161,210 @@ class Step1FileSelection(WizardStep):
         self.setup_file_selection()
     
     def setup_file_selection(self):
-        """Setup file selection interface"""
-        layout = QVBoxLayout(self.content_area)
+        """Setup file selection interface with truly responsive design"""
+        # Clear any existing layout
+        if self.content_area.layout():
+            QWidget().setLayout(self.content_area.layout())
         
+        # Main scroll area for responsive content
+        scroll_area = QScrollArea(self.content_area)
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        scroll_area.setStyleSheet("QScrollArea { border: none; background-color: transparent; }")
+        
+        # Create scroll widget
+        scroll_widget = QWidget()
+        scroll_widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        
+        # Main layout for scroll widget
+        main_layout = QVBoxLayout(scroll_widget)
+        main_layout.setContentsMargins(20, 20, 20, 20)
+        main_layout.setSpacing(30)
+        
+        # File selection section
+        file_section = self.create_file_selection_section()
+        main_layout.addWidget(file_section)
+        
+        # Tips section
+        tips_section = self.create_tips_section()
+        main_layout.addWidget(tips_section)
+        
+        # Add stretch to push content to top
+        main_layout.addStretch()
+        
+        # Set the scroll widget
+        scroll_area.setWidget(scroll_widget)
+        
+        # Layout for content area
+        content_layout = QVBoxLayout(self.content_area)
+        content_layout.setContentsMargins(0, 0, 0, 0)
+        content_layout.addWidget(scroll_area)
+    
+    def create_file_selection_section(self):
+        """Create the file selection section"""
         # File selection group
-        file_group = QGroupBox("PST File Selection")
-        file_group.setFont(QFont("Segoe UI", 10, QFont.Weight.Medium))
-        file_layout = QVBoxLayout(file_group)
-        
-        # File path display
-        path_layout = QHBoxLayout()
-        
-        self.file_path_edit = QLineEdit()
-        self.file_path_edit.setPlaceholderText("No file selected...")
-        self.file_path_edit.setReadOnly(True)
-        self.file_path_edit.setMinimumHeight(40)
-        self.file_path_edit.setStyleSheet("""
-            QLineEdit {
-                padding: 10px;
-                border: 2px solid #bdc3c7;
-                border-radius: 6px;
-                font-size: 11px;
-                background-color: #f8f9fa;
+        file_group = QGroupBox("📁 PST File Selection")
+        file_group.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
+        file_group.setStyleSheet("""
+            QGroupBox {
+                font-weight: bold;
+                border: 2px solid #3498db;
+                border-radius: 10px;
+                margin-top: 20px;
+                padding-top: 15px;
+                background-color: white;
+            }
+            QGroupBox::title {
+                subcontrol-origin: margin;
+                left: 25px;
+                padding: 0 10px 0 10px;
+                color: #2c3e50;
+                background-color: white;
+                font-size: 14px;
             }
         """)
         
+        # Layout for file group
+        file_layout = QVBoxLayout(file_group)
+        file_layout.setContentsMargins(30, 35, 30, 30)
+        file_layout.setSpacing(25)
+        
+        # File path section
+        path_container = QWidget()
+        path_layout = QHBoxLayout(path_container)
+        path_layout.setContentsMargins(0, 0, 0, 0)
+        path_layout.setSpacing(15)
+        
+        # File path input
+        self.file_path_edit = QLineEdit()
+        self.file_path_edit.setPlaceholderText("Click 'Browse...' to select a PST file")
+        self.file_path_edit.setReadOnly(True)
+        self.file_path_edit.setMinimumHeight(50)
+        self.file_path_edit.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        self.file_path_edit.setStyleSheet("""
+            QLineEdit {
+                padding: 15px 20px;
+                border: 2px solid #bdc3c7;
+                border-radius: 8px;
+                font-size: 13px;
+                background-color: #f8f9fa;
+                color: #495057;
+            }
+            QLineEdit:focus {
+                border-color: #3498db;
+                background-color: white;
+            }
+        """)
+        
+        # Browse button
         self.browse_button = QPushButton("📂 Browse...")
-        self.browse_button.setMinimumHeight(40)
-        self.browse_button.setMinimumWidth(120)
+        self.browse_button.setMinimumHeight(50)
+        self.browse_button.setMinimumWidth(150)
+        self.browse_button.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         self.browse_button.setStyleSheet("""
             QPushButton {
-                background-color: #3498db;
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #3498db, stop:1 #2980b9);
                 color: white;
                 border: none;
-                border-radius: 6px;
-                font-size: 11px;
+                border-radius: 8px;
+                font-size: 13px;
                 font-weight: bold;
-                padding: 10px 20px;
+                padding: 15px 25px;
             }
             QPushButton:hover {
-                background-color: #2980b9;
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #5dade2, stop:1 #3498db);
             }
             QPushButton:pressed {
-                background-color: #1f618d;
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #2980b9, stop:1 #1f618d);
             }
         """)
         self.browse_button.clicked.connect(self.browse_file)
         
-        path_layout.addWidget(self.file_path_edit)
-        path_layout.addWidget(self.browse_button)
+        # Add to path layout
+        path_layout.addWidget(self.file_path_edit, 3)  # 75% width
+        path_layout.addWidget(self.browse_button, 1)   # 25% width
         
-        file_layout.addLayout(path_layout)
+        file_layout.addWidget(path_container)
         
         # File info display
-        self.file_info_label = QLabel("Select a PST file to view information...")
-        self.file_info_label.setStyleSheet("color: #7f8c8d; padding: 10px; border: 1px solid #ecf0f1; border-radius: 4px; background-color: #f8f9fa;")
-        self.file_info_label.setMinimumHeight(80)
-        self.file_info_label.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self.file_info_label = QLabel("📄 No file selected yet. Choose a PST file to see detailed information.")
+        self.file_info_label.setMinimumHeight(120)
+        self.file_info_label.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
+        self.file_info_label.setWordWrap(True)
+        self.file_info_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        self.file_info_label.setStyleSheet("""
+            QLabel {
+                color: #6c757d; 
+                padding: 25px; 
+                border: 2px dashed #dee2e6; 
+                border-radius: 10px; 
+                background-color: #f8f9fa;
+                font-size: 13px;
+                line-height: 1.8;
+            }
+        """)
         
         file_layout.addWidget(self.file_info_label)
         
-        layout.addWidget(file_group)
+        return file_group
+    
+    def create_tips_section(self):
+        """Create the tips and guidelines section"""
+        # Tips group
+        tips_group = QGroupBox("💡 Tips & Guidelines")
+        tips_group.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
+        tips_group.setStyleSheet("""
+            QGroupBox {
+                font-weight: bold;
+                border: 2px solid #17a2b8;
+                border-radius: 10px;
+                margin-top: 20px;
+                padding-top: 15px;
+                background-color: #e7f8ff;
+            }
+            QGroupBox::title {
+                subcontrol-origin: margin;
+                left: 25px;
+                padding: 0 10px 0 10px;
+                color: #0c5460;
+                background-color: #e7f8ff;
+                font-size: 14px;
+            }
+        """)
         
-        # Tips section
-        tips_group = QGroupBox("💡 Tips")
-        tips_group.setFont(QFont("Segoe UI", 10, QFont.Weight.Medium))
+        # Layout for tips
         tips_layout = QVBoxLayout(tips_group)
+        tips_layout.setContentsMargins(30, 35, 30, 30)
+        tips_layout.setSpacing(15)
         
-        tips_text = """• PST files are typically located in: C:\\Users\\[username]\\Documents\\Outlook Files\\
-• Ensure the PST file is not currently open in Outlook
-• Large PST files may take longer to process
-• The system will automatically detect email structure and contacts"""
+        tips_items = [
+            "📂 PST files are typically located in: C:\\Users\\[username]\\Documents\\Outlook Files\\",
+            "🔒 Ensure the PST file is not currently open in Outlook before importing",
+            "⏱️ Large PST files (>1GB) may take longer to process - please be patient",
+            "🤖 The AI system will automatically detect email structure and contacts",
+            "📊 All import activities will be logged for your review and troubleshooting"
+        ]
         
-        tips_label = QLabel(tips_text)
-        tips_label.setStyleSheet("color: #2c3e50; line-height: 1.4;")
-        tips_label.setWordWrap(True)
+        for tip in tips_items:
+            tip_label = QLabel(tip)
+            tip_label.setWordWrap(True)
+            tip_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+            tip_label.setStyleSheet("""
+                QLabel {
+                    color: #0c5460; 
+                    font-size: 13px;
+                    line-height: 1.6;
+                    padding: 8px 0px;
+                    margin: 2px 0px;
+                }
+            """)
+            tips_layout.addWidget(tip_label)
         
-        tips_layout.addWidget(tips_label)
-        layout.addWidget(tips_group)
+        return tips_group
     
     def browse_file(self):
         """Open file browser for PST selection"""
@@ -260,17 +387,37 @@ class Step1FileSelection(WizardStep):
             file_size = file_stats.st_size / (1024 * 1024)  # MB
             modified_date = datetime.fromtimestamp(file_stats.st_mtime).strftime("%Y-%m-%d %H:%M")
             
-            info_text = f"""📁 File: {Path(file_path).name}
-📊 Size: {file_size:.1f} MB
-📅 Modified: {modified_date}
-✅ Ready for import"""
+            info_text = f"""<b>📁 File:</b> {Path(file_path).name}<br/>
+<b>📊 Size:</b> {file_size:.1f} MB<br/>
+<b>📅 Modified:</b> {modified_date}<br/>
+<b>✅ Status:</b> Ready for import"""
             
             self.file_info_label.setText(info_text)
-            self.file_info_label.setStyleSheet("color: #27ae60; padding: 10px; border: 1px solid #2ecc71; border-radius: 4px; background-color: #d5f4e6;")
+            self.file_info_label.setStyleSheet("""
+                QLabel {
+                    color: #155724; 
+                    padding: 20px; 
+                    border: 2px solid #28a745; 
+                    border-radius: 6px; 
+                    background-color: #d4edda;
+                    font-size: 12px;
+                    line-height: 1.6;
+                }
+            """)
             
         except Exception as e:
-            self.file_info_label.setText(f"❌ Error reading file: {str(e)}")
-            self.file_info_label.setStyleSheet("color: #e74c3c; padding: 10px; border: 1px solid #e74c3c; border-radius: 4px; background-color: #fdf2f2;")
+            self.file_info_label.setText(f"<b>❌ Error reading file:</b><br/>{str(e)}")
+            self.file_info_label.setStyleSheet("""
+                QLabel {
+                    color: #721c24; 
+                    padding: 20px; 
+                    border: 2px solid #dc3545; 
+                    border-radius: 6px; 
+                    background-color: #f8d7da;
+                    font-size: 12px;
+                    line-height: 1.6;
+                }
+            """)
     
     def validate_step(self) -> tuple[bool, str]:
         """Validate file selection"""
@@ -304,72 +451,295 @@ class Step2ImportSettings(WizardStep):
         self.setup_settings()
     
     def setup_settings(self):
-        """Setup import settings interface"""
-        layout = QVBoxLayout(self.content_area)
+        """Setup import settings interface with truly responsive design"""
+        # Clear any existing layout
+        if self.content_area.layout():
+            QWidget().setLayout(self.content_area.layout())
         
-        # AI Settings Group
-        ai_group = QGroupBox("🧠 AI Intelligence Options")
-        ai_group.setFont(QFont("Segoe UI", 10, QFont.Weight.Medium))
+        # Main scroll area for responsive content
+        scroll_area = QScrollArea(self.content_area)
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        scroll_area.setStyleSheet("QScrollArea { border: none; background-color: transparent; }")
+        
+        # Create scroll widget
+        scroll_widget = QWidget()
+        scroll_widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        
+        # Main layout for scroll widget
+        main_layout = QVBoxLayout(scroll_widget)
+        main_layout.setContentsMargins(20, 20, 20, 20)
+        main_layout.setSpacing(25)
+        
+        # AI Intelligence settings
+        ai_section = self.create_ai_settings_section()
+        main_layout.addWidget(ai_section)
+        
+        # Processing options
+        processing_section = self.create_processing_section()
+        main_layout.addWidget(processing_section)
+        
+        # Analytics settings
+        analytics_section = self.create_analytics_section()
+        main_layout.addWidget(analytics_section)
+        
+        # Add stretch to push content to top
+        main_layout.addStretch()
+        
+        # Set the scroll widget
+        scroll_area.setWidget(scroll_widget)
+        
+        # Layout for content area
+        content_layout = QVBoxLayout(self.content_area)
+        content_layout.setContentsMargins(0, 0, 0, 0)
+        content_layout.addWidget(scroll_area)
+    
+    def create_ai_settings_section(self):
+        """Create AI Intelligence settings section"""
+        ai_group = QGroupBox("🤖 AI Intelligence Settings")
+        ai_group.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
+        ai_group.setStyleSheet("""
+            QGroupBox {
+                font-weight: bold;
+                border: 2px solid #8e44ad;
+                border-radius: 10px;
+                margin-top: 20px;
+                padding-top: 15px;
+                background-color: #faf9ff;
+            }
+            QGroupBox::title {
+                subcontrol-origin: margin;
+                left: 25px;
+                padding: 0 10px 0 10px;
+                color: #6c3483;
+                background-color: #faf9ff;
+                font-size: 14px;
+            }
+        """)
+        
         ai_layout = QVBoxLayout(ai_group)
+        ai_layout.setContentsMargins(30, 35, 30, 30)
+        ai_layout.setSpacing(20)
         
-        self.use_ai_checkbox = QCheckBox("Enable AI-powered optimization")
-        self.use_ai_checkbox.setChecked(True)
-        self.use_ai_checkbox.setStyleSheet("font-size: 11px; padding: 5px;")
+        # AI options with descriptions
+        self.enable_ai_checkbox = self.create_styled_checkbox(
+            "🧠 Enable AI Email Classification",
+            "Automatically categorize emails using machine learning algorithms"
+        )
+        self.enable_ai_checkbox.checkbox.setChecked(True)
         
-        self.smart_contact_checkbox = QCheckBox("Automatic contact creation and linking")
-        self.smart_contact_checkbox.setChecked(True)
-        self.smart_contact_checkbox.setStyleSheet("font-size: 11px; padding: 5px;")
+        self.enable_ml_checkbox = self.create_styled_checkbox(
+            "⚡ Enable Machine Learning Pattern Recognition", 
+            "Learn from your email patterns to improve future imports"
+        )
+        self.enable_ml_checkbox.checkbox.setChecked(True)
         
-        self.duplicate_detection_checkbox = QCheckBox("Intelligent duplicate detection")
-        self.duplicate_detection_checkbox.setChecked(True)
-        self.duplicate_detection_checkbox.setStyleSheet("font-size: 11px; padding: 5px;")
+        self.enable_smart_optimization_checkbox = self.create_styled_checkbox(
+            "🚀 Enable Smart Import Optimization",
+            "Optimize import speed and efficiency using intelligent algorithms"
+        )
+        self.enable_smart_optimization_checkbox.checkbox.setChecked(True)
         
-        ai_layout.addWidget(self.use_ai_checkbox)
-        ai_layout.addWidget(self.smart_contact_checkbox)
-        ai_layout.addWidget(self.duplicate_detection_checkbox)
+        ai_layout.addWidget(self.enable_ai_checkbox)
+        ai_layout.addWidget(self.enable_ml_checkbox)
+        ai_layout.addWidget(self.enable_smart_optimization_checkbox)
         
-        layout.addWidget(ai_group)
-        
-        # Processing Settings Group
+        return ai_group
+    
+    def create_processing_section(self):
+        """Create processing options section"""
         processing_group = QGroupBox("⚙️ Processing Options")
-        processing_group.setFont(QFont("Segoe UI", 10, QFont.Weight.Medium))
-        processing_layout = QGridLayout(processing_group)
+        processing_group.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
+        processing_group.setStyleSheet("""
+            QGroupBox {
+                font-weight: bold;
+                border: 2px solid #e67e22;
+                border-radius: 10px;
+                margin-top: 20px;
+                padding-top: 15px;
+                background-color: #fef9e7;
+            }
+            QGroupBox::title {
+                subcontrol-origin: margin;
+                left: 25px;
+                padding: 0 10px 0 10px;
+                color: #d68910;
+                background-color: #fef9e7;
+                font-size: 14px;
+            }
+        """)
+        
+        processing_layout = QVBoxLayout(processing_group)
+        processing_layout.setContentsMargins(30, 35, 30, 30)
+        processing_layout.setSpacing(25)
         
         # Batch size setting
-        processing_layout.addWidget(QLabel("Batch Size:"), 0, 0)
-        self.batch_size_combo = QComboBox()
-        self.batch_size_combo.addItems(["50", "100", "200", "500"])
-        self.batch_size_combo.setCurrentText("100")
-        self.batch_size_combo.setStyleSheet("padding: 5px; font-size: 11px;")
-        processing_layout.addWidget(self.batch_size_combo, 0, 1)
+        batch_container = QWidget()
+        batch_layout = QVBoxLayout(batch_container)
+        batch_layout.setContentsMargins(0, 0, 0, 0)
+        batch_layout.setSpacing(10)
         
-        # Import mode
-        processing_layout.addWidget(QLabel("Import Mode:"), 1, 0)
-        self.import_mode_combo = QComboBox()
-        self.import_mode_combo.addItems(["Full Import", "Incremental Import", "Preview Only"])
-        self.import_mode_combo.setCurrentText("Full Import")
-        self.import_mode_combo.setStyleSheet("padding: 5px; font-size: 11px;")
-        processing_layout.addWidget(self.import_mode_combo, 1, 1)
+        batch_label = QLabel("📦 Batch Size")
+        batch_label.setStyleSheet("color: #2c3e50; font-size: 14px; font-weight: bold;")
+        batch_layout.addWidget(batch_label)
         
-        layout.addWidget(processing_group)
+        batch_control_layout = QHBoxLayout()
+        batch_control_layout.setSpacing(15)
         
-        # Analytics Settings Group
-        analytics_group = QGroupBox("📊 Analytics & Reporting")
-        analytics_group.setFont(QFont("Segoe UI", 10, QFont.Weight.Medium))
+        self.batch_size_spinner = QSpinBox()
+        self.batch_size_spinner.setMinimum(10)
+        self.batch_size_spinner.setMaximum(1000)
+        self.batch_size_spinner.setValue(100)
+        self.batch_size_spinner.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+        self.batch_size_spinner.setMinimumWidth(150)
+        self.batch_size_spinner.setMinimumHeight(40)
+        self.batch_size_spinner.setStyleSheet("""
+            QSpinBox {
+                padding: 10px 15px;
+                border: 2px solid #bdc3c7;
+                border-radius: 8px;
+                font-size: 13px;
+                background-color: white;
+            }
+            QSpinBox:focus {
+                border-color: #e67e22;
+            }
+        """)
+        
+        batch_info = QLabel("emails per batch (recommended: 100 for optimal performance)")
+        batch_info.setStyleSheet("color: #6c757d; font-size: 12px;")
+        batch_info.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        batch_info.setWordWrap(True)
+        
+        batch_control_layout.addWidget(self.batch_size_spinner)
+        batch_control_layout.addWidget(batch_info)
+        batch_control_layout.addStretch()
+        
+        batch_layout.addLayout(batch_control_layout)
+        processing_layout.addWidget(batch_container)
+        
+        # Processing checkboxes
+        self.skip_duplicates_checkbox = self.create_styled_checkbox(
+            "🚫 Skip duplicate emails",
+            "Automatically detect and skip emails that have already been imported"
+        )
+        self.skip_duplicates_checkbox.checkbox.setChecked(True)
+        
+        self.preserve_folder_structure_checkbox = self.create_styled_checkbox(
+            "📁 Preserve folder structure",
+            "Maintain the original Outlook folder hierarchy in Dynamics 365"
+        )
+        self.preserve_folder_structure_checkbox.checkbox.setChecked(True)
+        
+        processing_layout.addWidget(self.skip_duplicates_checkbox)
+        processing_layout.addWidget(self.preserve_folder_structure_checkbox)
+        
+        return processing_group
+    
+    def create_analytics_section(self):
+        """Create analytics settings section"""
+        analytics_group = QGroupBox("📊 Analytics Settings")
+        analytics_group.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
+        analytics_group.setStyleSheet("""
+            QGroupBox {
+                font-weight: bold;
+                border: 2px solid #27ae60;
+                border-radius: 10px;
+                margin-top: 20px;
+                padding-top: 15px;
+                background-color: #e8f8f5;
+            }
+            QGroupBox::title {
+                subcontrol-origin: margin;
+                left: 25px;
+                padding: 0 10px 0 10px;
+                color: #196f3d;
+                background-color: #e8f8f5;
+                font-size: 14px;
+            }
+        """)
+        
         analytics_layout = QVBoxLayout(analytics_group)
+        analytics_layout.setContentsMargins(30, 35, 30, 30)
+        analytics_layout.setSpacing(20)
         
-        self.enable_analytics_checkbox = QCheckBox("Generate import analytics report")
-        self.enable_analytics_checkbox.setChecked(True)
-        self.enable_analytics_checkbox.setStyleSheet("font-size: 11px; padding: 5px;")
+        self.enable_analytics_checkbox = self.create_styled_checkbox(
+            "📈 Enable Import Analytics",
+            "Generate comprehensive analytics and insights about your email data"
+        )
+        self.enable_analytics_checkbox.checkbox.setChecked(True)
         
-        self.timeline_analysis_checkbox = QCheckBox("Perform timeline completeness analysis")
-        self.timeline_analysis_checkbox.setChecked(True)
-        self.timeline_analysis_checkbox.setStyleSheet("font-size: 11px; padding: 5px;")
+        self.generate_reports_checkbox = self.create_styled_checkbox(
+            "📄 Generate detailed reports",
+            "Create PDF reports with import statistics and email analysis"
+        )
+        self.generate_reports_checkbox.checkbox.setChecked(True)
+        
+        self.timeline_analysis_checkbox = self.create_styled_checkbox(
+            "📅 Enable timeline analysis",
+            "Analyze email patterns and communication timelines"
+        )
+        self.timeline_analysis_checkbox.checkbox.setChecked(True)
         
         analytics_layout.addWidget(self.enable_analytics_checkbox)
+        analytics_layout.addWidget(self.generate_reports_checkbox)
         analytics_layout.addWidget(self.timeline_analysis_checkbox)
         
-        layout.addWidget(analytics_group)
+        return analytics_group
+    
+    def create_styled_checkbox(self, title, description):
+        """Create a styled checkbox with title and description"""
+        container = QWidget()
+        container.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        
+        layout = QVBoxLayout(container)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(5)
+        
+        checkbox = QCheckBox(title)
+        checkbox.setStyleSheet("""
+            QCheckBox {
+                font-size: 13px;
+                color: #2c3e50;
+                font-weight: 600;
+                spacing: 12px;
+            }
+            QCheckBox::indicator {
+                width: 20px;
+                height: 20px;
+                border-radius: 4px;
+                border: 2px solid #bdc3c7;
+                background-color: white;
+            }
+            QCheckBox::indicator:checked {
+                background-color: #3498db;
+                border-color: #3498db;
+                image: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIiIGhlaWdodD0iOSIgdmlld0JveD0iMCAwIDEyIDkiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxwYXRoIGQ9Ik0xIDQuNUw0LjUgOEwxMSAxIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgo8L3N2Zz4K);
+            }
+            QCheckBox::indicator:hover {
+                border-color: #3498db;
+            }
+        """)
+        
+        desc_label = QLabel(description)
+        desc_label.setStyleSheet("""
+            QLabel {
+                color: #6c757d; 
+                font-size: 12px;
+                margin-left: 32px;
+                line-height: 1.4;
+            }
+        """)
+        desc_label.setWordWrap(True)
+        
+        layout.addWidget(checkbox)
+        layout.addWidget(desc_label)
+        
+        # Store the checkbox reference in the container for easy access
+        container.checkbox = checkbox
+        
+        return container
     
     def validate_step(self) -> tuple[bool, str]:
         """Validate settings"""
@@ -378,13 +748,15 @@ class Step2ImportSettings(WizardStep):
     def get_step_data(self) -> Dict[str, Any]:
         """Get settings data"""
         return {
-            'use_ai_optimization': self.use_ai_checkbox.isChecked(),
-            'smart_contact_creation': self.smart_contact_checkbox.isChecked(),
-            'duplicate_detection': self.duplicate_detection_checkbox.isChecked(),
-            'batch_size': int(self.batch_size_combo.currentText()),
-            'import_mode': self.import_mode_combo.currentText(),
-            'enable_analytics': self.enable_analytics_checkbox.isChecked(),
-            'timeline_analysis': self.timeline_analysis_checkbox.isChecked()
+            'use_ai_optimization': self.enable_ai_checkbox.checkbox.isChecked(),
+            'smart_contact_creation': self.enable_smart_optimization_checkbox.checkbox.isChecked(),
+            'duplicate_detection': self.enable_ml_checkbox.checkbox.isChecked(),
+            'batch_size': int(self.batch_size_spinner.value()),
+            'skip_duplicates': self.skip_duplicates_checkbox.checkbox.isChecked(),
+            'preserve_folder_structure': self.preserve_folder_structure_checkbox.checkbox.isChecked(),
+            'generate_reports': self.generate_reports_checkbox.checkbox.isChecked(),
+            'timeline_analysis': self.timeline_analysis_checkbox.checkbox.isChecked(),
+            'enable_analytics': self.enable_analytics_checkbox.checkbox.isChecked()
         }
 
 
@@ -596,29 +968,30 @@ class ImportWizard(QWidget):
         self.setup_ui()
         
     def setup_ui(self):
-        """Setup the wizard interface"""
+        """Setup the wizard interface with responsive design"""
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
         
-        # Header
+        # Header - fixed height but responsive width
         header = self.create_header()
         layout.addWidget(header)
         
-        # Main content area
+        # Main content area with responsive design
         main_area = QFrame()
         main_area.setFrameStyle(QFrame.Shape.NoFrame)
         main_layout = QHBoxLayout(main_area)
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
         
-        # Step navigation sidebar
+        # Step navigation sidebar - 20% of width
         nav_sidebar = self.create_navigation_sidebar()
-        main_layout.addWidget(nav_sidebar)
+        main_layout.addWidget(nav_sidebar, 2)  # 2/10 = 20%
         
-        # Step content area
+        # Step content area - 80% of width
         self.step_stack = QStackedWidget()
         self.step_stack.setStyleSheet("background-color: white;")
+        self.step_stack.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
         
         # Add wizard steps
         self.steps = [
@@ -630,10 +1003,10 @@ class ImportWizard(QWidget):
         for step in self.steps:
             self.step_stack.addWidget(step)
         
-        main_layout.addWidget(self.step_stack)
-        layout.addWidget(main_area)
+        main_layout.addWidget(self.step_stack, 8)  # 8/10 = 80%
+        layout.addWidget(main_area, 1)  # Takes remaining space
         
-        # Footer with navigation buttons
+        # Footer - fixed height but responsive width
         footer = self.create_footer()
         layout.addWidget(footer)
         
@@ -642,31 +1015,34 @@ class ImportWizard(QWidget):
     
     def create_header(self) -> QWidget:
         """Create wizard header"""
-        header = QFrame()
+        header = QWidget()
         header.setFixedHeight(80)
         header.setStyleSheet("""
-            QFrame {
-                background: qlineargradient(x1: 0, y1: 0, x2: 1, y2: 0,
-                    stop: 0 #3498db, stop: 1 #2980b9);
-                border: none;
+            QWidget {
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                    stop:0 #3498db, stop:1 #2980b9);
+                border-radius: 0px;
             }
         """)
         
         layout = QHBoxLayout(header)
         layout.setContentsMargins(30, 20, 30, 20)
         
-        # Title and subtitle
-        title_layout = QVBoxLayout()
+        # Icon
+        icon_label = QLabel("📧")
+        icon_label.setStyleSheet("font-size: 32px; color: white;")
+        layout.addWidget(icon_label)
         
-        title = QLabel("📧 Email Import Wizard")
-        title.setFont(QFont("Segoe UI", 18, QFont.Weight.Bold))
-        title.setStyleSheet("color: white;")
+        # Title section
+        title_layout = QVBoxLayout()
+        title_layout.setSpacing(5)
+        
+        title = QLabel("Email Import Wizard")
+        title.setStyleSheet("color: white; font-size: 20px; font-weight: bold; margin: 0px;")
+        title_layout.addWidget(title)
         
         subtitle = QLabel("Step-by-step email import with AI intelligence")
-        subtitle.setFont(QFont("Segoe UI", 11))
-        subtitle.setStyleSheet("color: #ecf0f1;")
-        
-        title_layout.addWidget(title)
+        subtitle.setStyleSheet("color: rgba(255, 255, 255, 0.9); font-size: 13px; margin: 0px;")
         title_layout.addWidget(subtitle)
         
         layout.addLayout(title_layout)
@@ -675,19 +1051,30 @@ class ImportWizard(QWidget):
         return header
     
     def create_navigation_sidebar(self) -> QWidget:
-        """Create step navigation sidebar"""
+        """Create responsive step navigation sidebar"""
         sidebar = QFrame()
-        sidebar.setFixedWidth(250)
         sidebar.setStyleSheet("""
             QFrame {
                 background-color: #f8f9fa;
                 border-right: 1px solid #dee2e6;
             }
         """)
+        sidebar.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding)
         
         layout = QVBoxLayout(sidebar)
-        layout.setContentsMargins(20, 30, 20, 30)
-        layout.setSpacing(15)
+        # Responsive margins - 5% of width, 3% of height
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+        
+        # Add responsive margins using spacers
+        top_spacer = QSpacerItem(0, 30, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Fixed)
+        layout.addItem(top_spacer)
+        
+        # Navigation steps container
+        steps_container = QWidget()
+        steps_layout = QVBoxLayout(steps_container)
+        steps_layout.setContentsMargins(20, 0, 20, 0)  # 20px side margins
+        steps_layout.setSpacing(15)
         
         # Navigation steps
         step_info = [
@@ -700,17 +1087,19 @@ class ImportWizard(QWidget):
         
         for i, (num, title, desc) in enumerate(step_info):
             step_widget = self.create_nav_step(num, title, desc, i == 0)
-            layout.addWidget(step_widget)
+            steps_layout.addWidget(step_widget)
             self.nav_buttons.append(step_widget)
         
-        layout.addStretch()
+        layout.addWidget(steps_container)
+        layout.addStretch(1)  # Push content to top
         
         return sidebar
     
     def create_nav_step(self, number: str, title: str, description: str, active: bool = False) -> QWidget:
-        """Create a navigation step widget"""
+        """Create a responsive navigation step widget"""
         widget = QFrame()
-        widget.setFixedHeight(80)
+        widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        widget.setMinimumHeight(75)
         
         if active:
             widget.setStyleSheet("""
@@ -737,33 +1126,40 @@ class ImportWizard(QWidget):
         
         layout = QHBoxLayout(widget)
         layout.setContentsMargins(15, 10, 15, 10)
+        layout.setSpacing(12)
         
-        # Step number
+        # Step number - responsive sizing
         num_label = QLabel(number)
-        num_label.setFont(QFont("Segoe UI", 16, QFont.Weight.Bold))
-        num_label.setFixedSize(40, 40)
+        num_label.setFont(QFont("Segoe UI", 14, QFont.Weight.Bold))
+        num_label.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+        num_label.setFixedSize(35, 35)
         num_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         num_label.setStyleSheet("""
             QLabel {
                 background-color: rgba(255, 255, 255, 0.2);
-                border-radius: 20px;
+                border-radius: 17px;
+                font-size: 14px;
             }
         """)
         
-        # Step info
+        # Step info - responsive text
         info_layout = QVBoxLayout()
+        info_layout.setSpacing(2)
         
         title_label = QLabel(title)
-        title_label.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
+        title_label.setFont(QFont("Segoe UI", 10, QFont.Weight.Bold))
+        title_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         
         desc_label = QLabel(description)
         desc_label.setFont(QFont("Segoe UI", 9))
+        desc_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        desc_label.setWordWrap(True)
         
         info_layout.addWidget(title_label)
         info_layout.addWidget(desc_label)
         
         layout.addWidget(num_label)
-        layout.addLayout(info_layout)
+        layout.addLayout(info_layout, 1)  # Takes remaining space
         
         return widget
     
