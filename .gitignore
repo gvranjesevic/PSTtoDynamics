@@ -5,6 +5,9 @@
 # PST folder
 PST/
 
+# Logs directory
+logs/
+
 # Common development files
 .vs/
 .vscode/
