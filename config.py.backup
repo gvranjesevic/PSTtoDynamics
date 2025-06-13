@@ -10,10 +10,10 @@ import os
 from typing import Optional
 
 # === DYNAMICS 365 AUTHENTICATION ===
-USERNAME = os.getenv("DYNAMICS_USERNAME")
+USERNAME = os.getenv("DYNAMICS_USERNAME", "gvranjesevic@dynamique.com")
 PASSWORD = os.getenv("DYNAMICS_PASSWORD")  # Now uses environment variable for security
-TENANT_DOMAIN = os.getenv("DYNAMICS_TENANT_DOMAIN")
-CLIENT_ID = os.getenv("DYNAMICS_CLIENT_ID")
+TENANT_DOMAIN = os.getenv("DYNAMICS_TENANT_DOMAIN", "dynamique.com")
+CLIENT_ID = os.getenv("DYNAMICS_CLIENT_ID", "51f81489-12ee-4a9e-aaae-a2591f45987d")
 CRM_BASE_URL = os.getenv("DYNAMICS_CRM_URL", "https://dynglobal.crm.dynamics.com/api/data/v9.2")
 
 # === SECURE CREDENTIAL MANAGEMENT ===
@@ -56,7 +56,7 @@ DEFAULT_PST_PATH = os.getenv("DEFAULT_PST_PATH", r"C:\Users\Public\Documents\def
 CURRENT_PST_PATH = os.getenv("CURRENT_PST_PATH", r"PST\current.pst")
 
 # === SYSTEM CONFIGURATION ===
-SYSTEM_USER_ID = os.getenv("SYSTEM_USER_ID")
+SYSTEM_USER_ID = os.getenv("SYSTEM_USER_ID", "5794f83f-9b37-f011-8c4e-000d3a9c4367")
 
 # === IMPORT BEHAVIOR SETTINGS ===
 BATCH_SIZE = 50  # Number of emails to process in each batch
