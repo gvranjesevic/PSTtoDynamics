@@ -204,6 +204,9 @@ class PredictiveAnalytics:
         try:
             conn = sqlite3.connect(self.analytics_db_path)
             
+            # Ensure required tables exist
+            self._ensure_analytics_tables(conn)
+            
             # Load sender analytics
             sender_query = """
             SELECT email_address, category, importance_score, avg_response_time,
@@ -212,7 +215,14 @@ class PredictiveAnalytics:
             WHERE total_emails > 0
             """
             
-            sender_df = pd.read_sql_query(sender_query, conn)
+            try:
+                sender_df = pd.read_sql_query(sender_query, conn)
+            except pd.errors.DatabaseError:
+                # Table doesn't exist or is empty, create empty DataFrame
+                logger.warning("sender_analytics table not found, creating empty dataset")
+                sender_df = pd.DataFrame(columns=['email_address', 'category', 'importance_score', 
+                                                'avg_response_time', 'total_emails', 'first_contact', 
+                                                'last_contact', 'communication_pattern'])
             
             # Load import analytics
             import_query = """
@@ -222,7 +232,14 @@ class PredictiveAnalytics:
             WHERE total_emails > 0
             """
             
-            import_df = pd.read_sql_query(import_query, conn)
+            try:
+                import_df = pd.read_sql_query(import_query, conn)
+            except pd.errors.DatabaseError:
+                # Table doesn't exist or is empty, create empty DataFrame
+                logger.warning("import_analytics table not found, creating empty dataset")
+                import_df = pd.DataFrame(columns=['session_id', 'start_time', 'end_time', 'total_emails',
+                                                'successful_emails', 'failed_emails', 'success_rate', 
+                                                'processing_speed'])
             
             conn.close()
             
@@ -231,9 +248,11 @@ class PredictiveAnalytics:
                 'imports': import_df
             }
             
-            # Analyze patterns
-            self._analyze_sender_patterns()
-            self._analyze_timeline_patterns()
+            # Analyze patterns only if we have data
+            if not sender_df.empty:
+                self._analyze_sender_patterns()
+            if not import_df.empty:
+                self._analyze_timeline_patterns()
             
             logger.info(f"Loaded historical data: {len(sender_df)} senders, {len(import_df)} imports")
             return True
@@ -241,6 +260,45 @@ class PredictiveAnalytics:
         except Exception as e:
             logger.error(f"Error loading historical data: {e}")
             return False
+    
+    def _ensure_analytics_tables(self, conn):
+        """Ensure required analytics tables exist"""
+        cursor = conn.cursor()
+        
+        # Create sender_analytics table if it doesn't exist
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS sender_analytics (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                email_address TEXT NOT NULL UNIQUE,
+                category TEXT,
+                importance_score REAL DEFAULT 0.0,
+                avg_response_time REAL DEFAULT 0.0,
+                total_emails INTEGER DEFAULT 0,
+                first_contact TEXT,
+                last_contact TEXT,
+                communication_pattern TEXT,
+                created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        
+        # Create import_analytics table if it doesn't exist
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS import_analytics (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                session_id TEXT NOT NULL UNIQUE,
+                start_time TEXT,
+                end_time TEXT,
+                total_emails INTEGER DEFAULT 0,
+                successful_emails INTEGER DEFAULT 0,
+                failed_emails INTEGER DEFAULT 0,
+                success_rate REAL DEFAULT 0.0,
+                processing_speed REAL DEFAULT 0.0,
+                created_at TEXT DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        
+        conn.commit()
     
     def predict_timeline_gaps(self, contact_email: str, days_ahead: int = 30) -> List[TimelinePrediction]:
         """Predict potential timeline gaps for a specific contact"""
