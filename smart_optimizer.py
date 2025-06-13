@@ -108,67 +108,70 @@ class SmartImportOptimizer:
         logger.info("Smart Import Optimizer initialized successfully")
     
     def init_optimization_database(self):
-        """Initialize optimization tracking database"""
+        """Initialize the optimization database with required tables"""
         try:
-            conn = sqlite3.connect(self.optimization_db_path)
+            conn = sqlite3.connect(self.analytics_db_path)
             cursor = conn.cursor()
             
-            # Performance metrics table
-            cursor.execute("""
+            # Create performance metrics table
+            cursor.execute('''
                 CREATE TABLE IF NOT EXISTS performance_metrics (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     timestamp TEXT NOT NULL,
-                    batch_size INTEGER,
-                    processing_time REAL,
-                    memory_usage REAL,
-                    cpu_usage REAL,
-                    success_rate REAL,
-                    emails_per_second REAL,
-                    error_count INTEGER,
-                    throughput REAL
+                    batch_size INTEGER NOT NULL,
+                    processing_time REAL NOT NULL,
+                    memory_usage REAL NOT NULL,
+                    cpu_usage REAL NOT NULL,
+                    success_rate REAL NOT NULL,
+                    emails_per_second REAL NOT NULL,
+                    error_count INTEGER NOT NULL,
+                    throughput REAL NOT NULL
                 )
-            """)
+            ''')
             
-            # Optimization recommendations table
-            cursor.execute("""
+            # Create optimization recommendations table
+            cursor.execute('''
                 CREATE TABLE IF NOT EXISTS optimization_recommendations (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     timestamp TEXT NOT NULL,
-                    category TEXT,
-                    recommendation TEXT,
-                    confidence REAL,
-                    expected_improvement REAL,
-                    implementation_priority TEXT,
-                    estimated_impact TEXT,
-                    applied BOOLEAN DEFAULT FALSE
+                    category TEXT NOT NULL,
+                    recommendation TEXT NOT NULL,
+                    confidence REAL NOT NULL,
+                    expected_improvement REAL NOT NULL,
+                    implementation_priority TEXT NOT NULL,
+                    estimated_impact TEXT NOT NULL
                 )
-            """)
+            ''')
             
-            # Resource predictions table
-            cursor.execute("""
+            # Create resource predictions table
+            cursor.execute('''
                 CREATE TABLE IF NOT EXISTS resource_predictions (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     timestamp TEXT NOT NULL,
-                    email_count INTEGER,
-                    estimated_duration REAL,
-                    predicted_memory REAL,
-                    predicted_cpu REAL,
-                    recommended_batch_size INTEGER,
-                    confidence REAL,
-                    actual_duration REAL DEFAULT NULL,
-                    actual_memory REAL DEFAULT NULL,
-                    actual_cpu REAL DEFAULT NULL,
-                    prediction_accuracy REAL DEFAULT NULL
+                    email_count INTEGER NOT NULL,
+                    estimated_duration REAL NOT NULL,
+                    predicted_memory REAL NOT NULL,
+                    predicted_cpu REAL NOT NULL,
+                    recommended_batch_size INTEGER NOT NULL,
+                    confidence REAL NOT NULL,
+                    risk_factors TEXT NOT NULL
                 )
-            """)
+            ''')
             
             conn.commit()
             conn.close()
             
             logger.info("Optimization database initialized successfully")
             
+        except sqlite3.Error as e:
+            logger.error(f"Database error initializing optimization database: {e}")
+            raise
+        except (OSError, IOError) as e:
+            logger.error(f"File system error initializing optimization database: {e}")
+            raise
         except Exception as e:
-            logger.error(f"Error initializing optimization database: {e}")
+            logger.error(f"Unexpected error initializing optimization database: {e}")
+            raise
     
     def start_performance_monitoring(self):
         """Start real-time performance monitoring"""
