@@ -75,8 +75,14 @@ class PSTReader:
             logger.debug("   ❌ Could not access PST store after adding")
             return False
             
+        except (OSError, IOError) as e:
+            logger.error(f"❌ File access error connecting to PST: {e}")
+            return False
+        except ImportError as e:
+            logger.error(f"❌ Outlook/COM import error: {e}")
+            return False
         except Exception as e:
-            logger.error("❌ Error connecting to PST: {e}")
+            logger.error(f"❌ Unexpected error connecting to PST: {e}")
             return False
     
     def disconnect(self):

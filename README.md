@@ -149,61 +149,103 @@ This project is open source. Feel free to modify and distribute.
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Submit a pull request 
+4. Submit a pull request
 
 # PST to Dynamics 365
 
-**Version:** 1.0.0 (Production Release)
+**Version:** 1.0.1 (Hardening Release)
 **Company:** Dynamique Solutions
 
 ## Overview
 A professional desktop application for importing, synchronizing, and managing contacts and emails between PST files and Microsoft Dynamics 365, with advanced AI, analytics, and a modern GUI.
 
----
+## Features
 
-## Release Notes
-### 1.0.0 (Production Release)
-- First public production release
-- Advanced sync engine, conflict resolution, and monitoring dashboard
-- Professional onboarding, help, and installer
-- Comprehensive QA and documentation
+- **📧 PST File Processing**: Advanced PST file reading and email extraction
+- **🔄 Dynamics 365 Integration**: Bidirectional synchronization with Dynamics 365
+- **🤖 AI-Powered Analytics**: Machine learning for contact matching and data optimization
+- **📊 Advanced Analytics**: Comprehensive reporting and predictive insights
+- **🖥️ Modern GUI**: Professional PyQt6-based user interface
+- **🔒 Enterprise Security**: Secure authentication and data handling
+- **📈 Real-time Monitoring**: Sync monitoring dashboard with conflict resolution
 
----
+## Requirements
 
-## Phase 6: Advanced Sync & Monitoring (NEW)
+- Python 3.8+
+- Windows 10/11 (recommended)
+- Microsoft Dynamics 365 access
+- Valid Aspose.Email license (for production use)
 
-### Features
-- **Bidirectional Sync Engine**: Robust, real-time synchronization between PST and Dynamics 365.
-- **Advanced Conflict Resolution**: Last-write-wins, manual, and merge strategies with conflict history.
-- **Data Integrity**: Checksums, consistency checks, and recovery mechanisms.
-- **Sync Monitoring Dashboard**: Real-time metrics, conflict resolution UI, and detailed logs.
-- **Full Integration**: Dashboard accessible from the main navigation sidebar and View menu ("Sync Monitor").
+## Installation
 
-### How to Launch the Sync Monitoring Dashboard
-- Start the main application (`python gui/main_window.py` or packaged executable).
-- Use the sidebar or View menu to select **Sync Monitor**.
-- The dashboard provides:
-  - Live sync metrics (syncs, conflicts, errors)
-  - Conflict resolution interface
-  - Log viewing and export
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/gvranjesevic/PSTtoDynamics.git
+   cd PSTtoDynamics
+   ```
 
-### Developer Notes
-- All new features are unit tested (`tests/test_sync_engine.py`, `tests/test_sync_monitoring_dashboard.py`).
-- Modular design for easy extension and integration.
+2. **Install dependencies**:
+   ```bash
+   pip install -r requirements.txt
+   pip install -r requirements_gui.txt
+   ```
 
----
+3. **Configure environment**:
+   - Copy `environment_template.txt` to `.env`
+   - Fill in your Dynamics 365 credentials and settings
 
-## Getting Started
-- Install requirements: `pip install -r requirements.txt`
-- Run the app: `python gui/main_window.py`
+## Usage
 
----
+### GUI Application (Recommended)
+```bash
+python launch_gui.py
+```
 
-## Upcoming: Phase 7 (Deployment & User Experience)
-- Windows installer
-- Automated deployment
-- User onboarding/help
-- Feedback and telemetry (optional)
-- Production polish
+### Command Line Interface
+```bash
+python main_window.py
+```
 
-See `PHASE7_PLANNING.md` for details. 
+### Key Features Access
+- **Main Dashboard**: Overview of sync status and recent activity
+- **Sync Monitor**: Real-time synchronization monitoring and conflict resolution
+- **Analytics**: Advanced reporting and predictive insights
+- **Settings**: Configuration and authentication management
+
+## Architecture
+
+```
+PSTtoDynamics/
+├── gui/                     # PyQt6 GUI components
+├── sync/                    # Synchronization engine
+├── ml_models/              # Machine learning models
+├── tests/                  # Comprehensive test suite
+├── deployment/             # Packaging and deployment scripts
+├── archive/                # Legacy components and backups
+├── pst_reader.py          # PST file processing
+├── sync_engine.py         # Core synchronization logic
+├── predictive_analytics.py # AI and ML components
+├── smart_optimizer.py     # Performance optimization
+└── requirements*.txt      # Dependencies
+```
+
+## Security & Privacy
+
+- All credentials are encrypted and stored securely
+- PST files remain local - only metadata is synchronized
+- Full audit logging for compliance
+- No data transmitted to third parties
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+**Note**: This software includes Aspose.Email, which requires a commercial license for production use.
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request 
