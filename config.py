@@ -56,7 +56,7 @@ DEFAULT_PST_PATH = os.getenv("DEFAULT_PST_PATH", r"C:\Users\Public\Documents\def
 CURRENT_PST_PATH = os.getenv("CURRENT_PST_PATH", r"PST\current.pst")
 
 # === SYSTEM CONFIGURATION ===
-SYSTEM_USER_ID = "5794f83f-9b37-f011-8c4e-000d3a9c4367"
+SYSTEM_USER_ID = os.getenv("SYSTEM_USER_ID", "5794f83f-9b37-f011-8c4e-000d3a9c4367")
 
 # === IMPORT BEHAVIOR SETTINGS ===
 BATCH_SIZE = 50  # Number of emails to process in each batch
@@ -100,6 +100,7 @@ MAX_ATTACHMENT_SIZE_MB = 25  # Maximum attachment size to import
 SHOW_PROGRESS_BARS = True
 DETAILED_PROGRESS = True
 QUIET_MODE = False
+VERBOSE_STARTUP = False  # Control initialization messages for cleaner startup
 
 # === VALIDATION ===
 def validate_config():
@@ -184,4 +185,4 @@ class FeatureFlags:
     
     # Phase 4 Features (PLANNED)
     ENTERPRISE_UI = False
-    ADVANCED_REPORTING = False 
+    ADVANCED_REPORTING = False

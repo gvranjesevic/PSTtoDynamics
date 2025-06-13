@@ -21,10 +21,12 @@ try:
         sys.path.append(phase3_path)
     from Phase3_Analytics.phase3_integration import get_phase3_analytics
     PHASE3_AVAILABLE = True
-    print("✅ Phase 3 Analytics enabled")
+    if getattr(config, 'VERBOSE_STARTUP', True):
+        print("✅ Phase 3 Analytics enabled")
 except ImportError as e:
     PHASE3_AVAILABLE = False
-    print(f"⚠️ Phase 3 Analytics not available: {e}")
+    if getattr(config, 'VERBOSE_STARTUP', True):
+        print(f"⚠️ Phase 3 Analytics not available: {e}")
 
 
 class EmailImporter:
