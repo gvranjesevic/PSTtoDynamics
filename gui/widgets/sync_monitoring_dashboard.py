@@ -261,7 +261,7 @@ class SyncMonitoringDashboard(QMainWindow):
         self.metrics_widget.update_metrics(metrics)
         
         # Update logs
-        logs = self.sync_engine.monitor.get_logs()
+        logs = self.sync_engine.monitor.get_recent_logs()
         for log in logs:
             self.log_widget.add_log(log)
     

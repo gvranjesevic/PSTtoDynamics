@@ -96,7 +96,7 @@ class TestSyncMonitoringDashboard(unittest.TestCase):
         self.assertIsNotNone(dashboard.log_widget)
         
         # Test update
-        self.sync_engine.monitor.track_sync('Test Sync')
+        self.sync_engine.monitor.track_sync('Test Sync', {'test': 'data'})
         dashboard.update_dashboard()
         
         metrics = dashboard.metrics_widget.sync_count_label.text()
