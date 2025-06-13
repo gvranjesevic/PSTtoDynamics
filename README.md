@@ -153,8 +153,20 @@ This project is open source. Feel free to modify and distribute.
 
 # PST to Dynamics 365
 
+**Version:** 1.0.0 (Production Release)
+**Company:** Dynamique Solutions
+
 ## Overview
 A professional desktop application for importing, synchronizing, and managing contacts and emails between PST files and Microsoft Dynamics 365, with advanced AI, analytics, and a modern GUI.
+
+---
+
+## Release Notes
+### 1.0.0 (Production Release)
+- First public production release
+- Advanced sync engine, conflict resolution, and monitoring dashboard
+- Professional onboarding, help, and installer
+- Comprehensive QA and documentation
 
 ---
 

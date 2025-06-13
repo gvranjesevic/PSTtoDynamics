@@ -52,8 +52,8 @@ def set_secure_password(password: str) -> bool:
         return False  # keyring not available
 
 # === PST FILE CONFIGURATION ===
-DEFAULT_PST_PATH = r"C:\Users\gvran\Desktop\Old PST Files\gvranjesevic@mvp4me.com.pst"
-CURRENT_PST_PATH = r"PST\gvranjesevic@dynamique.com.001.pst"  # Current 720MB file
+DEFAULT_PST_PATH = os.getenv("DEFAULT_PST_PATH", r"C:\Users\Public\Documents\default.pst")
+CURRENT_PST_PATH = os.getenv("CURRENT_PST_PATH", r"PST\current.pst")
 
 # === SYSTEM CONFIGURATION ===
 SYSTEM_USER_ID = "5794f83f-9b37-f011-8c4e-000d3a9c4367"

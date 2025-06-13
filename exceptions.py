@@ -330,7 +330,18 @@ class ThemeLoadException(GUIException):
 # === Utility Functions ===
 
 def handle_exception(func):
-    """Decorator to handle exceptions and convert them to PSTDynamicsException if needed."""
+    """
+    Decorator to handle exceptions and convert them to PSTDynamicsException if needed.
+    
+    This decorator provides automatic exception conversion for common error types,
+    making error handling more consistent across the application.
+    
+    Args:
+        func: The function to wrap with exception handling
+        
+    Returns:
+        Wrapped function with exception handling
+    """
     def wrapper(*args, **kwargs):
         try:
             return func(*args, **kwargs)
@@ -338,12 +349,35 @@ def handle_exception(func):
             # Re-raise our custom exceptions as-is
             raise
         except FileNotFoundError as e:
-            if str(e).endswith('.pst'):
-                raise PSTFileNotFoundException(str(e).split("'")[1])
-            raise DatabaseConnectionException(str(e), "File not found")
+            error_msg = str(e)
+            if '.pst' in error_msg.lower():
+                # Extract file path more safely
+                if '[Errno 2]' in error_msg:
+                    # Windows format: [Errno 2] No such file or directory: 'path'
+                    path_start = error_msg.find("'")
+                    path_end = error_msg.rfind("'")
+                    if path_start != -1 and path_end != -1 and path_start < path_end:
+                        file_path = error_msg[path_start+1:path_end]
+                    else:
+                        file_path = error_msg
+                else:
+                    file_path = error_msg
+                raise PSTFileNotFoundException(file_path)
+            raise DatabaseConnectionException(error_msg, "File not found")
         except PermissionError as e:
-            if str(e).endswith('.pst'):
-                raise PSTAccessDeniedException(str(e).split("'")[1])
+            error_msg = str(e)
+            if '.pst' in error_msg.lower():
+                # Extract file path safely for PST files
+                if '[Errno 13]' in error_msg:
+                    path_start = error_msg.find("'")
+                    path_end = error_msg.rfind("'")
+                    if path_start != -1 and path_end != -1 and path_start < path_end:
+                        file_path = error_msg[path_start+1:path_end]
+                    else:
+                        file_path = error_msg
+                else:
+                    file_path = error_msg
+                raise PSTAccessDeniedException(file_path)
             raise ConfigurationException(f"Permission denied: {e}")
         except ConnectionError as e:
             raise DynamicsConnectionException("Unknown", str(e))

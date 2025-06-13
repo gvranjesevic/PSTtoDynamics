@@ -9,15 +9,35 @@ DYNAMICS_TENANT_DOMAIN=company.com
 DYNAMICS_CLIENT_ID=your-client-id-here
 DYNAMICS_CRM_URL=https://yourorg.crm.dynamics.com/api/data/v9.2
 
-# === OPTIONAL CONFIGURATION ===
-# Override default PST file path
-# PST_FILE_PATH=C:\path\to\your\file.pst
+# === PST FILE CONFIGURATION ===
+# Set your PST file paths here for security (removes hardcoded paths)
+DEFAULT_PST_PATH=C:\path\to\your\default.pst
+CURRENT_PST_PATH=C:\path\to\your\current.pst
 
+# === SYSTEM CONFIGURATION ===
+# Override system user ID if needed
+SYSTEM_USER_ID=your-system-user-id
+
+# === OPTIONAL CONFIGURATION ===
 # Override default log level (DEBUG, INFO, WARNING, ERROR)
-# LOG_LEVEL=INFO
+LOG_LEVEL=INFO
 
 # Override default batch size (1-1000)
-# BATCH_SIZE=50
+BATCH_SIZE=50
 
 # Enable/disable test mode (true/false)
-# TEST_MODE=true 
+TEST_MODE=true
+
+# === PERFORMANCE TUNING ===
+# Maximum emails to process per session
+MAX_EMAILS_PER_SESSION=5000
+
+# Memory optimization settings
+MEMORY_OPTIMIZATION=true
+
+# === SECURITY SETTINGS ===
+# Require user confirmation for major operations
+REQUIRE_USER_CONFIRMATION=true
+
+# Create backup before importing
+BACKUP_BEFORE_IMPORT=true 
