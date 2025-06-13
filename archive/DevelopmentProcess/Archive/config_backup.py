@@ -1,29 +1,53 @@
 """
-Configuration Settings for PST to Dynamics 365 Import System
-===========================================================
+Configuration Settings Template for PST to Dynamics 365 Import System
+====================================================================
 
-This file contains all configuration settings for the production system.
-Modify these settings based on your environment and requirements.
+SECURITY NOTICE: This file previously contained sensitive credentials.
+All sensitive data has been removed for security reasons.
+
+For configuration, please use environment variables or the secure
+configuration system in config.py instead.
+
+This file is kept for historical reference only.
 """
 
 import os
 
+# === SECURITY NOTICE ===
+# This configuration file has been sanitized to remove all sensitive information.
+# 
+# To configure the application:
+# 1. Copy environment_template.txt to .env
+# 2. Fill in your actual values in the .env file
+# 3. Use the secure configuration system in config.py
+#
+# NEVER commit actual credentials to version control!
+
 # === DYNAMICS 365 AUTHENTICATION ===
-USERNAME = "gvranjesevic@dynamique.com"
-PASSWORD = "#SanDiegoChicago77"  # TODO: Move to secure storage in production
-TENANT_DOMAIN = "dynamique.com"
-CLIENT_ID = "51f81489-12ee-4a9e-aaae-a2591f45987d"
-CRM_BASE_URL = "https://dynglobal.crm.dynamics.com/api/data/v9.2"
+# Use environment variables instead:
+# DYNAMICS_USERNAME=your.email@company.com
+# DYNAMICS_PASSWORD=your_secure_password
+# DYNAMICS_TENANT_DOMAIN=company.com
+# DYNAMICS_CLIENT_ID=your-client-id
+USERNAME = os.getenv("DYNAMICS_USERNAME", "CONFIGURE_IN_ENV_FILE")
+PASSWORD = None  # Use environment variable DYNAMICS_PASSWORD or keyring
+TENANT_DOMAIN = os.getenv("DYNAMICS_TENANT_DOMAIN", "CONFIGURE_IN_ENV_FILE")
+CLIENT_ID = os.getenv("DYNAMICS_CLIENT_ID", "CONFIGURE_IN_ENV_FILE")
+CRM_BASE_URL = os.getenv("DYNAMICS_CRM_URL", "https://yourorg.crm.dynamics.com/api/data/v9.2")
 
 # === PST FILE CONFIGURATION ===
-DEFAULT_PST_PATH = r"C:\Users\gvran\Desktop\Old PST Files\gvranjesevic@mvp4me.com.pst"
-CURRENT_PST_PATH = r"PST\gvranjesevic@dynamique.com.001.pst"  # Current 720MB file
+# Use environment variables for file paths:
+# DEFAULT_PST_PATH=C:\path\to\your\default.pst
+# CURRENT_PST_PATH=C:\path\to\your\current.pst
+DEFAULT_PST_PATH = os.getenv("DEFAULT_PST_PATH", r"CONFIGURE_IN_ENV_FILE")
+CURRENT_PST_PATH = os.getenv("CURRENT_PST_PATH", r"PST\configure_in_env.pst")
 
 # === SYSTEM CONFIGURATION ===
-SYSTEM_USER_ID = "5794f83f-9b37-f011-8c4e-000d3a9c4367"
+# Use environment variable: SYSTEM_USER_ID=your-system-user-id
+SYSTEM_USER_ID = os.getenv("SYSTEM_USER_ID", "CONFIGURE_IN_ENV_FILE")
 
 # === IMPORT BEHAVIOR SETTINGS ===
-BATCH_SIZE = 50  # Number of emails to process in each batch
+BATCH_SIZE = int(os.getenv("BATCH_SIZE", "50"))  # Number of emails to process in each batch
 MAX_RETRIES = 3  # Maximum retries for failed operations
 RETRY_DELAY = 2  # Seconds to wait between retries
 
@@ -43,7 +67,7 @@ CHECK_SUBJECT_SIMILARITY = True  # Compare subject lines for duplicates
 CHECK_BODY_SIMILARITY = False  # Compare email bodies (slower)
 
 # === LOGGING CONFIGURATION ===
-LOG_LEVEL = "INFO"  # DEBUG, INFO, WARNING, ERROR
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")  # DEBUG, INFO, WARNING, ERROR
 LOG_TO_FILE = True
 LOG_FILE_PATH = "import_logs"
 MAX_LOG_FILE_SIZE_MB = 100
@@ -70,14 +94,23 @@ def validate_config():
     """Validate configuration settings."""
     errors = []
     
-    if not os.path.exists(CURRENT_PST_PATH):
+    if USERNAME == "CONFIGURE_IN_ENV_FILE":
+        errors.append("USERNAME must be configured via environment variable DYNAMICS_USERNAME")
+    
+    if not PASSWORD:
+        errors.append("PASSWORD must be configured via environment variable DYNAMICS_PASSWORD or keyring")
+    
+    if TENANT_DOMAIN == "CONFIGURE_IN_ENV_FILE":
+        errors.append("TENANT_DOMAIN must be configured via environment variable DYNAMICS_TENANT_DOMAIN")
+    
+    if CLIENT_ID == "CONFIGURE_IN_ENV_FILE":
+        errors.append("CLIENT_ID must be configured via environment variable DYNAMICS_CLIENT_ID")
+    
+    if CURRENT_PST_PATH != "PST\\configure_in_env.pst" and not os.path.exists(CURRENT_PST_PATH):
         errors.append(f"PST file not found: {CURRENT_PST_PATH}")
     
     if BATCH_SIZE < 1 or BATCH_SIZE > 1000:
         errors.append("BATCH_SIZE must be between 1 and 1000")
-    
-    if not USERNAME or not PASSWORD:
-        errors.append("USERNAME and PASSWORD must be configured")
     
     return errors
 
@@ -106,7 +139,7 @@ ADVANCED_COMPARISON = {
 # === PHASE 2 BULK PROCESSING SETTINGS ===
 BULK_PROCESSING = {
     'ENABLE_BULK_MODE': False,          # Enable processing beyond test limits
-    'MAX_EMAILS_PER_SESSION': 5000,     # Maximum emails per import session
+    'MAX_EMAILS_PER_SESSION': int(os.getenv("MAX_EMAILS_PER_SESSION", "5000")),
     'BATCH_SIZE_BULK': 100,             # Batch size for bulk operations
     'PARALLEL_PROCESSING': False,       # Enable parallel processing (experimental)
     'MEMORY_OPTIMIZATION': True,        # Use memory-efficient processing
@@ -131,11 +164,11 @@ class FeatureFlags:
     PST_READING = True
     BASIC_IMPORT = True
     
-    # Phase 2 Features (IN DEVELOPMENT)
+    # Phase 2 Features (COMPLETE)
     CONTACT_CREATION = True
     ADVANCED_COMPARISON = True
     BULK_PROCESSING = True
-    IMPORT_ANALYTICS = False
+    IMPORT_ANALYTICS = True
     
     # Phase 3 Features (PLANNED)
     ATTACHMENT_HANDLING = False

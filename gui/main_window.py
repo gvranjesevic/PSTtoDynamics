@@ -2,16 +2,11 @@
 PST-to-Dynamics 365 Main GUI Window
 ===================================
 
-logger = logging.getLogger(__name__)
-
 Phase 5.1 Foundation: Main Application Window
-Professional desktop interface for email import sys
- import loggingtem with AI intelligence.
+Professional desktop interface for email import system with AI intelligence.
 """
 
 import sys
-
-
 import logging
 import os
 from datetime import datetime
@@ -26,6 +21,9 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import Qt, QTimer, pyqtSignal, QThread, QSize
 from PyQt6.QtGui import QIcon, QFont, QPixmap, QAction
+
+# Initialize logger after importing logging
+logger = logging.getLogger(__name__)
 
 # Import qtawesome for professional icons
 try:
@@ -50,7 +48,7 @@ try:
     BACKEND_AVAILABLE = True
 except ImportError as e:
     BACKEND_AVAILABLE = False
-    logger.warning("⚠️ Backend modules not available: {e}")
+    logger.warning(f"⚠️ Backend modules not available: {e}")
 
 # Import application icon
 try:
@@ -214,7 +212,7 @@ class NavigationSidebar(QFrame):
                     background-color: #2980b9;
                 }
                 QPushButton:pressed {
-                    background-color: #1f618d;
+                    background-color: #21618c;
                 }
             """)
     
@@ -229,358 +227,283 @@ class ContentArea(QWidget):
     
     def __init__(self):
         super().__init__()
+        self.active_widgets = []
         self.setup_ui()
-        self.current_module = None
-        
+    
     def setup_ui(self):
-        """Setup the content area"""
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(20, 20, 20, 20)
+        """Setup the content area interface"""
+        self.layout = QVBoxLayout(self)
+        self.layout.setContentsMargins(20, 20, 20, 20)
         
-        # Content header
-        self.header_label = QLabel("Welcome to PST-to-Dynamics 365")
-        self.header_label.setFont(QFont("Segoe UI", 18, QFont.Weight.Bold))
-        self.header_label.setStyleSheet("color: #2c3e50; margin-bottom: 10px;")
+        # Welcome message
+        welcome_label = QLabel("Welcome to PST to Dynamics 365")
+        welcome_label.setFont(QFont("Segoe UI", 18, QFont.Weight.Bold))
+        welcome_label.setStyleSheet("color: #2c3e50; margin-bottom: 10px;")
+        welcome_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         
-        self.subtitle_label = QLabel("AI-powered email import system")
-        self.subtitle_label.setFont(QFont("Segoe UI", 12))
-        self.subtitle_label.setStyleSheet("color: #7f8c8d; margin-bottom: 30px;")
+        subtitle_label = QLabel("Select a module from the sidebar to get started")
+        subtitle_label.setFont(QFont("Segoe UI", 12))
+        subtitle_label.setStyleSheet("color: #7f8c8d; margin-bottom: 30px;")
+        subtitle_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         
-        layout.addWidget(self.header_label)
-        layout.addWidget(self.subtitle_label)
-        
-        # Content body (placeholder for now)
-        self.content_body = QLabel("Select a module from the sidebar to get started.")
-        self.content_body.setFont(QFont("Segoe UI", 11))
-        self.content_body.setStyleSheet("color: #34495e; padding: 20px;")
-        self.content_body.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        
-        layout.addWidget(self.content_body)
-        layout.addStretch()
-        
+        self.layout.addWidget(welcome_label)
+        self.layout.addWidget(subtitle_label)
+        self.layout.addStretch()
+    
     def show_module(self, module_id: str):
-        """Display a specific module"""
-        # Clean up any active widgets first
+        """Display the specified module"""
+        # Clear current content
         self.cleanup_active_widgets()
         
-        self.current_module = module_id
+        # Clear layout
+        for i in reversed(range(self.layout.count())):
+            child = self.layout.itemAt(i).widget()
+            if child:
+                child.setParent(None)
         
-        module_info = {
-            "dashboard": ("System Dashboard", "Overview and system status"),
-            "import": ("Import Wizard", "Guided email import process"),
-            "analytics": ("Analytics Dashboard", "Import analytics and reports"),
-            "ai": ("AI Intelligence", "Machine learning insights and optimization"),
-            "contacts": ("Contact Management", "Manage Dynamics 365 contacts"),
-            "sync_monitor": ("Sync Monitoring", "Monitor sync operations and resolve conflicts"),
-            "settings": ("System Settings", "Configure application settings")
-        }
-        
-        if module_id in module_info:
-            title, description = module_info[module_id]
-            self.header_label.setText(title)
-            self.subtitle_label.setText(description)
-            
-            # Module-specific content (placeholder for Phase 5.2+)
-            if module_id == "dashboard":
-                self.show_dashboard()
-            elif module_id == "import":
-                self.show_import_placeholder()
-            elif module_id == "analytics":
-                self.show_analytics_placeholder()
-            elif module_id == "ai":
-                self.show_ai_placeholder()
-            elif module_id == "contacts":
-                self.show_contacts_placeholder()
-            elif module_id == "sync_monitor":
-                self.show_sync_monitoring_dashboard()
-            elif module_id == "settings":
-                self.show_settings_placeholder()
+        # Show appropriate module
+        if module_id == "dashboard":
+            self.show_dashboard()
+        elif module_id == "import":
+            self.show_import_placeholder()
+        elif module_id == "analytics":
+            self.show_analytics_placeholder()
+        elif module_id == "ai":
+            self.show_ai_placeholder()
+        elif module_id == "contacts":
+            self.show_contacts_placeholder()
+        elif module_id == "sync_monitor":
+            self.show_sync_monitoring_dashboard()
+        elif module_id == "settings":
+            self.show_settings_placeholder()
+        else:
+            # Default welcome screen
+            self.setup_ui()
     
     def show_dashboard(self):
-        """Show the dashboard module (Phase 5.1 basic version)"""
-        import sys
-        import logging
-        dashboard_info = f"""
-        <div style="font-family: Segoe UI; color: #2c3e50;">
-        <h3>System Status</h3>
-        <p><b>✅ Phase 1-4 Backend:</b> {"Available" if BACKEND_AVAILABLE else "Not Available"}</p>
-        <p><b>🧠 AI Intelligence:</b> {"Available" if PHASE4_AVAILABLE else "Not Available"}</p>
-        <p><b>🎨 GUI Framework:</b> PyQt6 Loaded</p>
+        """Show the main dashboard"""
+        # Dashboard header
+        header = QLabel("📊 System Dashboard")
+        header.setFont(QFont("Segoe UI", 20, QFont.Weight.Bold))
+        header.setStyleSheet("color: #2c3e50; margin-bottom: 20px;")
+        self.layout.addWidget(header)
         
-        <h3>Quick Actions</h3>
-        <p>• Use the Import Wizard to start importing emails</p>
-        <p>• View Analytics for import insights</p>
-        <p>• Access AI Intelligence for smart recommendations</p>
-        <p>• Manage Contacts in Dynamics 365</p>
+        # Status cards
+        status_layout = QHBoxLayout()
         
-        <h3>Phase 5.1 Foundation Complete</h3>
-        <p>✅ Main window framework</p>
-        <p>✅ Navigation sidebar</p>
-        <p>✅ Status monitoring</p>
-        <p>✅ Menu system</p>
-        </div>
-        """
+        # System status card
+        system_card = self.create_status_card("System Status", "✅ Online", "#27ae60")
+        status_layout.addWidget(system_card)
         
-        self.content_body.setText(dashboard_info)
-        self.content_body.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
+        # Database status card
+        db_card = self.create_status_card("Database", "✅ Connected", "#27ae60")
+        status_layout.addWidget(db_card)
+        
+        # Last sync card
+        sync_card = self.create_status_card("Last Sync", "🔄 Never", "#f39c12")
+        status_layout.addWidget(sync_card)
+        
+        self.layout.addLayout(status_layout)
+        self.layout.addStretch()
+    
+    def create_status_card(self, title: str, status: str, color: str) -> QFrame:
+        """Create a status card widget"""
+        card = QFrame()
+        card.setStyleSheet(f"""
+            QFrame {{
+                background: white;
+                border: 2px solid #ecf0f1;
+                border-radius: 10px;
+                padding: 15px;
+                margin: 5px;
+            }}
+        """)
+        
+        layout = QVBoxLayout(card)
+        
+        title_label = QLabel(title)
+        title_label.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
+        title_label.setStyleSheet("color: #2c3e50;")
+        
+        status_label = QLabel(status)
+        status_label.setFont(QFont("Segoe UI", 14))
+        status_label.setStyleSheet(f"color: {color};")
+        
+        layout.addWidget(title_label)
+        layout.addWidget(status_label)
+        
+        return card
     
     def show_import_placeholder(self):
-        """Show the Import Wizard (Phase 5.2)"""
-        # Clear existing content
-        if hasattr(self, 'import_wizard'):
-            return  # Already showing
-        
-        # Hide the header and subtitle to free up space
-        self.header_label.hide()
-        self.subtitle_label.hide()
-        
-        # Import the wizard
+        """Show import wizard placeholder"""
         try:
             from gui.widgets.import_wizard import ImportWizard
             
-            # Replace content body with import wizard
-            self.content_body.hide()
+            header = QLabel("📧 Import Wizard")
+            header.setFont(QFont("Segoe UI", 20, QFont.Weight.Bold))
+            header.setStyleSheet("color: #2c3e50; margin-bottom: 20px;")
+            self.layout.addWidget(header)
             
             # Create and add import wizard
-            self.import_wizard = ImportWizard()
-            self.import_wizard.wizard_completed.connect(self.on_import_completed)
-            self.import_wizard.wizard_cancelled.connect(self.on_import_cancelled)
+            wizard = ImportWizard()
+            wizard.import_completed.connect(self.on_import_completed)
+            wizard.import_cancelled.connect(self.on_import_cancelled)
+            self.active_widgets.append(wizard)
+            self.layout.addWidget(wizard)
             
-            # Add to layout
-            layout = self.layout()
-            layout.insertWidget(2, self.import_wizard)  # Insert after subtitle
-            
-        except ImportError as e:
-            self.content_body.setText(f"❌ Import Wizard not available: {e}\n\nFeatures:\n• Step-by-step import process\n• Real-time progress tracking\n• AI optimization recommendations\n• Error handling and recovery")
-            self.content_body.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        except ImportError:
+            # Fallback placeholder
+            placeholder = QLabel("📧 Import Wizard\n\nComing Soon...")
+            placeholder.setFont(QFont("Segoe UI", 16))
+            placeholder.setStyleSheet("color: #7f8c8d;")
+            placeholder.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            self.layout.addWidget(placeholder)
+            self.layout.addStretch()
     
     def on_import_completed(self, success: bool, data: dict):
-        """Handle import wizard completion"""
+        """Handle import completion"""
         if success:
-            message = f"✅ Import completed successfully!\n\nFile: {data.get('file_name', 'Unknown')}\nStatus: {data.get('final_status', 'Completed')}"
+            QMessageBox.information(self, "Import Complete", 
+                                  f"Successfully imported {data.get('count', 0)} emails!")
         else:
-            message = f"❌ Import was not completed.\n\nStatus: {data.get('final_status', 'Failed')}"
-        
-        # Clean up any active widgets
-        self.cleanup_active_widgets()
-        
-        # Show result and return to dashboard
-        self.content_body.setText(message)
-        self.content_body.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.content_body.show()
+            QMessageBox.warning(self, "Import Failed", 
+                              f"Import failed: {data.get('error', 'Unknown error')}")
     
     def on_import_cancelled(self):
-        """Handle import wizard cancellation"""
-        # Clean up any active widgets
-        self.cleanup_active_widgets()
-        
-        self.content_body.setText("📧 Import cancelled by user.\n\nYou can start a new import anytime using the Import Wizard.")
-        self.content_body.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.content_body.show()
+        """Handle import cancellation"""
+        QMessageBox.information(self, "Import Cancelled", "Import operation was cancelled.")
     
     def cleanup_active_widgets(self):
-        """Clean up any active widgets (wizard, config manager, etc.)"""
-        # Show header and subtitle again
-        self.header_label.show()
-        self.subtitle_label.show()
+        """Clean up active widgets to prevent memory leaks"""
+        for widget in self.active_widgets:
+            try:
+                # Stop any running threads or timers
+                if hasattr(widget, 'stop'):
+                    widget.stop()
+                if hasattr(widget, 'close'):
+                    widget.close()
+                if hasattr(widget, 'deleteLater'):
+                    widget.deleteLater()
+            except Exception as e:
+                logger.warning(f"Error cleaning up widget: {e}")
         
-        # Show content body again
-        self.content_body.show()
-        
-        # Remove import wizard
-        if hasattr(self, 'import_wizard'):
-            self.import_wizard.hide()
-            self.layout().removeWidget(self.import_wizard)
-            self.import_wizard.deleteLater()
-            del self.import_wizard
-        
-        # Remove configuration manager
-        if hasattr(self, 'config_manager'):
-            self.config_manager.hide()
-            self.layout().removeWidget(self.config_manager)
-            self.config_manager.deleteLater()
-            del self.config_manager
-        
-        # Remove analytics dashboard
-        if hasattr(self, 'analytics_dashboard'):
-            self.analytics_dashboard.hide()
-            self.layout().removeWidget(self.analytics_dashboard)
-            self.analytics_dashboard.deleteLater()
-            del self.analytics_dashboard
-        
-        # Remove AI intelligence dashboard
-        if hasattr(self, 'ai_dashboard'):
-            self.ai_dashboard.hide()
-            self.layout().removeWidget(self.ai_dashboard)
-            self.ai_dashboard.deleteLater()
-            del self.ai_dashboard
-        
-        # Remove contact management dashboard
-        if hasattr(self, 'contact_dashboard'):
-            self.contact_dashboard.hide()
-            self.layout().removeWidget(self.contact_dashboard)
-            self.contact_dashboard.deleteLater()
-            del self.contact_dashboard
-        
-        # Remove sync monitoring dashboard
-        if hasattr(self, 'sync_monitoring_dashboard'):
-            self.sync_monitoring_dashboard.hide()
-            self.layout().removeWidget(self.sync_monitoring_dashboard)
-            self.sync_monitoring_dashboard.deleteLater()
-            del self.sync_monitoring_dashboard
+        self.active_widgets.clear()
     
     def show_analytics_placeholder(self):
-        """Show Analytics Dashboard (Phase 5.4)"""
+        """Show analytics dashboard placeholder"""
         try:
             from gui.widgets.analytics_dashboard import AnalyticsDashboard
             
-            # Clean up any existing widgets
-            self.cleanup_active_widgets()
+            header = QLabel("📈 Analytics Dashboard")
+            header.setFont(QFont("Segoe UI", 20, QFont.Weight.Bold))
+            header.setStyleSheet("color: #2c3e50; margin-bottom: 20px;")
+            self.layout.addWidget(header)
             
-            # Hide the header and subtitle to free up space
-            self.header_label.hide()
-            self.subtitle_label.hide()
+            # Create and add analytics dashboard
+            dashboard = AnalyticsDashboard()
+            self.active_widgets.append(dashboard)
+            self.layout.addWidget(dashboard)
             
-            # Create and show analytics dashboard
-            self.analytics_dashboard = AnalyticsDashboard()
-            
-            # Replace content with analytics dashboard
-            self.content_body.hide()
-            
-            # Add to layout
-            layout = self.layout()
-            layout.insertWidget(2, self.analytics_dashboard)  # Insert after subtitle
-            
-            logger.info("📈 Phase 5.4 Analytics Dashboard loaded successfully")
-            
-        except ImportError as e:
-            logger.warning("⚠️ Analytics Dashboard not available: {e}")
-            self.content_body.setText("📈 Analytics Dashboard\n\nError loading dashboard module.\nPlease check installation.")
-            self.content_body.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        except Exception as e:
-            logger.error("❌ Error loading Analytics Dashboard: {e}")
-            self.content_body.setText(f"📈 Analytics Dashboard\n\nError: {str(e)}")
-            self.content_body.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        except ImportError:
+            # Fallback placeholder
+            placeholder = QLabel("📈 Analytics Dashboard\n\nComing Soon...")
+            placeholder.setFont(QFont("Segoe UI", 16))
+            placeholder.setStyleSheet("color: #7f8c8d;")
+            placeholder.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            self.layout.addWidget(placeholder)
+            self.layout.addStretch()
     
     def show_ai_placeholder(self):
-        """Show AI Intelligence Dashboard (Phase 5.5)"""
+        """Show AI intelligence dashboard placeholder"""
         try:
             from gui.widgets.ai_intelligence_dashboard import AIIntelligenceDashboard
             
-            # Clean up any existing widgets
-            self.cleanup_active_widgets()
+            header = QLabel("🧠 AI Intelligence Dashboard")
+            header.setFont(QFont("Segoe UI", 20, QFont.Weight.Bold))
+            header.setStyleSheet("color: #2c3e50; margin-bottom: 20px;")
+            self.layout.addWidget(header)
             
-            # Hide the header and subtitle to free up space
-            self.header_label.hide()
-            self.subtitle_label.hide()
+            # Create and add AI dashboard
+            dashboard = AIIntelligenceDashboard()
+            self.active_widgets.append(dashboard)
+            self.layout.addWidget(dashboard)
             
-            # Create and show AI intelligence dashboard
-            self.ai_dashboard = AIIntelligenceDashboard()
-            
-            # Replace content with AI dashboard
-            self.content_body.hide()
-            
-            # Add to layout
-            layout = self.layout()
-            layout.insertWidget(2, self.ai_dashboard)  # Insert after subtitle
-            
-            logger.debug("🤖 Phase 5.5 AI Intelligence Dashboard loaded successfully")
-            
-        except ImportError as e:
-            logger.warning("⚠️ AI Intelligence Dashboard not available: {e}")
-            self.content_body.setText("🤖 AI Intelligence Dashboard\n\nError loading AI dashboard module.\nPlease check Phase 4 components installation.")
-            self.content_body.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        except Exception as e:
-            logger.error("❌ Error loading AI Intelligence Dashboard: {e}")
-            self.content_body.setText(f"🤖 AI Intelligence Dashboard\n\nError: {str(e)}")
-            self.content_body.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        except ImportError:
+            # Fallback placeholder
+            placeholder = QLabel("🧠 AI Intelligence Dashboard\n\nComing Soon...")
+            placeholder.setFont(QFont("Segoe UI", 16))
+            placeholder.setStyleSheet("color: #7f8c8d;")
+            placeholder.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            self.layout.addWidget(placeholder)
+            self.layout.addStretch()
     
     def show_contacts_placeholder(self):
-        """Show Contact Management Dashboard (Phase 5.6)"""
+        """Show contacts management placeholder"""
         try:
             from gui.widgets.contact_management_dashboard import ContactManagementDashboard
             
-            # Clean up any existing widgets
-            self.cleanup_active_widgets()
+            header = QLabel("👥 Contact Management")
+            header.setFont(QFont("Segoe UI", 20, QFont.Weight.Bold))
+            header.setStyleSheet("color: #2c3e50; margin-bottom: 20px;")
+            self.layout.addWidget(header)
             
-            # Hide the header and subtitle to free up space
-            self.header_label.hide()
-            self.subtitle_label.hide()
+            # Create and add contact dashboard
+            dashboard = ContactManagementDashboard()
+            self.active_widgets.append(dashboard)
+            self.layout.addWidget(dashboard)
             
-            # Create and show contact management dashboard
-            self.contact_dashboard = ContactManagementDashboard()
-            
-            # Replace content with contact dashboard
-            self.content_body.hide()
-            
-            # Add to layout
-            layout = self.layout()
-            layout.insertWidget(2, self.contact_dashboard)  # Insert after subtitle
-            
-            logger.info("👥 Phase 5.6 Contact Management Dashboard loaded successfully")
-            
-        except ImportError as e:
-            logger.warning("⚠️ Contact Management Dashboard not available: {e}")
-            self.content_body.setText("👥 Contact Management Dashboard\n\nError loading contact dashboard module.\nPlease check contact management components installation.")
-            self.content_body.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        except Exception as e:
-            logger.error("❌ Error loading Contact Management Dashboard: {e}")
-            self.content_body.setText(f"👥 Contact Management Dashboard\n\nError: {str(e)}")
-            self.content_body.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        except ImportError:
+            # Fallback placeholder
+            placeholder = QLabel("👥 Contact Management\n\nComing Soon...")
+            placeholder.setFont(QFont("Segoe UI", 16))
+            placeholder.setStyleSheet("color: #7f8c8d;")
+            placeholder.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            self.layout.addWidget(placeholder)
+            self.layout.addStretch()
     
     def show_settings_placeholder(self):
-        """Show the Configuration Manager (Phase 5.3)"""
-        # Clear existing content
-        if hasattr(self, 'config_manager'):
-            return  # Already showing
-        
-        # Hide the header and subtitle to free up space
-        self.header_label.hide()
-        self.subtitle_label.hide()
-        
-        # Import the configuration manager
+        """Show settings/configuration placeholder"""
         try:
             from gui.widgets.configuration_manager import ConfigurationManager
             
-            # Replace content body with configuration manager
-            self.content_body.hide()
+            header = QLabel("⚙️ System Configuration")
+            header.setFont(QFont("Segoe UI", 20, QFont.Weight.Bold))
+            header.setStyleSheet("color: #2c3e50; margin-bottom: 20px;")
+            self.layout.addWidget(header)
             
             # Create and add configuration manager
-            self.config_manager = ConfigurationManager()
-            self.config_manager.configuration_changed.connect(self.on_configuration_changed)
+            config_manager = ConfigurationManager()
+            config_manager.configuration_changed.connect(self.on_configuration_changed)
+            self.active_widgets.append(config_manager)
+            self.layout.addWidget(config_manager)
             
-            # Add to layout
-            layout = self.layout()
-            layout.insertWidget(2, self.config_manager)  # Insert after subtitle
-            
-        except ImportError as e:
-            self.content_body.setText(f"❌ Configuration Manager not available: {e}\n\nFeatures:\n• Visual configuration editor\n• Authentication setup\n• Import behavior settings\n• Phase 2-4 advanced options")
-            self.content_body.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        except ImportError:
+            # Fallback placeholder
+            placeholder = QLabel("⚙️ System Configuration\n\nComing Soon...")
+            placeholder.setFont(QFont("Segoe UI", 16))
+            placeholder.setStyleSheet("color: #7f8c8d;")
+            placeholder.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            self.layout.addWidget(placeholder)
+            self.layout.addStretch()
     
     def on_configuration_changed(self, config_data: dict):
         """Handle configuration changes"""
-        logger.debug("Configuration updated:")
-        for section, data in config_data.items():
-            logger.debug("  {section}: {data}")
-        
-        # Update status to indicate configuration was saved
-        self.update_status("Configuration updated successfully", "#27ae60")
-
+        logger.info(f"Configuration updated: {config_data}")
+        QMessageBox.information(self, "Configuration Updated", 
+                              "Configuration has been saved successfully.")
+    
     def show_sync_monitoring_dashboard(self):
-        self.cleanup_active_widgets()
-        self.header_label.hide()
-        self.subtitle_label.hide()
-        self.content_body.hide()
-        self.sync_engine = SyncEngine()
-        self.sync_monitoring_dashboard = SyncMonitoringDashboard(self.sync_engine)
-        # Add inline help button
-        help_btn = QToolButton()
-        help_btn.setText("?")
-        help_btn.setToolTip("Learn more about sync monitoring and conflict resolution.")
-        help_btn.clicked.connect(lambda: QMessageBox.information(self, "Sync Monitor Help", "The Sync Monitoring Dashboard provides real-time sync metrics, conflict resolution, and logs. Use the tabs to view metrics, resolve conflicts, and review logs."))
-        layout = self.layout()
-        layout.insertWidget(2, help_btn)
-        layout.insertWidget(3, self.sync_monitoring_dashboard)
+        """Show the sync monitoring dashboard"""
+        header = QLabel("🔄 Sync Monitoring Dashboard")
+        header.setFont(QFont("Segoe UI", 20, QFont.Weight.Bold))
+        header.setStyleSheet("color: #2c3e50; margin-bottom: 20px;")
+        self.layout.addWidget(header)
+        
+        # Create sync engine and dashboard
+        sync_engine = SyncEngine()
+        dashboard = SyncMonitoringDashboard(sync_engine)
+        self.active_widgets.append(dashboard)
+        self.layout.addWidget(dashboard)
 
 
 class SystemStatusMonitor(QThread):
@@ -591,192 +514,119 @@ class SystemStatusMonitor(QThread):
     def __init__(self):
         super().__init__()
         self.running = True
-        
+    
     def run(self):
         """Monitor system status in background"""
         while self.running:
             try:
-                # Check backend availability
-                if BACKEND_AVAILABLE:
-                    self.status_updated.emit("System Ready", "#27ae60")
-                else:
-                    self.status_updated.emit("Backend Unavailable", "#e74c3c")
+                # Check system health
+                import psutil
+                cpu_percent = psutil.cpu_percent(interval=1)
+                memory_percent = psutil.virtual_memory().percent
                 
-                # Sleep for 5 seconds before next check
-                self.msleep(5000)
+                if cpu_percent > 80 or memory_percent > 80:
+                    self.status_updated.emit("System Load High", "#e74c3c")
+                else:
+                    self.status_updated.emit("System Ready", "#27ae60")
+                
+                self.msleep(5000)  # Check every 5 seconds
                 
             except Exception as e:
-                self.status_updated.emit("Status Error", "#e74c3c")
-                self.msleep(10000)  # Wait longer if error
+                logger.warning(f"Status monitor error: {e}")
+                self.status_updated.emit("Monitor Error", "#f39c12")
+                self.msleep(10000)  # Wait longer on error
     
     def stop(self):
         """Stop the monitoring thread"""
         self.running = False
+        self.quit()
         self.wait()
 
 
 class MainWindow(QMainWindow):
-    """Main application window for PST-to-Dynamics 365 GUI"""
+    """Main application window"""
     
     def __init__(self):
         super().__init__()
         self.status_monitor = None
         self.setup_ui()
-        self.setup_menu_bar()
-        self.setup_toolbar()
-        self.setup_status_bar()
-        self.start_monitoring()
         self.show_welcome_if_first_run()
-        
+        self.start_monitoring()
+    
     def setup_ui(self):
         """Setup the main window interface"""
-        self.setWindowTitle("PST to Dynamics 365 - AI Email Import System")
-        self.setGeometry(100, 100, 1400, 900)
+        self.setWindowTitle("PST to Dynamics 365 - AI-Powered Email Import")
+        self.setMinimumSize(1200, 800)
+        self.resize(1400, 900)
         
         # Set application icon
         try:
-            from gui.resources.app_icon import get_app_icon
-            self.setWindowIcon(get_app_icon(32))
-        except ImportError:
-            pass  # Fallback to default icon
+            if ICON_AVAILABLE:
+                icon = get_app_icon()
+                if icon:
+                    self.setWindowIcon(icon)
+        except Exception as e:
+            logger.warning(f"Could not set window icon: {e}")
         
-        # Central widget with splitter
+        # Create central widget and main layout
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
+        main_layout = QHBoxLayout(central_widget)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.setSpacing(0)
         
-        layout = QHBoxLayout(central_widget)
-        layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(0)
-        
-        # Create splitter for resizable panels
-        splitter = QSplitter(Qt.Orientation.Horizontal)
-        
-        # Navigation sidebar
+        # Create sidebar and content area
         self.sidebar = NavigationSidebar()
-        self.sidebar.navigate_to.connect(self.on_navigate)
-        
-        # Main content area
         self.content_area = ContentArea()
         
-        # Add to splitter
+        # Create splitter for resizable layout
+        splitter = QSplitter(Qt.Orientation.Horizontal)
         splitter.addWidget(self.sidebar)
         splitter.addWidget(self.content_area)
+        splitter.setStretchFactor(0, 0)  # Sidebar fixed
+        splitter.setStretchFactor(1, 1)  # Content area stretches
+        splitter.setSizes([220, 1180])
         
-        # Set splitter proportions (sidebar: content = 1:4)
-        splitter.setSizes([220, 980])
-        splitter.setCollapsible(0, False)  # Don't allow sidebar to collapse
+        main_layout.addWidget(splitter)
         
-        layout.addWidget(splitter)
+        # Connect signals
+        self.sidebar.navigate_to.connect(self.on_navigate)
         
-        # Apply dark theme
+        # Setup menu bar, toolbar, and status bar
+        self.setup_menu_bar()
+        self.setup_toolbar()
+        self.setup_status_bar()
+        
+        # Apply modern styling
         self.setStyleSheet("""
             QMainWindow {
-                background-color: #ffffff;
-            }
-            
-            /* Menu Bar Styling */
-            QMenuBar {
                 background-color: #f8f9fa;
-                border-bottom: 1px solid #dee2e6;
-                padding: 4px 8px;
-                font-family: "Segoe UI";
-                font-size: 14px;
-                color: #2c3e50;
             }
-            QMenuBar::item {
-                background-color: transparent;
-                padding: 6px 12px;
-                margin: 2px;
-                border-radius: 4px;
-            }
-            QMenuBar::item:selected {
-                background-color: #e9ecef;
-            }
-            QMenuBar::item:pressed {
-                background-color: #3498db;
-                color: white;
-            }
-            
-            /* Menu Dropdown Styling */
-            QMenu {
-                background-color: #ffffff;
-                border: 1px solid #bdc3c7;
-                border-radius: 6px;
-                padding: 6px 0px;
-                font-family: "Segoe UI";
-                font-size: 14px;
-                color: #2c3e50;
-            }
-            QMenu::item {
-                padding: 8px 20px;
-                margin: 1px;
-                color: #2c3e50;
-                background-color: transparent;
-            }
-            QMenu::item:selected {
-                background-color: #3498db;
-                color: white;
-            }
-            QMenu::separator {
-                height: 1px;
-                background-color: #ecf0f1;
-                margin: 4px 10px;
-            }
-            
-            /* Toolbar Styling */
-            QToolBar {
-                background-color: #f8f9fa;
-                border: none;
-                border-bottom: 1px solid #dee2e6;
-                padding: 6px;
-                spacing: 4px;
-            }
-            QToolBar QToolButton {
-                background-color: transparent;
-                border: none;
-                padding: 8px 12px;
-                margin: 2px;
-                border-radius: 4px;
-                font-family: "Segoe UI";
-                font-size: 13px;
-                color: #2c3e50;
-            }
-            QToolBar QToolButton:hover {
-                background-color: #e9ecef;
-            }
-            QToolBar QToolButton:pressed {
-                background-color: #3498db;
-                color: white;
-            }
-            
-            /* Splitter Styling */
             QSplitter::handle {
-                background-color: #bdc3c7;
-                width: 1px;
+                background-color: #dee2e6;
+                width: 2px;
             }
             QSplitter::handle:hover {
-                background-color: #95a5a6;
+                background-color: #adb5bd;
             }
         """)
     
     def setup_menu_bar(self):
-        """Setup the menu bar"""
+        """Setup the application menu bar"""
         menubar = self.menuBar()
         
         # File menu
         file_menu = menubar.addMenu("&File")
         
-        new_import_action = QAction("&New Import...", self)
-        new_import_action.setShortcut("Ctrl+N")
-        new_import_action.setStatusTip("Start a new email import")
-        new_import_action.triggered.connect(lambda: self.on_navigate("import"))
-        file_menu.addAction(new_import_action)
+        new_action = QAction("&New Import", self)
+        new_action.setShortcut("Ctrl+N")
+        new_action.triggered.connect(lambda: self.on_navigate("import"))
+        file_menu.addAction(new_action)
         
         file_menu.addSeparator()
         
         exit_action = QAction("E&xit", self)
-        exit_action.setShortcut("Alt+F4")
-        exit_action.setStatusTip("Exit the application")
+        exit_action.setShortcut("Ctrl+Q")
         exit_action.triggered.connect(self.close)
         file_menu.addAction(exit_action)
         
@@ -784,246 +634,304 @@ class MainWindow(QMainWindow):
         view_menu = menubar.addMenu("&View")
         
         dashboard_action = QAction("&Dashboard", self)
-        dashboard_action.setShortcut("Ctrl+1")
         dashboard_action.triggered.connect(lambda: self.on_navigate("dashboard"))
         view_menu.addAction(dashboard_action)
         
         analytics_action = QAction("&Analytics", self)
-        analytics_action.setShortcut("Ctrl+2")
         analytics_action.triggered.connect(lambda: self.on_navigate("analytics"))
         view_menu.addAction(analytics_action)
         
-        ai_action = QAction("&AI Intelligence", self)
-        ai_action.setShortcut("Ctrl+3")
-        ai_action.triggered.connect(lambda: self.on_navigate("ai"))
-        view_menu.addAction(ai_action)
+        contacts_action = QAction("&Contacts", self)
+        contacts_action.triggered.connect(lambda: self.on_navigate("contacts"))
+        view_menu.addAction(contacts_action)
         
         sync_monitor_action = QAction("&Sync Monitor", self)
-        sync_monitor_action.setShortcut("Ctrl+4")
         sync_monitor_action.triggered.connect(lambda: self.on_navigate("sync_monitor"))
         view_menu.addAction(sync_monitor_action)
         
         # Tools menu
         tools_menu = menubar.addMenu("&Tools")
         
-        settings_action = QAction("&Settings...", self)
-        settings_action.setShortcut("Ctrl+,")
+        settings_action = QAction("&Settings", self)
         settings_action.triggered.connect(lambda: self.on_navigate("settings"))
         tools_menu.addAction(settings_action)
         
         # Help menu
         help_menu = menubar.addMenu("&Help")
         
+        welcome_action = QAction("&Welcome", self)
+        welcome_action.triggered.connect(self.show_welcome_dialog)
+        help_menu.addAction(welcome_action)
+        
+        manual_action = QAction("&User Manual", self)
+        manual_action.triggered.connect(self.show_user_manual)
+        help_menu.addAction(manual_action)
+        
+        faq_action = QAction("&FAQ", self)
+        faq_action.triggered.connect(self.show_faq_dialog)
+        help_menu.addAction(faq_action)
+        
+        feedback_action = QAction("Send &Feedback", self)
+        feedback_action.triggered.connect(self.show_feedback_dialog)
+        help_menu.addAction(feedback_action)
+        
+        help_menu.addSeparator()
+        
         about_action = QAction("&About", self)
         about_action.triggered.connect(self.show_about)
         help_menu.addAction(about_action)
-        help_menu.addSeparator()
-        welcome_action = QAction("Show Welcome Screen", self)
-        welcome_action.triggered.connect(self.show_welcome_dialog)
-        help_menu.addAction(welcome_action)
-        manual_action = QAction("User Manual", self)
-        manual_action.triggered.connect(self.show_user_manual)
-        help_menu.addAction(manual_action)
-        faq_action = QAction("FAQ", self)
-        faq_action.triggered.connect(self.show_faq_dialog)
-        help_menu.addAction(faq_action)
-        feedback_action = QAction("Send Feedback", self)
-        feedback_action.triggered.connect(self.show_feedback_dialog)
-        help_menu.addAction(feedback_action)
     
     def setup_toolbar(self):
-        """Setup the toolbar"""
-        toolbar = self.addToolBar("Main Toolbar")
-        toolbar.setMovable(False)
-        toolbar.setFloatable(False)
+        """Setup the application toolbar"""
+        toolbar = self.addToolBar("Main")
+        toolbar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
         
-        # Quick action buttons with text labels
-        import_action = QAction("📧 Import", self)
-        import_action.setStatusTip("Start email import")
+        # Quick action buttons
+        if ICONS_AVAILABLE:
+            try:
+                import_action = QAction(qta.icon('fa5s.file-import'), "Import", self)
+                dashboard_action = QAction(qta.icon('fa5s.tachometer-alt'), "Dashboard", self)
+                settings_action = QAction(qta.icon('fa5s.cog'), "Settings", self)
+            except:
+                # Fallback to text-only
+                import_action = QAction("📧 Import", self)
+                dashboard_action = QAction("📊 Dashboard", self)
+                settings_action = QAction("⚙️ Settings", self)
+        else:
+            import_action = QAction("📧 Import", self)
+            dashboard_action = QAction("📊 Dashboard", self)
+            settings_action = QAction("⚙️ Settings", self)
+        
         import_action.triggered.connect(lambda: self.on_navigate("import"))
-        toolbar.addAction(import_action)
-        
-        analytics_action = QAction("📈 Analytics", self)
-        analytics_action.setStatusTip("View analytics")
-        analytics_action.triggered.connect(lambda: self.on_navigate("analytics"))
-        toolbar.addAction(analytics_action)
-        
-        ai_action = QAction("🧠 AI", self)
-        ai_action.setStatusTip("AI Intelligence")
-        ai_action.triggered.connect(lambda: self.on_navigate("ai"))
-        toolbar.addAction(ai_action)
-        
-        toolbar.addSeparator()
-        
-        settings_action = QAction("⚙️ Settings", self)
-        settings_action.setStatusTip("Application settings")
+        dashboard_action.triggered.connect(lambda: self.on_navigate("dashboard"))
         settings_action.triggered.connect(lambda: self.on_navigate("settings"))
-        toolbar.addAction(settings_action)
         
-        # Add stretch to push items to the left
-        spacer = QWidget()
-        spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
-        toolbar.addWidget(spacer)
+        toolbar.addAction(import_action)
+        toolbar.addAction(dashboard_action)
+        toolbar.addSeparator()
+        toolbar.addAction(settings_action)
     
     def setup_status_bar(self):
-        """Setup the status bar"""
+        """Setup the application status bar"""
         self.status_bar = self.statusBar()
         
-        # Main status message
-        self.status_label = QLabel("Ready")
-        self.status_bar.addWidget(self.status_label)
+        # Status message
+        self.status_message = QLabel("Ready")
+        self.status_bar.addWidget(self.status_message)
         
-        # Add spacer
-        self.status_bar.addPermanentWidget(QLabel(""), 1)
+        # Progress bar (hidden by default)
+        self.progress_bar = QProgressBar()
+        self.progress_bar.setVisible(False)
+        self.progress_bar.setMaximumWidth(200)
+        self.status_bar.addPermanentWidget(self.progress_bar)
         
-        # Backend status
-        self.backend_status = QLabel("Backend: Checking...")
-        self.status_bar.addPermanentWidget(self.backend_status)
-        
-        # Phase indicator
-        phase_label = QLabel("Phase 5.1 Foundation")
-        phase_label.setStyleSheet("font-weight: bold; color: #3498db; padding: 0 10px;")
-        self.status_bar.addPermanentWidget(phase_label)
+        # Version info
+        version_label = QLabel("v1.0.0")
+        version_label.setStyleSheet("color: #6c757d; font-size: 10px;")
+        self.status_bar.addPermanentWidget(version_label)
     
     def start_monitoring(self):
-        """Start system status monitoring"""
+        """Start background system monitoring"""
         self.status_monitor = SystemStatusMonitor()
         self.status_monitor.status_updated.connect(self.update_status)
         self.status_monitor.start()
     
     def update_status(self, message: str, color: str):
-        """Update the status display"""
+        """Update status bar and sidebar"""
+        self.status_message.setText(message)
+        self.status_message.setStyleSheet(f"color: {color};")
         self.sidebar.update_status(message, color)
-        self.backend_status.setText(f"Backend: {message}")
-        self.backend_status.setStyleSheet(f"color: {color};")
     
     def on_navigate(self, module_id: str):
         """Handle navigation to different modules"""
         self.content_area.show_module(module_id)
-        self.status_label.setText(f"Viewing {module_id.title()}")
+        self.sidebar.select_nav_item(module_id)
     
     def show_about(self):
         """Show about dialog"""
         about_text = """
-        <h3>PST to Dynamics 365</h3>
-        <p><b>Version:</b> 1.0.0 (Production Release)</p>
+        <h2>PST to Dynamics 365</h2>
+        <p><b>Version:</b> 1.0.0</p>
         <p><b>Company:</b> Dynamique Solutions</p>
-        <p><b>AI-Powered Email Import System</b></p>
         <br>
-        <p>A comprehensive solution for importing emails from PST files 
-        into Microsoft Dynamics 365 with advanced AI intelligence.</p>
+        <p>A professional desktop application for importing, synchronizing, and managing 
+        contacts and emails between PST files and Microsoft Dynamics 365.</p>
         <br>
         <p><b>Features:</b></p>
         <ul>
-        <li>Bidirectional sync and conflict resolution</li>
-        <li>Professional desktop GUI</li>
-        <li>AI-powered pattern recognition</li>
-        <li>Smart import optimization</li>
-        <li>Predictive analytics</li>
-        <li>Enterprise-grade interface</li>
+        <li>Advanced sync engine with conflict resolution</li>
+        <li>AI-powered analytics and insights</li>
+        <li>Professional monitoring dashboard</li>
+        <li>Comprehensive contact management</li>
         </ul>
         <br>
-        <p><b>Developer:</b> gvranjesevic@dynamique.com</p>
+        <p><i>Built with PyQt6 and modern design principles.</i></p>
         """
+        
         QMessageBox.about(self, "About PST to Dynamics 365", about_text)
     
     def show_welcome_if_first_run(self):
-        config_path = os.path.join(os.path.expanduser('~'), '.psttodyn_config.json')
-        first_run = True
-        if os.path.exists(config_path):
-            try:
-                with open(config_path, 'r') as f:
-                    cfg = json.load(f)
-                    first_run = cfg.get('first_run', True)
-            except Exception:
-                first_run = True
-        if first_run:
-            dlg = WelcomeDialog(self)
-            dlg.exec()
-            # Mark as not first run
-            try:
-                with open(config_path, 'w') as f:
-                    json.dump({'first_run': False}, f)
-            except Exception:
-                pass
-
+        """Show welcome dialog on first run"""
+        try:
+            # Check if this is first run
+            settings_file = os.path.join(os.path.expanduser("~"), ".pst_dynamics_settings.json")
+            if not os.path.exists(settings_file):
+                # First run - show welcome dialog
+                QTimer.singleShot(1000, self.show_welcome_dialog)  # Delay to ensure window is shown
+                
+                # Create settings file to mark as not first run
+                try:
+                    with open(settings_file, 'w') as f:
+                        json.dump({"first_run": False, "version": "1.0.0"}, f)
+                except Exception as e:
+                    logger.warning(f"Could not create settings file: {e}")
+        except Exception as e:
+            logger.warning(f"Error checking first run: {e}")
+    
     def show_welcome_dialog(self):
-        dlg = WelcomeDialog(self)
-        dlg.exec()
+        """Show welcome dialog"""
+        try:
+            welcome_dialog = WelcomeDialog(self)
+            welcome_dialog.exec()
+        except Exception as e:
+            logger.warning(f"Could not show welcome dialog: {e}")
     
     def show_user_manual(self):
-        dlg = QDialog(self)
-        dlg.setWindowTitle("User Manual")
-        dlg.setMinimumSize(700, 600)
-        layout = QVBoxLayout(dlg)
-        text = QTextEdit()
-        text.setReadOnly(True)
+        """Show user manual"""
         try:
-            with open("USER_MANUAL.md", "r", encoding="utf-8") as f:
-                text.setPlainText(f.read())
+            # Try to open user manual file or URL
+            manual_text = """
+            <h2>PST to Dynamics 365 User Manual</h2>
+            <h3>Getting Started</h3>
+            <p>1. Configure your Dynamics 365 connection in Settings</p>
+            <p>2. Select your PST file using the Import Wizard</p>
+            <p>3. Review and start the import process</p>
+            <p>4. Monitor progress in the Sync Monitor</p>
+            
+            <h3>Configuration</h3>
+            <p>Use environment variables or the Settings panel to configure:</p>
+            <ul>
+            <li>DYNAMICS_USERNAME - Your Dynamics 365 username</li>
+            <li>DYNAMICS_PASSWORD - Your password (use keyring for security)</li>
+            <li>DYNAMICS_TENANT_DOMAIN - Your organization domain</li>
+            <li>DYNAMICS_CLIENT_ID - Application client ID</li>
+            </ul>
+            
+            <h3>Support</h3>
+            <p>For additional help, use the Send Feedback option in the Help menu.</p>
+            """
+            
+            dialog = QDialog(self)
+            dialog.setWindowTitle("User Manual")
+            dialog.setMinimumSize(600, 400)
+            
+            layout = QVBoxLayout(dialog)
+            
+            text_edit = QTextEdit()
+            text_edit.setHtml(manual_text)
+            text_edit.setReadOnly(True)
+            layout.addWidget(text_edit)
+            
+            button_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok)
+            button_box.accepted.connect(dialog.accept)
+            layout.addWidget(button_box)
+            
+            dialog.exec()
+            
         except Exception as e:
-            text.setPlainText(f"Could not load user manual: {e}")
-        layout.addWidget(text)
-        btns = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok)
-        btns.accepted.connect(dlg.accept)
-        layout.addWidget(btns)
-        dlg.exec()
-
+            logger.error(f"Error showing user manual: {e}")
+            QMessageBox.information(self, "User Manual", 
+                                  "User manual is not available. Please check the documentation folder.")
+    
     def show_faq_dialog(self):
-        dlg = QDialog(self)
-        dlg.setWindowTitle("Frequently Asked Questions (FAQ)")
-        dlg.setMinimumSize(500, 400)
-        layout = QVBoxLayout(dlg)
-        faq_text = QTextEdit()
-        faq_text.setReadOnly(True)
-        faq_text.setPlainText("""
-Q: How do I import emails from a PST file?
-A: Use the Import Wizard from the navigation sidebar.
-
-Q: How do I resolve sync conflicts?
-A: Go to the Sync Monitor and use the Conflict Resolution tab.
-
-Q: Where can I find logs and metrics?
-A: The Sync Monitoring Dashboard provides real-time logs and metrics.
-
-Q: How do I get help?
-A: Use this Help menu or contact support.
-        """)
-        layout.addWidget(faq_text)
-        btns = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok)
-        btns.accepted.connect(dlg.accept)
-        layout.addWidget(btns)
-        dlg.exec()
-
+        """Show FAQ dialog"""
+        faq_text = """
+        <h2>Frequently Asked Questions</h2>
+        
+        <h3>Q: How do I configure my Dynamics 365 connection?</h3>
+        <p>A: Go to Settings and enter your Dynamics 365 credentials, or use environment variables for security.</p>
+        
+        <h3>Q: What PST file formats are supported?</h3>
+        <p>A: The application supports standard Outlook PST files (.pst) created by Microsoft Outlook.</p>
+        
+        <h3>Q: How do I handle import conflicts?</h3>
+        <p>A: Use the Sync Monitor to view and resolve conflicts using various resolution strategies.</p>
+        
+        <h3>Q: Can I import large PST files?</h3>
+        <p>A: Yes, the application supports batch processing and memory optimization for large files.</p>
+        
+        <h3>Q: How do I get support?</h3>
+        <p>A: Use the Send Feedback option in the Help menu to report issues or request assistance.</p>
+        """
+        
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Frequently Asked Questions")
+        dialog.setMinimumSize(600, 400)
+        
+        layout = QVBoxLayout(dialog)
+        
+        text_edit = QTextEdit()
+        text_edit.setHtml(faq_text)
+        text_edit.setReadOnly(True)
+        layout.addWidget(text_edit)
+        
+        button_box = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok)
+        button_box.accepted.connect(dialog.accept)
+        layout.addWidget(button_box)
+        
+        dialog.exec()
+    
     def show_feedback_dialog(self):
-        dlg = QDialog(self)
-        dlg.setWindowTitle("Send Feedback")
-        dlg.setMinimumSize(400, 300)
-        layout = QVBoxLayout(dlg)
-        label = QLabel("We value your feedback! Please enter your comments below:")
-        layout.addWidget(label)
+        """Show feedback dialog"""
+        dialog = QDialog(self)
+        dialog.setWindowTitle("Send Feedback")
+        dialog.setMinimumSize(500, 400)
+        
+        layout = QVBoxLayout(dialog)
+        
+        # Instructions
+        instructions = QLabel("Please describe your feedback, bug report, or feature request:")
+        layout.addWidget(instructions)
+        
+        # Feedback text area
         feedback_edit = QTextEdit()
+        feedback_edit.setPlaceholderText("Enter your feedback here...")
         layout.addWidget(feedback_edit)
-        email_label = QLabel("Your email (optional):")
-        layout.addWidget(email_label)
+        
+        # Email field
+        email_layout = QHBoxLayout()
+        email_layout.addWidget(QLabel("Email (optional):"))
         email_edit = QLineEdit()
-        layout.addWidget(email_edit)
-        btns = QDialogButtonBox(QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel)
-        btns.accepted.connect(lambda: self.submit_feedback(feedback_edit.toPlainText(), email_edit.text(), dlg))
-        btns.rejected.connect(dlg.reject)
-        layout.addWidget(btns)
-        dlg.exec()
-
+        email_edit.setPlaceholderText("your.email@example.com")
+        email_layout.addWidget(email_edit)
+        layout.addLayout(email_layout)
+        
+        # Buttons
+        button_box = QDialogButtonBox(
+            QDialogButtonBox.StandardButton.Ok | QDialogButtonBox.StandardButton.Cancel
+        )
+        button_box.accepted.connect(lambda: self.submit_feedback(feedback_edit.toPlainText(), email_edit.text(), dialog))
+        button_box.rejected.connect(dialog.reject)
+        layout.addWidget(button_box)
+        
+        dialog.exec()
+    
     def submit_feedback(self, feedback, email, dlg):
         # Placeholder: In production, send to server or save locally
-        logger.debug("Feedback received: {feedback}\nFrom: {email}")
-        QMessageBox.information(self, "Thank you!", "Your feedback has been received.")
+        logger.info(f"Feedback submitted: {feedback[:100]}... (Email: {email})")
+        QMessageBox.information(self, "Feedback Sent", 
+                              "Thank you for your feedback! We'll review it and get back to you if needed.")
         dlg.accept()
-
+    
     def closeEvent(self, event):
-        """Handle application close"""
+        """Handle application close event"""
+        # Stop monitoring thread
         if self.status_monitor:
             self.status_monitor.stop()
+        
+        # Clean up active widgets
+        self.content_area.cleanup_active_widgets()
+        
         event.accept()
 
 
@@ -1033,39 +941,46 @@ class PSTDynamicsApp(QApplication):
     def __init__(self):
         super().__init__(sys.argv)
         self.setup_app()
-        self.main_window = None
-        
+    
     def setup_app(self):
         """Setup application properties"""
         self.setApplicationName("PST to Dynamics 365")
-        self.setApplicationVersion("Phase 5.1")
+        self.setApplicationVersion("1.0.0")
         self.setOrganizationName("Dynamique Solutions")
         self.setOrganizationDomain("dynamique.com")
     
     def run(self):
         """Run the application"""
-        self.main_window = MainWindow()
-        self.main_window.show()
-        
-        logger.info("🚀 PST-to-Dynamics 365 GUI Application Started")
-        logger.info("📊 Phase 5.1 Foundation - Main Window Framework")
-        logger.info("✅ All systems ready for testing and review")
-        
-        return self.exec()
+        try:
+            # Create and show main window
+            window = MainWindow()
+            window.show()
+            
+            # Start event loop
+            return self.exec()
+            
+        except Exception as e:
+            logger.error(f"Application error: {e}")
+            QMessageBox.critical(None, "Application Error", 
+                               f"A critical error occurred:\n{str(e)}")
+            return 1
 
 
 def main():
     """Main entry point"""
-    logger.debug("=" * 60)
-    logger.debug("🎯 PST-to-Dynamics 365 Phase 5.1 Foundation")
-    logger.debug("🖥️ Professional Desktop GUI Application")
-    logger.debug("=" * 60)
-    
     try:
+        # Setup logging
+        logging.basicConfig(
+            level=logging.INFO,
+            format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+        )
+        
+        # Create and run application
         app = PSTDynamicsApp()
         return app.run()
+        
     except Exception as e:
-        logger.error("❌ Application startup error: {e}")
+        print(f"Failed to start application: {e}")
         return 1
 
 

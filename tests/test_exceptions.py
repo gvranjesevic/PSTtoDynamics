@@ -5,6 +5,7 @@ Unit tests for the custom exception handling system.
 import unittest
 import sys
 import os
+from datetime import datetime
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from exceptions import (

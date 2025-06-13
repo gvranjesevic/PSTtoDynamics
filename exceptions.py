@@ -350,35 +350,80 @@ def handle_exception(func):
             raise
         except FileNotFoundError as e:
             error_msg = str(e)
+            file_path = "unknown"
+            
+            # Try to extract file path more robustly
             if '.pst' in error_msg.lower():
-                # Extract file path more safely
-                if '[Errno 2]' in error_msg:
-                    # Windows format: [Errno 2] No such file or directory: 'path'
-                    path_start = error_msg.find("'")
-                    path_end = error_msg.rfind("'")
-                    if path_start != -1 and path_end != -1 and path_start < path_end:
-                        file_path = error_msg[path_start+1:path_end]
-                    else:
-                        file_path = error_msg
+                # Try multiple extraction methods
+                import re
+                
+                # Method 1: Look for quoted paths
+                quoted_match = re.search(r"'([^']*\.pst[^']*)'", error_msg, re.IGNORECASE)
+                if quoted_match:
+                    file_path = quoted_match.group(1)
                 else:
-                    file_path = error_msg
+                    # Method 2: Look for paths after common error prefixes
+                    path_patterns = [
+                        r"No such file or directory:\s*(.+\.pst)",
+                        r"cannot find the file\s*(.+\.pst)",
+                        r"file not found:\s*(.+\.pst)",
+                        r"(\w:[\\\/][^:]*\.pst)",  # Windows absolute path
+                        r"([\\\/][^:]*\.pst)",     # Unix absolute path
+                        r"([^:]*\.pst)"            # Relative path
+                    ]
+                    
+                    for pattern in path_patterns:
+                        match = re.search(pattern, error_msg, re.IGNORECASE)
+                        if match:
+                            file_path = match.group(1).strip()
+                            break
+                    
+                    # If still no match, use the whole error message
+                    if file_path == "unknown":
+                        file_path = error_msg
+                
                 raise PSTFileNotFoundException(file_path)
-            raise DatabaseConnectionException(error_msg, "File not found")
+            
+            # For non-PST files, treat as database connection error
+            raise DatabaseConnectionException(file_path, "File not found")
+            
         except PermissionError as e:
             error_msg = str(e)
+            file_path = "unknown"
+            
+            # Try to extract file path more robustly
             if '.pst' in error_msg.lower():
-                # Extract file path safely for PST files
-                if '[Errno 13]' in error_msg:
-                    path_start = error_msg.find("'")
-                    path_end = error_msg.rfind("'")
-                    if path_start != -1 and path_end != -1 and path_start < path_end:
-                        file_path = error_msg[path_start+1:path_end]
-                    else:
-                        file_path = error_msg
+                import re
+                
+                # Method 1: Look for quoted paths
+                quoted_match = re.search(r"'([^']*\.pst[^']*)'", error_msg, re.IGNORECASE)
+                if quoted_match:
+                    file_path = quoted_match.group(1)
                 else:
-                    file_path = error_msg
+                    # Method 2: Look for paths after common error prefixes
+                    path_patterns = [
+                        r"Permission denied:\s*(.+\.pst)",
+                        r"access is denied:\s*(.+\.pst)",
+                        r"(\w:[\\\/][^:]*\.pst)",  # Windows absolute path
+                        r"([\\\/][^:]*\.pst)",     # Unix absolute path
+                        r"([^:]*\.pst)"            # Relative path
+                    ]
+                    
+                    for pattern in path_patterns:
+                        match = re.search(pattern, error_msg, re.IGNORECASE)
+                        if match:
+                            file_path = match.group(1).strip()
+                            break
+                    
+                    # If still no match, use the whole error message
+                    if file_path == "unknown":
+                        file_path = error_msg
+                
                 raise PSTAccessDeniedException(file_path)
+            
+            # For non-PST files, treat as configuration error
             raise ConfigurationException(f"Permission denied: {e}")
+            
         except ConnectionError as e:
             raise DynamicsConnectionException("Unknown", str(e))
         except Exception as e:
