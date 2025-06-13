@@ -19,7 +19,7 @@ try:
     phase3_path = os.path.join(os.path.dirname(__file__), 'Phase3_Analytics')
     if phase3_path not in sys.path:
         sys.path.append(phase3_path)
-    from phase3_integration import get_phase3_analytics
+    from Phase3_Analytics.phase3_integration import get_phase3_analytics
     PHASE3_AVAILABLE = True
     print("✅ Phase 3 Analytics enabled")
 except ImportError as e:
