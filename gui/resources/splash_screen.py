@@ -53,7 +53,7 @@ class SplashScreen(QSplashScreen):
             icon_x = (width - 80) // 2
             icon_y = 50
             painter.drawPixmap(icon_x, icon_y, icon_pixmap)
-        except:
+        except (Exception, AttributeError, TypeError, ValueError):
             # Fallback: draw simple icon
             painter.setBrush(QColor(255, 255, 255))
             painter.setPen(Qt.PenStyle.NoPen)

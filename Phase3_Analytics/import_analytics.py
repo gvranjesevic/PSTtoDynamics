@@ -3,6 +3,8 @@
 Import Analytics Engine
 ======================
 
+logger = logging.getLogger(__name__)
+
 Phase 3.1 - Core analytics module for comprehensive import tracking and analysis.
 Provides real-time metrics collection, performance analysis, and operational intelligence.
 
@@ -16,6 +18,7 @@ Features:
 """
 
 import json
+import logging
 import time
 import sqlite3
 import threading
@@ -36,7 +39,7 @@ try:
     PSUTIL_AVAILABLE = True
 except ImportError:
     PSUTIL_AVAILABLE = False
-    print("⚠️ psutil not available - resource monitoring disabled")
+    logger.debug("⚠️ psutil not available - resource monitoring disabled")
 
 
 @dataclass
@@ -275,7 +278,7 @@ class ImportAnalytics:
         self.error_counts = defaultdict(int)
         self.email_processing_times = []
         
-        print("📊 Import Analytics Engine initialized" + (" (enabled)" if enabled else " (disabled)"))
+        logger.info("📊 Import Analytics Engine initialized" + (" (enabled)" if enabled else " (disabled)"))
     
     def start_session(self, session_id: Optional[str] = None) -> str:
         """Start a new import session."""
@@ -297,13 +300,13 @@ class ImportAnalytics:
                     process = psutil.Process()
                     self.start_memory = process.memory_info().rss / 1024 / 1024  # MB
                     self.start_cpu_percent = psutil.cpu_percent()
-                except:
+                except (Exception, AttributeError, TypeError, ValueError):
                     pass
             
             if self.database:
                 self.database.save_session(self.current_session)
             
-            print(f"📊 Analytics session started: {session_id}")
+            logger.info("📊 Analytics session started: {session_id}")
             return session_id
     
     def end_session(self):
@@ -340,17 +343,17 @@ class ImportAnalytics:
                         'memory_increase_mb': current_memory - self.start_memory,
                         'final_cpu_percent': psutil.cpu_percent()
                     })
-                except:
+                except (Exception, AttributeError, TypeError, ValueError):
                     pass
             
             if self.database:
                 self.database.save_session(self.current_session)
             
-            print(f"📊 Analytics session completed: {self.current_session.session_id}")
-            print(f"   📧 Processed: {self.current_session.processed_emails} emails")
-            print(f"   ✅ Success rate: {self.current_session.performance_metrics.get('success_rate', 0):.1%}")
-            print(f"   ⏱️ Duration: {duration/60:.1f} minutes")
-            print(f"   ⚡ Speed: {self.current_session.performance_metrics.get('emails_per_minute', 0):.1f} emails/min")
+            logger.info("📊 Analytics session completed: {self.current_session.session_id}")
+            logger.debug("   📧 Processed: {self.current_session.processed_emails} emails")
+            logger.debug("   ✅ Success rate: {self.current_session.performance_metrics.get('success_rate', 0):.1%}")
+            logger.debug("   ⏱️ Duration: {duration/60:.1f} minutes")
+            logger.debug("   ⚡ Speed: {self.current_session.performance_metrics.get('emails_per_minute', 0):.1f} emails/min")
     
     def start_batch(self, batch_number: int, email_count: int) -> str:
         """Start tracking a new batch."""
@@ -372,7 +375,7 @@ class ImportAnalytics:
             try:
                 process = psutil.Process()
                 self.current_batch.memory_usage_mb = process.memory_info().rss / 1024 / 1024
-            except:
+            except (Exception, AttributeError, TypeError, ValueError):
                 pass
         
         return batch_id
@@ -407,7 +410,7 @@ class ImportAnalytics:
         if self.database:
             self.database.save_batch_metrics(self.current_batch)
         
-        print(f"   📦 Batch {self.current_batch.batch_number}: {success_count}/{self.current_batch.email_count} emails processed in {duration:.1f}s")
+        logger.debug("   📦 Batch {self.current_batch.batch_number}: {success_count}/{self.current_batch.email_count} emails processed in {duration:.1f}s")
     
     def record_error(self, error_type: str, error_message: str = ""):
         """Record an error occurrence."""
@@ -534,7 +537,7 @@ def get_analytics() -> ImportAnalytics:
 
 if __name__ == "__main__":
     # Test the analytics engine
-    print("🧪 Testing Import Analytics Engine")
+    logger.debug("🧪 Testing Import Analytics Engine")
     
     # Create test analytics instance
     test_analytics = ImportAnalytics(enabled=True)
@@ -559,10 +562,10 @@ if __name__ == "__main__":
     test_analytics.end_session()
     
     # Display results
-    print("\n📊 Test Results:")
+    logger.debug("\n📊 Test Results:")
     print(json.dumps(test_analytics.get_current_stats(), indent=2))
     
-    print("\n📈 Performance Summary:")
+    logger.debug("\n📈 Performance Summary:")
     print(json.dumps(test_analytics.get_performance_summary(), indent=2))
     
-    print("\n✅ Import Analytics Engine test completed!") 
+    logger.debug("\n✅ Import Analytics Engine test completed!") 

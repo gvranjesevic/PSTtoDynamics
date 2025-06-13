@@ -2,10 +2,13 @@
 Dynamics 365 Data Access Module
 ==============================
 
+logger = logging.getLogger(__name__)
+
 Handles data retrieval from and operations to Dynamics 365.
 """
 
 import requests
+import logging
 from typing import Dict, List, Optional
 from datetime import datetime, timedelta
 import config
@@ -37,7 +40,7 @@ class DynamicsData:
         """
         headers = self._get_headers()
         if not headers:
-            print("❌ Authentication failed")
+            logger.error("❌ Authentication failed")
             return None
         
         url = f"{config.CRM_BASE_URL}/{endpoint}"
@@ -52,7 +55,7 @@ class DynamicsData:
             elif method.upper() == 'DELETE':
                 response = requests.delete(url, headers=headers, timeout=30)
             else:
-                print(f"❌ Unsupported HTTP method: {method}")
+                logger.error("❌ Unsupported HTTP method: {method}")
                 return None
             
             # Handle successful responses
@@ -64,11 +67,11 @@ class DynamicsData:
                 except (Exception, AttributeError, TypeError, ValueError):
                     return {"success": True, "status_code": response.status_code}
             else:
-                print(f"❌ Request failed: {response.status_code} - {response.text}")
+                logger.error("❌ Request failed: {response.status_code} - {response.text}")
                 return None
                 
         except Exception as e:
-            print(f"❌ Request error: {e}")
+            logger.error("❌ Request error: {e}")
             return None
     
     def get_contacts(self, email_filter: str = None) -> List[Dict]:
@@ -81,7 +84,7 @@ class DynamicsData:
         Returns:
             List of contact dictionaries
         """
-        print("👥 Retrieving contacts from Dynamics 365...")
+        logger.info("👥 Retrieving contacts from Dynamics 365...")
         
         params = {
             '$select': 'contactid,fullname,emailaddress1,emailaddress2,emailaddress3'
@@ -95,10 +98,10 @@ class DynamicsData:
         
         if result and 'value' in result:
             contacts = result['value']
-            print(f"   ✅ Found {len(contacts)} contacts")
+            logger.debug("   ✅ Found {len(contacts)} contacts")
             return contacts
         else:
-            print("   ❌ Failed to retrieve contacts")
+            logger.debug("   ❌ Failed to retrieve contacts")
             return []
     
     def get_contact_by_email(self, email: str) -> Optional[Dict]:
@@ -124,7 +127,7 @@ class DynamicsData:
         Returns:
             List of email dictionaries
         """
-        print(f"📧 Retrieving emails for contact {contact_id}...")
+        logger.info("📧 Retrieving emails for contact {contact_id}...")
         
         params = {
             '$select': 'activityid,subject,description,createdon,actualstart,actualend,statecode,statuscode',
@@ -136,10 +139,10 @@ class DynamicsData:
         
         if result and 'value' in result:
             emails = result['value']
-            print(f"   ✅ Found {len(emails)} existing emails")
+            logger.debug("   ✅ Found {len(emails)} existing emails")
             return emails
         else:
-            print("   ❌ Failed to retrieve emails")
+            logger.debug("   ❌ Failed to retrieve emails")
             return []
     
     def create_email(self, email_data: Dict, contact_id: str) -> Optional[str]:
@@ -197,20 +200,20 @@ class DynamicsData:
                 ]
             }
             
-            print(f"   📧 Creating email: {email_data.get('subject', 'No Subject')[:50]}...")
+            logger.debug("   📧 Creating email: {email_data.get('subject', 'No Subject')[:50]}...")
             
             result = self._make_request('POST', 'emails', data=payload)
             
             if result and 'activityid' in result:
                 email_id = result['activityid']
-                print(f"   ✅ Email created with ID: {email_id}")
+                logger.debug("   ✅ Email created with ID: {email_id}")
                 return email_id
             else:
-                print(f"   ❌ Failed to create email")
+                logger.debug("   ❌ Failed to create email")
                 return None
                 
         except Exception as e:
-            print(f"   ❌ Error creating email: {e}")
+            logger.debug("   ❌ Error creating email: {e}")
             return None
     
     def update_email_status(self, email_id: str, status: str = "Closed") -> bool:
@@ -239,14 +242,14 @@ class DynamicsData:
             result = self._make_request('PATCH', f'emails({email_id})', data=payload)
             
             if result:
-                print(f"   ✅ Email status updated to {status}")
+                logger.debug("   ✅ Email status updated to {status}")
                 return True
             else:
-                print(f"   ❌ Failed to update email status")
+                logger.debug("   ❌ Failed to update email status")
                 return False
                 
         except Exception as e:
-            print(f"   ❌ Error updating email status: {e}")
+            logger.debug("   ❌ Error updating email status: {e}")
             return False
     
     def is_email_duplicate(self, new_email: Dict, existing_emails: List[Dict]) -> bool:

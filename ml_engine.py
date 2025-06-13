@@ -394,7 +394,7 @@ class MLPatternEngine:
                     next_timestamp = self.timeline_predictor.predict([features])[0]
                     predicted_next = datetime.fromtimestamp(next_timestamp)
                     confidence = 0.7  # Default confidence
-                except:
+                except (Exception, AttributeError, TypeError, ValueError):
                     pass
             
             behavior = SenderBehavior(
@@ -869,21 +869,21 @@ if __name__ == "__main__":
     # Run ML analysis
     results = analyze_import_intelligence(sample_emails)
     
-    print("\n=== ML INTELLIGENCE ANALYSIS RESULTS ===")
-    print(f"Patterns analyzed: {results['ml_analysis']['patterns_analyzed']}")
-    print(f"Behaviors analyzed: {results['ml_analysis']['behaviors_analyzed']}")
-    print(f"Timeline gaps predicted: {results['ml_analysis']['timeline_gaps_predicted']}")
-    print(f"Anomalies detected: {results['ml_analysis']['anomalies_detected']}")
-    print(f"Recommendations: {len(results['recommendations'])}")
+    logger.debug("\n=== ML INTELLIGENCE ANALYSIS RESULTS ===")
+    logger.debug("Patterns analyzed: {results['ml_analysis']['patterns_analyzed']}")
+    logger.debug("Behaviors analyzed: {results['ml_analysis']['behaviors_analyzed']}")
+    logger.debug("Timeline gaps predicted: {results['ml_analysis']['timeline_gaps_predicted']}")
+    logger.debug("Anomalies detected: {results['ml_analysis']['anomalies_detected']}")
+    logger.debug("Recommendations: {len(results['recommendations'])}")
     
-    print("\n=== INTELLIGENCE SUMMARY ===")
+    logger.debug("\n=== INTELLIGENCE SUMMARY ===")
     summary = results['ml_analysis']['intelligence_summary']
     for key, value in summary.items():
         if isinstance(value, dict):
-            print(f"{key.upper()}:")
+            logger.debug("{key.upper()}:")
             for subkey, subvalue in value.items():
-                print(f"  {subkey}: {subvalue}")
+                logger.debug("  {subkey}: {subvalue}")
         else:
-            print(f"{key}: {value}")
+            logger.debug("{key}: {value}")
     
-    print("\n✅ ML Pattern Engine Phase 4.1 testing completed successfully!") 
+    logger.debug("\n✅ ML Pattern Engine Phase 4.1 testing completed successfully!") 

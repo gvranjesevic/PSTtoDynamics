@@ -34,7 +34,7 @@ try:
     PYQTGRAPH_AVAILABLE = True
 except ImportError:
     PYQTGRAPH_AVAILABLE = False
-    print("⚠️ PyQtGraph not available - using fallback charts")
+    logger.warning("⚠️ PyQtGraph not available - using fallback charts")
 
 # Import Phase 4 AI components
 try:
@@ -45,10 +45,10 @@ try:
     from smart_optimizer import smart_optimizer, optimize_import_batch
     from predictive_analytics import predictive_analytics, analyze_predictive_intelligence
     PHASE4_AVAILABLE = True
-    print("✅ Phase 4 AI components loaded successfully")
+    logger.info("✅ Phase 4 AI components loaded successfully")
 except ImportError as e:
     PHASE4_AVAILABLE = False
-    print(f"⚠️ Phase 4 AI components not available: {e}")
+    logger.warning("⚠️ Phase 4 AI components not available: {e}")
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)

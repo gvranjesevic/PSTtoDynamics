@@ -624,15 +624,15 @@ class SyncDashboard:
     
     def display_metrics(self):
         metrics = self.monitor.get_metrics()
-        print("📊 Sync Metrics:")
+        logger.info("📊 Sync Metrics:")
         for key, value in metrics.items():
-            print(f"   {key}: {value}")
+            logger.debug("   {key}: {value}")
     
     def display_logs(self):
         logs = self.monitor.get_recent_logs(10)
-        print("📝 Recent Sync Logs:")
+        logger.debug("📝 Recent Sync Logs:")
         for log in logs:
             timestamp = log['timestamp'].strftime('%H:%M:%S')
-            print(f"   [{timestamp}] {log['level'].upper()}: {log['message']}")
+            logger.debug("   [{timestamp}] {log['level'].upper()}: {log['message']}")
 
 

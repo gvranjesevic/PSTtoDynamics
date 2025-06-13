@@ -406,42 +406,42 @@ class DatabaseInitializer:
 
 def main():
     """Main function to initialize databases."""
-    print("🔧 PST-to-Dynamics Database Initialization")
-    print("=" * 50)
+    logger.debug("🔧 PST-to-Dynamics Database Initialization")
+    logger.debug("=" * 50)
     
     initializer = DatabaseInitializer()
     
     # Initialize all databases
     if initializer.initialize_all_databases():
-        print("✅ All databases initialized successfully!")
+        logger.info("✅ All databases initialized successfully!")
     else:
-        print("❌ Some databases failed to initialize!")
+        logger.error("❌ Some databases failed to initialize!")
         return False
     
     # Verify integrity
-    print("\n🔍 Verifying database integrity...")
+    logger.debug("\n🔍 Verifying database integrity...")
     integrity_results = initializer.verify_database_integrity()
     
     all_good = True
     for db_name, is_valid in integrity_results.items():
         status = "✅" if is_valid else "❌"
-        print(f"{status} {db_name}: {'OK' if is_valid else 'FAILED'}")
+        logger.debug("{status} {db_name}: {'OK' if is_valid else 'FAILED'}")
         if not is_valid:
             all_good = False
     
     # Show statistics
-    print("\n📊 Database Statistics:")
+    logger.debug("\n📊 Database Statistics:")
     stats = initializer.get_database_stats()
     
     for db_name, db_stats in stats.items():
         if db_stats.get('exists', False):
             tables = db_stats.get('tables', [])
             size = db_stats.get('size_kb', 0)
-            print(f"  {db_name}: {len(tables)} tables, {size} KB")
+            logger.debug("  {db_name}: {len(tables)} tables, {size} KB")
         else:
-            print(f"  {db_name}: Not found or error")
+            logger.debug("  {db_name}: Not found or error")
     
-    print("\n🎉 Database initialization complete!")
+    logger.debug("\n🎉 Database initialization complete!")
     return all_good
 
 if __name__ == "__main__":

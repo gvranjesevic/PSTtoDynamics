@@ -2,6 +2,8 @@
 Phase 5.7 Enhanced UX Components
 ===============================
 
+logger = logging.getLogger(__name__)
+
 Advanced user experience components including keyboard navigation,
 tooltips, notifications, and accessibility features.
 
@@ -18,6 +20,7 @@ Phase: 5.7
 """
 
 import sys
+import logging
 from typing import Dict, List, Optional, Callable, Any
 from enum import Enum
 from PyQt6.QtWidgets import (
@@ -94,7 +97,7 @@ class KeyboardNavigationManager(QObject):
         for widget in widgets:
             self._add_focus_indicator(widget)
         
-        print(f"✅ Registered navigation group '{group_name}' with {len(widgets)} widgets")
+        logger.info("✅ Registered navigation group '{group_name}' with {len(widgets)} widgets")
     
     def _add_focus_indicator(self, widget: QWidget):
         """Add visual focus indicator to a widget"""
@@ -141,7 +144,7 @@ class KeyboardNavigationManager(QObject):
             # Show new focus indicator
             self._show_current_focus_indicator()
             
-            print(f"✅ Switched to navigation group: {group_name}")
+            logger.info("✅ Switched to navigation group: {group_name}")
     
     def _navigate_next(self):
         """Navigate to next widget in current group"""
@@ -648,19 +651,19 @@ class AccessibilityManager(QObject):
         """Enable high contrast mode"""
         self.high_contrast_mode = True
         # Implementation would apply high contrast styles
-        print("✅ High contrast mode enabled")
+        logger.info("✅ High contrast mode enabled")
     
     def enable_large_text(self):
         """Enable large text mode"""
         self.large_text_mode = True
         # Implementation would increase font sizes
-        print("✅ Large text mode enabled")
+        logger.info("✅ Large text mode enabled")
     
     def enable_screen_reader(self):
         """Enable screen reader compatibility"""
         self.screen_reader_mode = True
         # Implementation would add ARIA labels and descriptions
-        print("✅ Screen reader mode enabled")
+        logger.info("✅ Screen reader mode enabled")
 
 # Enhanced tooltip manager for easy tooltip assignment
 class TooltipManager:
@@ -808,7 +811,7 @@ if __name__ == "__main__":
             show_notification(self, "Warning: Please check your input", NotificationType.WARNING)
         
         def test_error_notification(self):
-            actions = [("Retry", lambda: print("Retry clicked")), ("Cancel", lambda: print("Cancel clicked"))]
+            actions = [("Retry", lambda: logger.debug("Retry clicked")), ("Cancel", lambda: logger.debug("Cancel clicked"))]
             show_notification(self, "An error occurred during processing", 
                             NotificationType.ERROR, duration=0, actions=actions)
         
@@ -824,12 +827,12 @@ if __name__ == "__main__":
     window = UXTestWindow()
     window.show()
     
-    print("🚀 Phase 5.7 Enhanced UX Test")
-    print("=" * 40)
-    print("✅ Keyboard Navigation System")
-    print("✅ Enhanced Tooltips")
-    print("✅ Notification Center")
-    print("✅ Accessibility Features")
-    print("✅ Focus Management")
+    logger.info("🚀 Phase 5.7 Enhanced UX Test")
+    logger.debug("=" * 40)
+    logger.info("✅ Keyboard Navigation System")
+    logger.info("✅ Enhanced Tooltips")
+    logger.info("✅ Notification Center")
+    logger.info("✅ Accessibility Features")
+    logger.info("✅ Focus Management")
     
     sys.exit(app.exec())

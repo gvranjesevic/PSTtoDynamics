@@ -4,12 +4,15 @@ Analytics Database Validation Test
 ==================================
 """
 
+logger = logging.getLogger(__name__)
+
 import sqlite3
+import logging
 import os
 
 def validate_databases():
-    print("📊 Analytics Database Validation:")
-    print("=" * 40)
+    logger.info("📊 Analytics Database Validation:")
+    logger.debug("=" * 40)
     
     db_files = ['analytics.db', 'timeline_analysis.db', 'sender_analysis.db']
     
@@ -20,29 +23,29 @@ def validate_databases():
                 cursor = conn.cursor()
                 cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
                 tables = [row[0] for row in cursor.fetchall()]
-                print(f"  ✅ {db_file}: {len(tables)} tables - {tables}")
+                logger.debug("  ✅ {db_file}: {len(tables)} tables - {tables}")
                 
                 # Count records in each table
                 for table in tables:
                     cursor.execute(f"SELECT COUNT(*) FROM {table};")
                     count = cursor.fetchone()[0]
-                    print(f"     📁 {table}: {count} records")
+                    logger.debug("     📁 {table}: {count} records")
                 
                 conn.close()
             except Exception as e:
-                print(f"  ❌ {db_file}: Error - {e}")
+                logger.debug("  ❌ {db_file}: Error - {e}")
         else:
-            print(f"  ⚠️ {db_file}: Not found")
+            logger.debug("  ⚠️ {db_file}: Not found")
     
     # Check reports directory
     reports_dir = "reports"
     if os.path.exists(reports_dir):
         reports = [f for f in os.listdir(reports_dir) if f.endswith(('.json', '.txt'))]
-        print(f"\n📋 Analytics Reports: {len(reports)} files")
+        logger.debug("\n📋 Analytics Reports: {len(reports)} files")
         for report in reports[-3:]:  # Show last 3
-            print(f"  📄 {report}")
+            logger.debug("  📄 {report}")
     else:
-        print("\n📋 Reports directory: Not found")
+        logger.debug("\n📋 Reports directory: Not found")
 
 if __name__ == "__main__":
     validate_databases() 

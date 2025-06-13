@@ -3,6 +3,8 @@
 Complete PST Email Importer for Dynamics 365 - FINAL VERSION
 ===========================================================
 
+logger = logging.getLogger(__name__)
+
 This script reads ALL emails from the PST file, matches them with existing contacts
 in Dynamics 365, and imports missing emails using the corrected Activity Party solution.
 
@@ -18,6 +20,7 @@ Uses the PST file at: PST\\gvranjesevic@dynamique.com.001.pst
 """
 
 import win32com.client
+import logging
 import requests
 import msal
 from datetime import datetime, timezone
@@ -45,15 +48,15 @@ TEST_EMAIL_ADDRESS = "service@ringcentral.com"  # Email address to test with
 
 def get_auth_headers():
     """Authenticates and returns headers for API requests."""
-    print("Authenticating to Dynamics 365...")
+    logger.debug("Authenticating to Dynamics 365...")
     app = msal.PublicClientApplication(client_id, authority=f"https://login.microsoftonline.com/{tenant_domain}")
     result = app.acquire_token_by_username_password(username, password, scopes=["https://dynglobal.crm.dynamics.com/.default"])
     
     if "access_token" not in result:
-        print(f"Authentication failed: {result}")
+        logger.debug("Authentication failed: {result}")
         return None
     
-    print("Authentication successful!")
+    logger.debug("Authentication successful!")
     return {
         'Authorization': f'Bearer {result["access_token"]}',
         'Accept': 'application/json',
@@ -83,10 +86,10 @@ def extract_email_address(email_string):
 
 def scan_pst_file():
     """Scans the PST file and groups emails by sender address."""
-    print(f"\nScanning PST file: {PST_FILE_PATH}")
+    logger.debug("\nScanning PST file: {PST_FILE_PATH}")
     
     if not os.path.exists(PST_FILE_PATH):
-        print(f"PST file not found: {PST_FILE_PATH}")
+        logger.debug("PST file not found: {PST_FILE_PATH}")
         return {}
     
     try:
@@ -94,7 +97,7 @@ def scan_pst_file():
         outlook = win32com.client.Dispatch("Outlook.Application")
         namespace = outlook.GetNamespace("MAPI")
         
-        print("   Opening PST file...")
+        logger.debug("   Opening PST file...")
         
         # Try to access PST file
         pst_store = None
@@ -104,7 +107,7 @@ def scan_pst_file():
         for store in namespace.Stores:
             if PST_FILE_PATH.lower() in str(store.FilePath).lower():
                 pst_store = store
-                print("   PST already loaded in Outlook")
+                logger.debug("   PST already loaded in Outlook")
                 break
         
         # If not loaded, try to add it temporarily
@@ -112,7 +115,7 @@ def scan_pst_file():
             try:
                 namespace.AddStore(PST_FILE_PATH)
                 temp_store_added = True
-                print("   PST temporarily added to Outlook")
+                logger.debug("   PST temporarily added to Outlook")
                 
                 # Find the newly added store
                 for store in namespace.Stores:
@@ -120,16 +123,16 @@ def scan_pst_file():
                         pst_store = store
                         break
             except Exception as e:
-                print(f"   Could not add PST to stores: {e}")
+                logger.debug("   Could not add PST to stores: {e}")
                 return {}
         
         if not pst_store:
-            print("   Could not access PST store")
+            logger.debug("   Could not access PST store")
             return {}
         
         # Get the root folder
         root_folder = pst_store.GetRootFolder()
-        print(f"   Root folder: {root_folder.Name}")
+        logger.debug("   Root folder: {root_folder.Name}")
         
         emails_by_sender = defaultdict(list)
         total_emails = 0
@@ -139,7 +142,7 @@ def scan_pst_file():
             indent = "   " + "  " * depth
             
             try:
-                print(f"{indent}Scanning folder: {folder.Name}")
+                logger.debug("{indent}Scanning folder: {folder.Name}")
                 items = folder.Items
                 
                 folder_emails = 0
@@ -161,7 +164,7 @@ def scan_pst_file():
                                             sender_email = extract_email_address(recipient.Address)
                                             if sender_email:
                                                 break
-                                except:
+                                except (Exception, AttributeError, TypeError, ValueError):
                                     pass
                             
                             # Method 3: Try Sender property
@@ -169,7 +172,7 @@ def scan_pst_file():
                                 try:
                                     if hasattr(item.Sender, 'Address'):
                                         sender_email = extract_email_address(item.Sender.Address)
-                                except:
+                                except (Exception, AttributeError, TypeError, ValueError):
                                     pass
                             
                             if sender_email:
@@ -188,23 +191,23 @@ def scan_pst_file():
                                     folder_emails += 1
                                     
                                     if total_emails % 50 == 0:
-                                        print(f"   Processed {total_emails} emails so far...")
+                                        logger.debug("   Processed {total_emails} emails so far...")
                                 except Exception as e:
-                                    print(f"{indent}  Error processing email: {e}")
+                                    logger.debug("{indent}  Error processing email: {e}")
                     except Exception as e:
-                        print(f"{indent}  Error with item: {e}")
+                        logger.debug("{indent}  Error with item: {e}")
                 
-                print(f"{indent}  Found {folder_emails} emails in this folder")
+                logger.debug("{indent}  Found {folder_emails} emails in this folder")
                 
                 # Recursively scan subfolders
                 try:
                     for subfolder in folder.Folders:
                         scan_folder_recursive(subfolder, depth + 1)
                 except Exception as e:
-                    print(f"{indent}  Error scanning subfolders: {e}")
+                    logger.debug("{indent}  Error scanning subfolders: {e}")
                     
             except Exception as e:
-                print(f"{indent}Error scanning folder {folder.Name}: {e}")
+                logger.debug("{indent}Error scanning folder {folder.Name}: {e}")
         
         # Start scanning from root
         scan_folder_recursive(root_folder)
@@ -213,29 +216,29 @@ def scan_pst_file():
         if temp_store_added:
             try:
                 namespace.RemoveStore(pst_store.StoreID)
-                print("   Cleaned up temporary PST store")
-            except:
+                logger.debug("   Cleaned up temporary PST store")
+            except (Exception, AttributeError, TypeError, ValueError):
                 pass
         
-        print(f"PST scan complete!")
-        print(f"   Total emails found: {total_emails}")
-        print(f"   Unique senders: {len(emails_by_sender)}")
+        logger.debug("PST scan complete!")
+        logger.debug("   Total emails found: {total_emails}")
+        logger.debug("   Unique senders: {len(emails_by_sender)}")
         
         # Show top senders
-        print(f"\nTop email senders:")
+        logger.debug("\nTop email senders:")
         sorted_senders = sorted(emails_by_sender.items(), key=lambda x: len(x[1]), reverse=True)
         for i, (sender, emails) in enumerate(sorted_senders[:10]):
-            print(f"   {i+1:2d}. {sender:<40} ({len(emails):3d} emails)")
+            logger.debug("   {i+1:2d}. {sender:<40} ({len(emails):3d} emails)")
         
         return emails_by_sender
         
     except Exception as e:
-        print(f"Error scanning PST file: {e}")
+        logger.debug("Error scanning PST file: {e}")
         return {}
 
 def get_dynamics_contacts(headers):
     """Retrieves all contacts from Dynamics 365 with email addresses."""
-    print(f"\nRetrieving Dynamics 365 contacts...")
+    logger.debug("\nRetrieving Dynamics 365 contacts...")
     
     contacts = {}
     url = f"{crm_base_url}/contacts?$select=contactid,fullname,emailaddress1&$filter=emailaddress1 ne null"
@@ -251,25 +254,25 @@ def get_dynamics_contacts(headers):
                     'name': contact['fullname']
                 }
         
-        print(f"Found {len(contacts)} contacts with email addresses")
+        logger.debug("Found {len(contacts)} contacts with email addresses")
         return contacts
     else:
-        print(f"Failed to retrieve contacts: {response.status_code}")
+        logger.debug("Failed to retrieve contacts: {response.status_code}")
         return {}
 
 def get_existing_emails_for_contact(headers, contact_id):
     """Gets all existing emails for a specific contact from Dynamics 365."""
-    print(f"   Checking existing emails for contact...")
+    logger.debug("   Checking existing emails for contact...")
     
     url = f"{crm_base_url}/emails?$filter=_regardingobjectid_value eq {contact_id}&$select=subject,senton,createdon&$orderby=senton desc"
     
     response = requests.get(url, headers=headers)
     if response.status_code == 200:
         existing_emails = response.json().get('value', [])
-        print(f"   Found {len(existing_emails)} existing emails")
+        logger.debug("   Found {len(existing_emails)} existing emails")
         return existing_emails
     else:
-        print(f"   Failed to retrieve existing emails: {response.status_code}")
+        logger.debug("   Failed to retrieve existing emails: {response.status_code}")
         return []
 
 def is_email_duplicate(new_email, existing_emails):
@@ -292,7 +295,7 @@ def is_email_duplicate(new_email, existing_emails):
                     time_diff = abs((existing_dt - new_dt).total_seconds())
                     if time_diff < 3600:  # Within 1 hour
                         return True
-                except:
+                except (Exception, AttributeError, TypeError, ValueError):
                     pass
     
     return False
@@ -341,16 +344,16 @@ def create_email_with_activity_party(headers, email_data, contact_id):
         try:
             response_data = response.json()
             email_id = response_data.get('activityid')
-            print(f"   Email created successfully (Status: {response.status_code}, ID: {email_id})")
-        except:
-            print(f"   Email created successfully (Status: {response.status_code}, no ID in response)")
+            logger.debug("   Email created successfully (Status: {response.status_code}, ID: {email_id})")
+        except (Exception, AttributeError, TypeError, ValueError):
+            logger.debug("   Email created successfully (Status: {response.status_code}, no ID in response)")
     elif response.status_code == 204:
         # Success but no content returned
-        print(f"   Email created successfully (Status: {response.status_code}, no ID returned)")
+        logger.debug("   Email created successfully (Status: {response.status_code}, no ID returned)")
         return "success_no_id"
     else:
-        print(f"   Failed to create email: {response.status_code}")
-        print(f"      Error: {response.text}")
+        logger.debug("   Failed to create email: {response.status_code}")
+        logger.debug("      Error: {response.text}")
         return None
     
     # Step 2: Update status to Closed (only if we have email ID)
@@ -365,11 +368,11 @@ def create_email_with_activity_party(headers, email_data, contact_id):
         
         # Both 200 (OK) and 204 (No Content) are success for PATCH
         if update_response.status_code in [200, 204]:
-            print(f"   Email status updated to Closed (Status: {update_response.status_code})")
+            logger.debug("   Email status updated to Closed (Status: {update_response.status_code})")
             return email_id
         else:
-            print(f"   Email created but status update failed: {update_response.status_code}")
-            print(f"      Update error: {update_response.text}")
+            logger.debug("   Email created but status update failed: {update_response.status_code}")
+            logger.debug("      Update error: {update_response.text}")
             return email_id
     
     return "success_no_id"
@@ -378,15 +381,15 @@ def process_emails_for_sender(headers, sender_email, pst_emails, contacts):
     """Processes all emails for a specific sender."""
     
     if sender_email not in contacts:
-        print(f"No contact found for {sender_email}, skipping {len(pst_emails)} emails")
+        logger.debug("No contact found for {sender_email}, skipping {len(pst_emails)} emails")
         return {'imported': 0, 'skipped': len(pst_emails), 'errors': 0}
     
     contact = contacts[sender_email]
     contact_id = contact['id']
     contact_name = contact['name']
     
-    print(f"\nProcessing emails for: {contact_name} ({sender_email})")
-    print(f"   Total PST emails found: {len(pst_emails)}")
+    logger.debug("\nProcessing emails for: {contact_name} ({sender_email})")
+    logger.debug("   Total PST emails found: {len(pst_emails)}")
     
     # Get existing emails for this contact
     existing_emails = get_existing_emails_for_contact(headers, contact_id)
@@ -399,20 +402,20 @@ def process_emails_for_sender(headers, sender_email, pst_emails, contacts):
     
     skipped_count = len(pst_emails) - len(new_emails)
     if skipped_count > 0:
-        print(f"   Skipping {skipped_count} duplicate emails")
+        logger.debug("   Skipping {skipped_count} duplicate emails")
     
     if not new_emails:
-        print(f"   All emails already exist for this contact")
+        logger.debug("   All emails already exist for this contact")
         return {'imported': 0, 'skipped': len(pst_emails), 'errors': 0}
     
-    print(f"   Importing {len(new_emails)} new emails...")
+    logger.debug("   Importing {len(new_emails)} new emails...")
     
     # Import new emails
     imported_count = 0
     error_count = 0
     
     for i, email_data in enumerate(new_emails):
-        print(f"   Importing email {i+1}/{len(new_emails)}: {email_data['subject'][:50]}...")
+        logger.debug("   Importing email {i+1}/{len(new_emails)}: {email_data['subject'][:50]}...")
         
         email_id = create_email_with_activity_party(headers, email_data, contact_id)
         
@@ -426,26 +429,26 @@ def process_emails_for_sender(headers, sender_email, pst_emails, contacts):
         
         # Batch delay every 5 emails
         if (i + 1) % 5 == 0 and (i + 1) < len(new_emails):
-            print(f"   Batch delay (processed {i+1}/{len(new_emails)})...")
+            logger.debug("   Batch delay (processed {i+1}/{len(new_emails)})...")
             time.sleep(3)
     
-    print(f"   Contact processing complete:")
-    print(f"      Imported: {imported_count}")
-    print(f"      Skipped: {skipped_count}")
-    print(f"      Errors: {error_count}")
+    logger.debug("   Contact processing complete:")
+    logger.debug("      Imported: {imported_count}")
+    logger.debug("      Skipped: {skipped_count}")
+    logger.debug("      Errors: {error_count}")
     
     return {'imported': imported_count, 'skipped': skipped_count, 'errors': error_count}
 
 def main():
     """Main execution function."""
-    print("COMPLETE PST EMAIL IMPORTER")
-    print("=" * 60)
-    print(f"PST File: {PST_FILE_PATH}")
+    logger.debug("COMPLETE PST EMAIL IMPORTER")
+    logger.debug("=" * 60)
+    logger.debug("PST File: {PST_FILE_PATH}")
     
     if TEST_MODE:
-        print(f"TEST MODE: Processing only {TEST_EMAIL_ADDRESS}")
+        logger.debug("TEST MODE: Processing only {TEST_EMAIL_ADDRESS}")
     else:
-        print("FULL MODE: Processing ALL email addresses")
+        logger.debug("FULL MODE: Processing ALL email addresses")
     
     print()
     
@@ -457,30 +460,30 @@ def main():
     # Step 2: Scan PST file
     emails_by_sender = scan_pst_file()
     if not emails_by_sender:
-        print("No emails found in PST file")
+        logger.debug("No emails found in PST file")
         return
     
     # Step 3: Get Dynamics contacts
     contacts = get_dynamics_contacts(headers)
     if not contacts:
-        print("No contacts found in Dynamics 365")
+        logger.debug("No contacts found in Dynamics 365")
         return
     
     # Step 4: Process emails
-    print(f"\nStarting email processing...")
+    logger.debug("\nStarting email processing...")
     
     if TEST_MODE:
         if TEST_EMAIL_ADDRESS in emails_by_sender:
-            print(f"\nTesting with {TEST_EMAIL_ADDRESS}")
+            logger.debug("\nTesting with {TEST_EMAIL_ADDRESS}")
             pst_emails = emails_by_sender[TEST_EMAIL_ADDRESS]
             results = process_emails_for_sender(headers, TEST_EMAIL_ADDRESS, pst_emails, contacts)
             
-            print(f"\nTEST RESULTS:")
-            print(f"   Imported: {results['imported']}")
-            print(f"   Skipped: {results['skipped']}")
-            print(f"   Errors: {results['errors']}")
+            logger.debug("\nTEST RESULTS:")
+            logger.debug("   Imported: {results['imported']}")
+            logger.debug("   Skipped: {results['skipped']}")
+            logger.debug("   Errors: {results['errors']}")
         else:
-            print(f"Test email address {TEST_EMAIL_ADDRESS} not found in PST")
+            logger.debug("Test email address {TEST_EMAIL_ADDRESS} not found in PST")
     else:
         # Process all email addresses
         total_results = {'imported': 0, 'skipped': 0, 'errors': 0}
@@ -498,13 +501,13 @@ def main():
                 # Delay between contacts
                 time.sleep(2)
         
-        print(f"\nFINAL RESULTS:")
-        print(f"   Processed contacts: {processed_contacts}")
-        print(f"   Total imported: {total_results['imported']}")
-        print(f"   Total skipped: {total_results['skipped']}")
-        print(f"   Total errors: {total_results['errors']}")
+        logger.debug("\nFINAL RESULTS:")
+        logger.debug("   Processed contacts: {processed_contacts}")
+        logger.debug("   Total imported: {total_results['imported']}")
+        logger.debug("   Total skipped: {total_results['skipped']}")
+        logger.debug("   Total errors: {total_results['errors']}")
     
-    print(f"\nComplete PST Email Import finished!")
+    logger.debug("\nComplete PST Email Import finished!")
 
 if __name__ == "__main__":
     main() 

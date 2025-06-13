@@ -3,11 +3,14 @@
 Icon Generation Script
 =====================
 
+logger = logging.getLogger(__name__)
+
 Generates application icons in various formats from a simple design.
 Run this script to create icon files for the installer and application.
 """
 
 import os
+import logging
 import sys
 from pathlib import Path
 
@@ -19,7 +22,7 @@ def create_simple_icons():
         resources_dir = Path("gui/resources")
         resources_dir.mkdir(exist_ok=True)
         
-        print("🎨 Creating application icons with PIL...")
+        logger.debug("🎨 Creating application icons with PIL...")
         
         sizes = [16, 32, 48, 64, 128, 256]
         
@@ -37,7 +40,7 @@ def create_simple_icons():
             font_size = max(6, size // 8)
             try:
                 font = ImageFont.truetype("arial.ttf", font_size)
-            except:
+            except (Exception, AttributeError, TypeError, ValueError):
                 font = ImageFont.load_default()
             
             text = "PST" if size < 64 else "PST\nto\nD365"
@@ -55,7 +58,7 @@ def create_simple_icons():
             # Save PNG
             png_path = resources_dir / f"app_icon_{size}.png"
             img.save(png_path, 'PNG')
-            print(f"✅ Generated {png_path}")
+            logger.info("✅ Generated {png_path}")
         
         # Create main app icon
         main_img = Image.new('RGBA', (128, 128), (0, 0, 0, 0))
@@ -67,7 +70,7 @@ def create_simple_icons():
         # Text
         try:
             font = ImageFont.truetype("arial.ttf", 16)
-        except:
+        except (Exception, AttributeError, TypeError, ValueError):
             font = ImageFont.load_default()
         
         text = "PST\nto\nD365"
@@ -83,7 +86,7 @@ def create_simple_icons():
         # Save main icon
         main_icon_path = resources_dir / "app_icon.png"
         main_img.save(main_icon_path, 'PNG')
-        print(f"✅ Generated {main_icon_path}")
+        logger.info("✅ Generated {main_icon_path}")
         
         # Create ICO file with multiple sizes
         ico_images = []
@@ -98,7 +101,7 @@ def create_simple_icons():
             font_size = max(6, size // 8)
             try:
                 font = ImageFont.truetype("arial.ttf", font_size)
-            except:
+            except (Exception, AttributeError, TypeError, ValueError):
                 font = ImageFont.load_default()
             
             text = "PST"
@@ -114,16 +117,16 @@ def create_simple_icons():
         
         ico_path = resources_dir / "app_icon.ico"
         ico_images[0].save(ico_path, format='ICO', sizes=[(img.size[0], img.size[1]) for img in ico_images])
-        print(f"✅ Generated {ico_path}")
+        logger.info("✅ Generated {ico_path}")
         
-        print("🎉 Icon generation complete!")
+        logger.info("🎉 Icon generation complete!")
         return True
         
     except ImportError:
-        print("❌ PIL not available, creating basic text files...")
+        logger.error("❌ PIL not available, creating basic text files...")
         return create_text_placeholder()
     except Exception as e:
-        print(f"❌ Error creating icons: {e}")
+        logger.error("❌ Error creating icons: {e}")
         return create_text_placeholder()
 
 def create_text_placeholder():
@@ -142,8 +145,8 @@ def create_text_placeholder():
         f.write("- app_icon_*.png (various sizes)\n\n")
         f.write("Icons can be generated using PIL/Pillow or created manually.\n")
     
-    print(f"✅ Created placeholder {icon_info}")
-    print("ℹ️ Install Pillow (pip install Pillow) to generate actual icons")
+    logger.info("✅ Created placeholder {icon_info}")
+    logger.debug("ℹ️ Install Pillow (pip install Pillow) to generate actual icons")
     return True
 
 if __name__ == "__main__":

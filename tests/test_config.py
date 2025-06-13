@@ -220,9 +220,14 @@ class TestConfiguration(unittest.TestCase):
     
     def test_string_configuration_types(self):
         """Test that string configurations have correct types."""
-        self.assertIsInstance(config.USERNAME, str)
-        self.assertIsInstance(config.TENANT_DOMAIN, str)
-        self.assertIsInstance(config.CLIENT_ID, str)
+        # Skip tests for values that now require environment variables
+        if config.USERNAME is not None:
+            self.assertIsInstance(config.USERNAME, str)
+        if config.TENANT_DOMAIN is not None:
+            self.assertIsInstance(config.TENANT_DOMAIN, str)
+        if config.CLIENT_ID is not None:
+            self.assertIsInstance(config.CLIENT_ID, str)
+        
         self.assertIsInstance(config.CRM_BASE_URL, str)
         self.assertIsInstance(config.DEFAULT_PST_PATH, str)
         self.assertIsInstance(config.LOG_LEVEL, str)
@@ -260,9 +265,9 @@ class TestConfigurationIntegration(unittest.TestCase):
             import importlib
             importlib.reload(config)
             
-            # Should still have default values
-            self.assertIsNotNone(config.USERNAME)
-            self.assertIsNotNone(config.TENANT_DOMAIN)
+            # Should have None values when environment variables are not set
+            self.assertIsNone(config.USERNAME)
+            self.assertIsNone(config.TENANT_DOMAIN)
             
         finally:
             # Restore environment variables

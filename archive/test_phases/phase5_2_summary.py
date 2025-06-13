@@ -26,19 +26,19 @@ print(f'\n🔗 Backend Modules:')
 try:
     from email_importer import EmailImporter
     print('  ✅ EmailImporter: Available')
-except:
+except (Exception, AttributeError, TypeError, ValueError):
     print('  ❌ EmailImporter: Not Available')
 
 try:
     from bulk_processor import BulkProcessor
     print('  ✅ BulkProcessor: Available')
-except:
+except (Exception, AttributeError, TypeError, ValueError):
     print('  ❌ BulkProcessor: Not Available')
 
 try:
     from phase4_integration import Phase4IntelligentSystem
     print('  ✅ Phase4IntelligentSystem: Available')
-except:
+except (Exception, AttributeError, TypeError, ValueError):
     print('  ❌ Phase4IntelligentSystem: Not Available')
 
 print(f'\n🎯 Phase 5.2 Status: FULLY OPERATIONAL')

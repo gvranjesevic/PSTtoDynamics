@@ -2,6 +2,8 @@
 PST-to-Dynamics 365 API Documentation
 =====================================
 
+logger = logging.getLogger(__name__)
+
 This module provides comprehensive API documentation for all core components
 of the PST-to-Dynamics 365 email import system.
 
@@ -13,6 +15,7 @@ from typing import Dict, List, Optional, Any, Union, Callable
 from dataclasses import dataclass
 from enum import Enum
 import inspect
+import logging
 
 
 class ModuleStatus(Enum):
@@ -112,7 +115,7 @@ class APIDocumentationGenerator:
                         
                         importer = EmailImporter()
                         results = importer.import_emails('path/to/emails.pst')
-                        print(f"Imported {results.successful_imports} emails")
+                        logger.debug("Imported {results.successful_imports} emails")
                         """,
                         """
                         # Advanced import with custom settings
@@ -121,7 +124,7 @@ class APIDocumentationGenerator:
                             pst_path='large_mailbox.pst',
                             batch_size=100,
                             create_contacts=True,
-                            progress_callback=lambda progress: print(f"Progress: {progress}%")
+                            progress_callback=lambda progress: logger.debug("Progress: {progress}%")
                         )
                         """
                     ]
@@ -141,7 +144,7 @@ class APIDocumentationGenerator:
                         """
                         validation = importer.validate_pst_file('emails.pst')
                         if validation.is_valid:
-                            print(f"PST file contains {validation.email_count} emails")
+                            logger.debug("PST file contains {validation.email_count} emails")
                         """
                     ]
                 ),
@@ -157,8 +160,8 @@ class APIDocumentationGenerator:
                     examples=[
                         """
                         preview = importer.get_import_preview('emails.pst')
-                        print(f"Will create {len(preview.new_contacts)} new contacts")
-                        print(f"Found {len(preview.potential_duplicates)} potential duplicates")
+                        logger.debug("Will create {len(preview.new_contacts)} new contacts")
+                        logger.debug("Found {len(preview.potential_duplicates)} potential duplicates")
                         """
                     ]
                 )
@@ -175,16 +178,16 @@ class APIDocumentationGenerator:
                     # Validate PST file first
                     validation = importer.validate_pst_file('mailbox.pst')
                     if not validation.is_valid:
-                        print(f"PST validation failed: {validation.error_message}")
+                        logger.debug("PST validation failed: {validation.error_message}")
                         return
                     
                     # Get preview of import
                     preview = importer.get_import_preview('mailbox.pst')
-                    print(f"Preview: {len(preview.emails)} emails, {len(preview.new_contacts)} new contacts")
+                    logger.debug("Preview: {len(preview.emails)} emails, {len(preview.new_contacts)} new contacts")
                     
                     # Perform import with progress tracking
                     def progress_handler(progress_data):
-                        print(f"Progress: {progress_data.percentage}% - {progress_data.current_operation}")
+                        logger.debug("Progress: {progress_data.percentage}% - {progress_data.current_operation}")
                     
                     results = importer.import_emails(
                         pst_path='mailbox.pst',
@@ -192,13 +195,13 @@ class APIDocumentationGenerator:
                         progress_callback=progress_handler
                     )
                     
-                    print(f"Import completed:")
-                    print(f"  Successful: {results.successful_imports}")
-                    print(f"  Failed: {results.failed_imports}")
-                    print(f"  Contacts created: {results.contacts_created}")
+                    logger.debug("Import completed:")
+                    logger.debug("  Successful: {results.successful_imports}")
+                    logger.debug("  Failed: {results.failed_imports}")
+                    logger.debug("  Contacts created: {results.contacts_created}")
                     
                 except PSTDynamicsException as e:
-                    print(f"Import failed: {e.get_user_friendly_message()}")
+                    logger.debug("Import failed: {e.get_user_friendly_message()}")
                 """
             ]
         )
@@ -351,7 +354,7 @@ class APIDocumentationGenerator:
                         import config
                         password = config.get_secure_password()
                         if password:
-                            print("Password retrieved from secure storage")
+                            logger.debug("Password retrieved from secure storage")
                         """
                     ]
                 ),
@@ -365,7 +368,7 @@ class APIDocumentationGenerator:
                         """
                         errors = config.validate_config()
                         if errors:
-                            print(f"Configuration errors: {errors}")
+                            logger.debug("Configuration errors: {errors}")
                         """
                     ]
                 )
@@ -456,14 +459,14 @@ def generate_api_docs():
     with open("API_REFERENCE.md", "w", encoding="utf-8") as f:
         f.write(markdown_docs)
     
-    print("📚 API documentation generated: API_REFERENCE.md")
+    logger.debug("📚 API documentation generated: API_REFERENCE.md")
     return markdown_docs
 
 
 if __name__ == "__main__":
     # Generate documentation when run as script
     docs = generate_api_docs()
-    print("\n" + "="*60)
-    print("API DOCUMENTATION PREVIEW")
-    print("="*60)
+    logger.debug("\n" + "="*60)
+    logger.debug("API DOCUMENTATION PREVIEW")
+    logger.debug("="*60)
     print(docs[:2000] + "..." if len(docs) > 2000 else docs) 

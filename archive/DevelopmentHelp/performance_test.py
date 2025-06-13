@@ -2,6 +2,8 @@
 Performance Testing for Large Datasets
 =====================================
 
+logger = logging.getLogger(__name__)
+
 Tests system performance with large email datasets (1000+ emails):
 - Bulk processing efficiency
 - Memory management
@@ -14,6 +16,7 @@ Phase: Performance Testing
 """
 
 import sys
+import logging
 import os
 import time
 import random
@@ -24,7 +27,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 def generate_test_dataset(email_count: int) -> dict:
     """Generate a large test dataset for performance testing."""
-    print(f"📊 Generating test dataset with {email_count:,} emails...")
+    logger.info("📊 Generating test dataset with {email_count:,} emails...")
     
     # Sample domains and names for variety
     domains = ['example.com', 'testcompany.com', 'ringcentral.com', 'protective.com', 'dynamique.com', 'microsoft.com']
@@ -63,13 +66,13 @@ def generate_test_dataset(email_count: int) -> dict:
             emails_by_sender[sender_email] = []
         emails_by_sender[sender_email].append(email_data)
     
-    print(f"   ✅ Generated {email_count:,} emails from {len(emails_by_sender)} unique senders")
+    logger.debug("   ✅ Generated {email_count:,} emails from {len(emails_by_sender)} unique senders")
     return emails_by_sender
 
 def test_bulk_processing_performance(test_data: dict):
     """Test bulk processing performance with large datasets."""
-    print("\n📦 BULK PROCESSING PERFORMANCE TEST")
-    print("=" * 60)
+    logger.debug("\n📦 BULK PROCESSING PERFORMANCE TEST")
+    logger.debug("=" * 60)
     
     try:
         import bulk_processor
@@ -77,51 +80,51 @@ def test_bulk_processing_performance(test_data: dict):
         processor = bulk_processor.BulkProcessor()
         
         total_emails = sum(len(emails) for emails in test_data.values())
-        print(f"📧 Testing with {total_emails:,} emails from {len(test_data)} senders")
+        logger.info("📧 Testing with {total_emails:,} emails from {len(test_data)} senders")
         
         # Test batch creation performance
-        print("\n⏱️ Testing batch creation performance...")
+        logger.debug("\n⏱️ Testing batch creation performance...")
         start_time = time.time()
         
         batches = processor._create_processing_batches(test_data)
         
         batch_time = time.time() - start_time
-        print(f"   ✅ Created {len(batches)} batches in {batch_time:.2f} seconds")
-        print(f"   📊 Batch creation rate: {total_emails/batch_time:.0f} emails/second")
+        logger.debug("   ✅ Created {len(batches)} batches in {batch_time:.2f} seconds")
+        logger.debug("   📊 Batch creation rate: {total_emails/batch_time:.0f} emails/second")
         
         # Analyze batch distribution
         batch_sizes = [batch['size'] for batch in batches]
-        print(f"   📦 Batch statistics:")
-        print(f"      Average size: {sum(batch_sizes)/len(batch_sizes):.1f} emails")
-        print(f"      Largest batch: {max(batch_sizes)} emails")
-        print(f"      Smallest batch: {min(batch_sizes)} emails")
+        logger.debug("   📦 Batch statistics:")
+        logger.debug("      Average size: {sum(batch_sizes)/len(batch_sizes):.1f} emails")
+        logger.debug("      Largest batch: {max(batch_sizes)} emails")
+        logger.debug("      Smallest batch: {min(batch_sizes)} emails")
         
         # Test session management
-        print("\n📊 Testing session management...")
+        logger.debug("\n📊 Testing session management...")
         session_stats = processor.get_session_stats()
-        print(f"   Session ID: {session_stats['session_id']}")
-        print(f"   Processing capacity: {processor.max_emails_per_session:,} emails")
+        logger.debug("   Session ID: {session_stats['session_id']}")
+        logger.debug("   Processing capacity: {processor.max_emails_per_session:,} emails")
         
         if total_emails > processor.max_emails_per_session:
-            print(f"   ⚠️ Dataset exceeds single session limit")
-            print(f"   📦 Would require {(total_emails // processor.max_emails_per_session) + 1} sessions")
+            logger.debug("   ⚠️ Dataset exceeds single session limit")
+            logger.debug("   📦 Would require {(total_emails // processor.max_emails_per_session) + 1} sessions")
         else:
-            print(f"   ✅ Dataset fits in single session")
+            logger.debug("   ✅ Dataset fits in single session")
         
         # Test checkpoint intervals
         checkpoint_count = total_emails // processor.checkpoint_interval
-        print(f"   📍 Checkpoint intervals: {checkpoint_count} checkpoints needed")
+        logger.debug("   📍 Checkpoint intervals: {checkpoint_count} checkpoints needed")
         
         return True
         
     except Exception as e:
-        print(f"❌ Bulk processing performance test failed: {e}")
+        logger.error("❌ Bulk processing performance test failed: {e}")
         return False
 
 def test_duplicate_detection_performance(test_data: dict):
     """Test duplicate detection performance at scale."""
-    print("\n🔍 DUPLICATE DETECTION PERFORMANCE TEST")
-    print("=" * 60)
+    logger.debug("\n🔍 DUPLICATE DETECTION PERFORMANCE TEST")
+    logger.debug("=" * 60)
     
     try:
         import email_comparator
@@ -135,7 +138,7 @@ def test_duplicate_detection_performance(test_data: dict):
         for sender in sample_senders:
             sample_emails.extend(test_data[sender][:10])  # Max 10 emails per sender
         
-        print(f"🔍 Testing duplicate detection with {len(sample_emails)} sample emails")
+        logger.info("🔍 Testing duplicate detection with {len(sample_emails)} sample emails")
         
         # Create some potential duplicates by modifying existing emails
         duplicates = []
@@ -144,7 +147,7 @@ def test_duplicate_detection_performance(test_data: dict):
             duplicate['subject'] = duplicate['subject'] + ' [DUPLICATE]'
             duplicates.append(duplicate)
         
-        print(f"   📧 Created {len(duplicates)} potential duplicates for testing")
+        logger.debug("   📧 Created {len(duplicates)} potential duplicates for testing")
         
         # Test comparison performance
         start_time = time.time()
@@ -159,34 +162,34 @@ def test_duplicate_detection_performance(test_data: dict):
         
         comparison_time = time.time() - start_time
         
-        print(f"   ⏱️ Performance results:")
-        print(f"      Comparisons: {comparison_count}")
-        print(f"      Total time: {comparison_time:.2f} seconds")
-        print(f"      Rate: {comparison_count/comparison_time:.1f} comparisons/second")
-        print(f"      Duplicates found: {duplicate_count}")
+        logger.debug("   ⏱️ Performance results:")
+        logger.debug("      Comparisons: {comparison_count}")
+        logger.debug("      Total time: {comparison_time:.2f} seconds")
+        logger.debug("      Rate: {comparison_count/comparison_time:.1f} comparisons/second")
+        logger.debug("      Duplicates found: {duplicate_count}")
         
         # Get comparison statistics
         stats = comparator.get_comparison_stats()
-        print(f"   📊 Comparison statistics:")
-        print(f"      Total comparisons: {stats['total_comparisons']}")
-        print(f"      Message-ID matches: {stats['message_id_matches']}")
-        print(f"      Content hash matches: {stats['content_hash_matches']}")
+        logger.debug("   📊 Comparison statistics:")
+        logger.debug("      Total comparisons: {stats['total_comparisons']}")
+        logger.debug("      Message-ID matches: {stats['message_id_matches']}")
+        logger.debug("      Content hash matches: {stats['content_hash_matches']}")
         
         # Estimate performance for full dataset
         total_emails = sum(len(emails) for emails in test_data.values())
         estimated_time = (total_emails * comparison_time) / comparison_count
-        print(f"   📈 Estimated time for full dataset: {estimated_time/60:.1f} minutes")
+        logger.debug("   📈 Estimated time for full dataset: {estimated_time/60:.1f} minutes")
         
         return True
         
     except Exception as e:
-        print(f"❌ Duplicate detection performance test failed: {e}")
+        logger.error("❌ Duplicate detection performance test failed: {e}")
         return False
 
 def test_contact_creation_performance(test_data: dict):
     """Test contact creation performance with many senders."""
-    print("\n👥 CONTACT CREATION PERFORMANCE TEST")
-    print("=" * 60)
+    logger.debug("\n👥 CONTACT CREATION PERFORMANCE TEST")
+    logger.debug("=" * 60)
     
     try:
         import contact_creator
@@ -195,10 +198,10 @@ def test_contact_creation_performance(test_data: dict):
         
         # Get unique senders
         senders = list(test_data.keys())
-        print(f"👥 Testing contact creation for {len(senders)} unique senders")
+        logger.info("👥 Testing contact creation for {len(senders)} unique senders")
         
         # Test contact info extraction performance
-        print("\n⏱️ Testing contact info extraction...")
+        logger.debug("\n⏱️ Testing contact info extraction...")
         start_time = time.time()
         
         extracted_contacts = []
@@ -209,23 +212,23 @@ def test_contact_creation_performance(test_data: dict):
         
         extraction_time = time.time() - start_time
         
-        print(f"   ✅ Extracted {len(extracted_contacts)} valid contacts")
-        print(f"   ⏱️ Extraction time: {extraction_time:.2f} seconds")
-        print(f"   📊 Rate: {len(senders)/extraction_time:.1f} contacts/second")
+        logger.debug("   ✅ Extracted {len(extracted_contacts)} valid contacts")
+        logger.debug("   ⏱️ Extraction time: {extraction_time:.2f} seconds")
+        logger.debug("   📊 Rate: {len(senders)/extraction_time:.1f} contacts/second")
         
         # Test batch creation for contact creation
-        print("\n📦 Testing batch organization...")
+        logger.debug("\n📦 Testing batch organization...")
         batch_size = 25  # From config
         batches_needed = (len(extracted_contacts) + batch_size - 1) // batch_size
         
-        print(f"   📦 Batch requirements:")
-        print(f"      Total contacts: {len(extracted_contacts)}")
-        print(f"      Batch size: {batch_size}")
-        print(f"      Batches needed: {batches_needed}")
-        print(f"      Estimated creation time: {batches_needed * 2:.1f} seconds")
+        logger.debug("   📦 Batch requirements:")
+        logger.debug("      Total contacts: {len(extracted_contacts)}")
+        logger.debug("      Batch size: {batch_size}")
+        logger.debug("      Batches needed: {batches_needed}")
+        logger.debug("      Estimated creation time: {batches_needed * 2:.1f} seconds")
         
         # Test missing contact analysis performance
-        print("\n🔍 Testing missing contact analysis...")
+        logger.debug("\n🔍 Testing missing contact analysis...")
         analysis_start = time.time()
         
         # Note: This will try to connect to Dynamics, may fail in test environment
@@ -233,24 +236,24 @@ def test_contact_creation_performance(test_data: dict):
             analysis = creator.analyze_missing_contacts(senders[:10])  # Test subset
             analysis_time = time.time() - analysis_start
             
-            print(f"   📊 Analysis results (10 senders):")
-            print(f"      Total senders: {analysis['total_senders']}")
-            print(f"      Missing contacts: {analysis['missing_contacts']}")
-            print(f"      Analysis time: {analysis_time:.2f} seconds")
+            logger.debug("   📊 Analysis results (10 senders):")
+            logger.debug("      Total senders: {analysis['total_senders']}")
+            logger.debug("      Missing contacts: {analysis['missing_contacts']}")
+            logger.debug("      Analysis time: {analysis_time:.2f} seconds")
             
         except Exception as e:
-            print(f"   ⚠️ Analysis test skipped (no Dynamics connection): {str(e)[:50]}...")
+            logger.debug("   ⚠️ Analysis test skipped (no Dynamics connection): {str(e)[:50]}...")
         
         return True
         
     except Exception as e:
-        print(f"❌ Contact creation performance test failed: {e}")
+        logger.error("❌ Contact creation performance test failed: {e}")
         return False
 
 def test_memory_performance(test_data: dict):
     """Test memory usage and optimization."""
-    print("\n💾 MEMORY PERFORMANCE TEST")
-    print("=" * 60)
+    logger.debug("\n💾 MEMORY PERFORMANCE TEST")
+    logger.debug("=" * 60)
     
     try:
         import psutil
@@ -260,17 +263,17 @@ def test_memory_performance(test_data: dict):
         
         # Initial memory measurement
         initial_memory = process.memory_info().rss / 1024 / 1024  # MB
-        print(f"💾 Initial memory usage: {initial_memory:.1f} MB")
+        logger.debug("💾 Initial memory usage: {initial_memory:.1f} MB")
         
         # Memory usage during data processing
         total_emails = sum(len(emails) for emails in test_data.values())
         memory_per_email = initial_memory / max(total_emails, 1) * 1000  # KB per email
         
-        print(f"   📧 Dataset size: {total_emails:,} emails")
-        print(f"   📊 Memory per email: {memory_per_email:.2f} KB")
+        logger.debug("   📧 Dataset size: {total_emails:,} emails")
+        logger.debug("   📊 Memory per email: {memory_per_email:.2f} KB")
         
         # Test garbage collection
-        print("\n🧹 Testing memory optimization...")
+        logger.debug("\n🧹 Testing memory optimization...")
         gc_start = time.time()
         collected = gc.collect()
         gc_time = time.time() - gc_start
@@ -278,41 +281,41 @@ def test_memory_performance(test_data: dict):
         post_gc_memory = process.memory_info().rss / 1024 / 1024  # MB
         memory_freed = initial_memory - post_gc_memory
         
-        print(f"   🧹 Garbage collection results:")
-        print(f"      Objects collected: {collected}")
-        print(f"      Time taken: {gc_time:.3f} seconds")
-        print(f"      Memory freed: {memory_freed:.1f} MB")
-        print(f"      Final memory: {post_gc_memory:.1f} MB")
+        logger.debug("   🧹 Garbage collection results:")
+        logger.debug("      Objects collected: {collected}")
+        logger.debug("      Time taken: {gc_time:.3f} seconds")
+        logger.debug("      Memory freed: {memory_freed:.1f} MB")
+        logger.debug("      Final memory: {post_gc_memory:.1f} MB")
         
         # Memory efficiency assessment
         if memory_per_email < 5:  # Less than 5KB per email
-            print("   ✅ Excellent memory efficiency")
+            logger.debug("   ✅ Excellent memory efficiency")
         elif memory_per_email < 20:  # Less than 20KB per email
-            print("   ✅ Good memory efficiency")
+            logger.debug("   ✅ Good memory efficiency")
         else:
-            print("   ⚠️ High memory usage - optimization recommended")
+            logger.debug("   ⚠️ High memory usage - optimization recommended")
         
         return True
         
     except ImportError:
-        print("   ⚠️ psutil not available - memory testing skipped")
+        logger.debug("   ⚠️ psutil not available - memory testing skipped")
         return True
     except Exception as e:
-        print(f"❌ Memory performance test failed: {e}")
+        logger.error("❌ Memory performance test failed: {e}")
         return False
 
 def run_stress_test(email_count: int):
     """Run a comprehensive stress test."""
-    print(f"\n🔥 STRESS TEST - {email_count:,} EMAILS")
-    print("=" * 60)
+    logger.debug("\n🔥 STRESS TEST - {email_count:,} EMAILS")
+    logger.debug("=" * 60)
     
     # Generate large dataset
     start_time = time.time()
     test_data = generate_test_dataset(email_count)
     generation_time = time.time() - start_time
     
-    print(f"📊 Dataset generation: {generation_time:.2f} seconds")
-    print(f"   Rate: {email_count/generation_time:.0f} emails/second generated")
+    logger.info("📊 Dataset generation: {generation_time:.2f} seconds")
+    logger.debug("   Rate: {email_count/generation_time:.0f} emails/second generated")
     
     # Run all performance tests
     test_results = []
@@ -333,10 +336,10 @@ def run_stress_test(email_count: int):
 
 def main():
     """Run comprehensive performance testing."""
-    print("🚀 PERFORMANCE TESTING - LARGE DATASETS")
-    print("=" * 80)
-    print("⚡ Testing system performance with 1000+ email datasets")
-    print("=" * 80)
+    logger.info("🚀 PERFORMANCE TESTING - LARGE DATASETS")
+    logger.debug("=" * 80)
+    logger.debug("⚡ Testing system performance with 1000+ email datasets")
+    logger.debug("=" * 80)
     
     start_time = time.time()
     
@@ -345,7 +348,7 @@ def main():
     all_results = []
     
     for size in test_sizes:
-        print(f"\n{'='*20} TESTING {size:,} EMAILS {'='*20}")
+        logger.debug("\n{'='*20} TESTING {size:,} EMAILS {'='*20}")
         
         results = run_stress_test(size)
         all_results.extend(results)
@@ -358,9 +361,9 @@ def main():
     total_tests = len(all_results)
     passed_tests = sum(1 for _, success in all_results if success)
     
-    print("\n" + "=" * 80)
-    print("📊 PERFORMANCE TEST SUMMARY")
-    print("=" * 80)
+    logger.debug("\n" + "=" * 80)
+    logger.info("📊 PERFORMANCE TEST SUMMARY")
+    logger.debug("=" * 80)
     
     # Group results by test type
     test_types = {}
@@ -373,23 +376,23 @@ def main():
         passed = sum(results)
         total = len(results)
         status = "✅ PASS" if passed == total else "⚠️ PARTIAL" if passed > 0 else "❌ FAIL"
-        print(f"{test_type:<20} {status} ({passed}/{total})")
+        logger.debug("{test_type:<20} {status} ({passed}/{total})")
     
-    print(f"\n📈 Overall Results:")
-    print(f"   ✅ Tests Passed: {passed_tests}/{total_tests}")
-    print(f"   ⏱️ Total Time: {total_time:.1f} seconds")
+    logger.debug("\n📈 Overall Results:")
+    logger.debug("   ✅ Tests Passed: {passed_tests}/{total_tests}")
+    logger.debug("   ⏱️ Total Time: {total_time:.1f} seconds")
     
     # Performance assessment
     if passed_tests >= total_tests * 0.8:
-        print("\n🎉 EXCELLENT PERFORMANCE!")
-        print("✅ System handles large datasets efficiently")
-        print("🚀 Ready for production deployment with bulk processing")
+        logger.debug("\n🎉 EXCELLENT PERFORMANCE!")
+        logger.info("✅ System handles large datasets efficiently")
+        logger.info("🚀 Ready for production deployment with bulk processing")
     elif passed_tests >= total_tests * 0.6:
-        print("\n✅ GOOD PERFORMANCE")
-        print("⚠️ Some performance issues but acceptable for production")
+        logger.debug("\n✅ GOOD PERFORMANCE")
+        logger.warning("⚠️ Some performance issues but acceptable for production")
     else:
-        print("\n⚠️ PERFORMANCE ISSUES DETECTED")
-        print("🔧 Optimization needed before production deployment")
+        logger.debug("\n⚠️ PERFORMANCE ISSUES DETECTED")
+        logger.debug("🔧 Optimization needed before production deployment")
     
     return passed_tests >= total_tests * 0.6
 

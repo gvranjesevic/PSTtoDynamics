@@ -5,7 +5,10 @@ A simple Python application to analyze PST (Outlook Personal Storage) files
 and provide basic email statistics.
 """
 
+logger = logging.getLogger(__name__)
+
 import os
+import logging
 import sys
 import pypff
 from datetime import datetime
@@ -29,18 +32,18 @@ class PSTAnalyzer:
             
             self.pst_file = pypff.file()
             self.pst_file.open(self.pst_file_path)
-            print(f"✅ Successfully opened PST file: {self.pst_file_path}")
+            logger.info("✅ Successfully opened PST file: {self.pst_file_path}")
             return True
             
         except Exception as e:
-            print(f"❌ Error opening PST file: {str(e)}")
+            logger.error("❌ Error opening PST file: {str(e)}")
             return False
     
     def close_pst_file(self):
         """Close the PST file."""
         if self.pst_file:
             self.pst_file.close()
-            print("✅ PST file closed successfully")
+            logger.info("✅ PST file closed successfully")
     
     def extract_folder_emails(self, folder, folder_path=""):
         """Recursively extract emails from folders and subfolders."""
@@ -54,7 +57,7 @@ class PSTAnalyzer:
                 if email_info:
                     self.email_data.append(email_info)
             except Exception as e:
-                print(f"⚠️  Error processing message {i} in folder {current_path}: {str(e)}")
+                logger.warning("⚠️  Error processing message {i} in folder {current_path}: {str(e)}")
         
         # Process subfolders recursively
         for j in range(folder.number_of_sub_folders):
@@ -62,7 +65,7 @@ class PSTAnalyzer:
                 subfolder = folder.get_sub_folder(j)
                 self.extract_folder_emails(subfolder, current_path)
             except Exception as e:
-                print(f"⚠️  Error processing subfolder {j} in {current_path}: {str(e)}")
+                logger.warning("⚠️  Error processing subfolder {j} in {current_path}: {str(e)}")
     
     def extract_email_info(self, message, folder_path):
         """Extract relevant information from an email message."""
@@ -82,17 +85,17 @@ class PSTAnalyzer:
             }
             return email_info
         except Exception as e:
-            print(f"⚠️  Error extracting email info: {str(e)}")
+            logger.warning("⚠️  Error extracting email info: {str(e)}")
             return None
     
     def analyze_emails(self):
         """Extract all emails from the PST file."""
         if not self.pst_file:
-            print("❌ PST file not opened. Call open_pst_file() first.")
+            logger.error("❌ PST file not opened. Call open_pst_file() first.")
             return False
         
         try:
-            print("📧 Starting email extraction...")
+            logger.info("📧 Starting email extraction...")
             
             # Get the root folder
             root_folder = self.pst_file.get_root_folder()
@@ -100,36 +103,36 @@ class PSTAnalyzer:
             # Extract emails from all folders
             self.extract_folder_emails(root_folder)
             
-            print(f"✅ Extracted {len(self.email_data)} emails successfully")
+            logger.info("✅ Extracted {len(self.email_data)} emails successfully")
             return True
             
         except Exception as e:
-            print(f"❌ Error during email analysis: {str(e)}")
+            logger.error("❌ Error during email analysis: {str(e)}")
             return False
     
     def generate_statistics(self):
         """Generate comprehensive statistics about the emails."""
         if not self.email_data:
-            print("❌ No email data available. Run analyze_emails() first.")
+            logger.error("❌ No email data available. Run analyze_emails() first.")
             return
         
-        print("\n" + "="*60)
-        print("📊 PST FILE STATISTICS")
-        print("="*60)
+        logger.debug("\n" + "="*60)
+        logger.info("📊 PST FILE STATISTICS")
+        logger.debug("="*60)
         
         # Basic counts
         total_emails = len(self.email_data)
-        print(f"📧 Total Emails: {total_emails:,}")
+        logger.info("📧 Total Emails: {total_emails:,}")
         
         # Folder statistics
         folder_counts = Counter(email['folder'] for email in self.email_data)
-        print(f"\n📁 Emails by Folder:")
+        logger.debug("\n📁 Emails by Folder:")
         folder_table = [[folder, count] for folder, count in folder_counts.most_common()]
         print(tabulate(folder_table, headers=['Folder', 'Email Count'], tablefmt='grid'))
         
         # Sender statistics
         sender_counts = Counter(email['sender'] for email in self.email_data)
-        print(f"\n👤 Top 10 Senders:")
+        logger.debug("\n👤 Top 10 Senders:")
         sender_table = [[sender, count] for sender, count in sender_counts.most_common(10)]
         print(tabulate(sender_table, headers=['Sender', 'Email Count'], tablefmt='grid'))
         
@@ -138,7 +141,7 @@ class PSTAnalyzer:
         avg_size = total_size / total_emails if total_emails > 0 else 0
         max_size = max((email['size'] for email in self.email_data if email['size']), default=0)
         
-        print(f"\n💾 Size Statistics:")
+        logger.debug("\n💾 Size Statistics:")
         size_stats = [
             ['Total Size', f"{total_size / (1024*1024):.2f} MB"],
             ['Average Size', f"{avg_size / 1024:.2f} KB"],
@@ -150,7 +153,7 @@ class PSTAnalyzer:
         emails_with_attachments = sum(1 for email in self.email_data if email['has_attachments'])
         total_attachments = sum(email['attachment_count'] for email in self.email_data)
         
-        print(f"\n📎 Attachment Statistics:")
+        logger.debug("\n📎 Attachment Statistics:")
         attachment_stats = [
             ['Emails with Attachments', f"{emails_with_attachments:,}"],
             ['Total Attachments', f"{total_attachments:,}"],
@@ -164,7 +167,7 @@ class PSTAnalyzer:
             earliest_date = min(dates)
             latest_date = max(dates)
             
-            print(f"\n📅 Date Range:")
+            logger.debug("\n📅 Date Range:")
             date_stats = [
                 ['Earliest Email', earliest_date.strftime('%Y-%m-%d %H:%M:%S')],
                 ['Latest Email', latest_date.strftime('%Y-%m-%d %H:%M:%S')],
@@ -172,7 +175,7 @@ class PSTAnalyzer:
             ]
             print(tabulate(date_stats, headers=['Metric', 'Value'], tablefmt='grid'))
         
-        print("\n" + "="*60)
+        logger.debug("\n" + "="*60)
 
 
 def main():
@@ -180,9 +183,9 @@ def main():
     # PST file path
     pst_file_path = r"C:\GitHub-Repos\gvranjesevic@dynamique.com\PSTtoDynamics\PST\gvranjesevic@dynamique.com.001.pst"
     
-    print("🔍 PST File Analyzer")
-    print("="*50)
-    print(f"📁 Target PST file: {pst_file_path}")
+    logger.info("🔍 PST File Analyzer")
+    logger.debug("="*50)
+    logger.info("📁 Target PST file: {pst_file_path}")
     
     # Create analyzer instance
     analyzer = PSTAnalyzer(pst_file_path)
@@ -200,9 +203,9 @@ def main():
         analyzer.generate_statistics()
         
     except KeyboardInterrupt:
-        print("\n⚠️  Analysis interrupted by user")
+        logger.debug("\n⚠️  Analysis interrupted by user")
     except Exception as e:
-        print(f"❌ Unexpected error: {str(e)}")
+        logger.error("❌ Unexpected error: {str(e)}")
     finally:
         # Clean up
         analyzer.close_pst_file()

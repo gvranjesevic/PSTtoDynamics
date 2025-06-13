@@ -2,11 +2,17 @@
 PST-to-Dynamics 365 Main GUI Window
 ===================================
 
+logger = logging.getLogger(__name__)
+
 Phase 5.1 Foundation: Main Application Window
-Professional desktop interface for email import system with AI intelligence.
+Professional desktop interface for email import sys
+ import loggingtem with AI intelligence.
 """
 
 import sys
+
+
+import logging
 import os
 from datetime import datetime
 from typing import Optional, Dict, Any
@@ -27,7 +33,7 @@ try:
     ICONS_AVAILABLE = True
 except ImportError:
     ICONS_AVAILABLE = False
-    print("⚠️ QtAwesome not available - using default icons")
+    logger.warning("⚠️ QtAwesome not available - using default icons")
 
 # Import existing backend modules (Phase 1-4 remain unchanged)
 try:
@@ -39,12 +45,12 @@ try:
         PHASE4_AVAILABLE = True
     except ImportError:
         PHASE4_AVAILABLE = False
-        print("⚠️ Phase 4 AI not available in GUI mode")
+        logger.warning("⚠️ Phase 4 AI not available in GUI mode")
     
     BACKEND_AVAILABLE = True
 except ImportError as e:
     BACKEND_AVAILABLE = False
-    print(f"⚠️ Backend modules not available: {e}")
+    logger.warning("⚠️ Backend modules not available: {e}")
 
 # Import application icon
 try:
@@ -52,7 +58,7 @@ try:
     ICON_AVAILABLE = True
 except ImportError:
     ICON_AVAILABLE = False
-    print("⚠️ Application icon not available")
+    logger.warning("⚠️ Application icon not available")
 
 # Add import for the sync monitoring dashboard
 from gui.widgets.sync_monitoring_dashboard import SyncMonitoringDashboard
@@ -293,6 +299,7 @@ class ContentArea(QWidget):
     def show_dashboard(self):
         """Show the dashboard module (Phase 5.1 basic version)"""
         import sys
+        import logging
         dashboard_info = f"""
         <div style="font-family: Segoe UI; color: #2c3e50;">
         <h3>System Status</h3>
@@ -444,14 +451,14 @@ class ContentArea(QWidget):
             layout = self.layout()
             layout.insertWidget(2, self.analytics_dashboard)  # Insert after subtitle
             
-            print("📈 Phase 5.4 Analytics Dashboard loaded successfully")
+            logger.info("📈 Phase 5.4 Analytics Dashboard loaded successfully")
             
         except ImportError as e:
-            print(f"⚠️ Analytics Dashboard not available: {e}")
+            logger.warning("⚠️ Analytics Dashboard not available: {e}")
             self.content_body.setText("📈 Analytics Dashboard\n\nError loading dashboard module.\nPlease check installation.")
             self.content_body.setAlignment(Qt.AlignmentFlag.AlignCenter)
         except Exception as e:
-            print(f"❌ Error loading Analytics Dashboard: {e}")
+            logger.error("❌ Error loading Analytics Dashboard: {e}")
             self.content_body.setText(f"📈 Analytics Dashboard\n\nError: {str(e)}")
             self.content_body.setAlignment(Qt.AlignmentFlag.AlignCenter)
     
@@ -477,14 +484,14 @@ class ContentArea(QWidget):
             layout = self.layout()
             layout.insertWidget(2, self.ai_dashboard)  # Insert after subtitle
             
-            print("🤖 Phase 5.5 AI Intelligence Dashboard loaded successfully")
+            logger.debug("🤖 Phase 5.5 AI Intelligence Dashboard loaded successfully")
             
         except ImportError as e:
-            print(f"⚠️ AI Intelligence Dashboard not available: {e}")
+            logger.warning("⚠️ AI Intelligence Dashboard not available: {e}")
             self.content_body.setText("🤖 AI Intelligence Dashboard\n\nError loading AI dashboard module.\nPlease check Phase 4 components installation.")
             self.content_body.setAlignment(Qt.AlignmentFlag.AlignCenter)
         except Exception as e:
-            print(f"❌ Error loading AI Intelligence Dashboard: {e}")
+            logger.error("❌ Error loading AI Intelligence Dashboard: {e}")
             self.content_body.setText(f"🤖 AI Intelligence Dashboard\n\nError: {str(e)}")
             self.content_body.setAlignment(Qt.AlignmentFlag.AlignCenter)
     
@@ -510,14 +517,14 @@ class ContentArea(QWidget):
             layout = self.layout()
             layout.insertWidget(2, self.contact_dashboard)  # Insert after subtitle
             
-            print("👥 Phase 5.6 Contact Management Dashboard loaded successfully")
+            logger.info("👥 Phase 5.6 Contact Management Dashboard loaded successfully")
             
         except ImportError as e:
-            print(f"⚠️ Contact Management Dashboard not available: {e}")
+            logger.warning("⚠️ Contact Management Dashboard not available: {e}")
             self.content_body.setText("👥 Contact Management Dashboard\n\nError loading contact dashboard module.\nPlease check contact management components installation.")
             self.content_body.setAlignment(Qt.AlignmentFlag.AlignCenter)
         except Exception as e:
-            print(f"❌ Error loading Contact Management Dashboard: {e}")
+            logger.error("❌ Error loading Contact Management Dashboard: {e}")
             self.content_body.setText(f"👥 Contact Management Dashboard\n\nError: {str(e)}")
             self.content_body.setAlignment(Qt.AlignmentFlag.AlignCenter)
     
@@ -552,9 +559,9 @@ class ContentArea(QWidget):
     
     def on_configuration_changed(self, config_data: dict):
         """Handle configuration changes"""
-        print("Configuration updated:")
+        logger.debug("Configuration updated:")
         for section, data in config_data.items():
-            print(f"  {section}: {data}")
+            logger.debug("  {section}: {data}")
         
         # Update status to indicate configuration was saved
         self.update_status("Configuration updated successfully", "#27ae60")
@@ -1009,7 +1016,7 @@ A: Use this Help menu or contact support.
 
     def submit_feedback(self, feedback, email, dlg):
         # Placeholder: In production, send to server or save locally
-        print(f"Feedback received: {feedback}\nFrom: {email}")
+        logger.debug("Feedback received: {feedback}\nFrom: {email}")
         QMessageBox.information(self, "Thank you!", "Your feedback has been received.")
         dlg.accept()
 
@@ -1040,25 +1047,25 @@ class PSTDynamicsApp(QApplication):
         self.main_window = MainWindow()
         self.main_window.show()
         
-        print("🚀 PST-to-Dynamics 365 GUI Application Started")
-        print("📊 Phase 5.1 Foundation - Main Window Framework")
-        print("✅ All systems ready for testing and review")
+        logger.info("🚀 PST-to-Dynamics 365 GUI Application Started")
+        logger.info("📊 Phase 5.1 Foundation - Main Window Framework")
+        logger.info("✅ All systems ready for testing and review")
         
         return self.exec()
 
 
 def main():
     """Main entry point"""
-    print("=" * 60)
-    print("🎯 PST-to-Dynamics 365 Phase 5.1 Foundation")
-    print("🖥️ Professional Desktop GUI Application")
-    print("=" * 60)
+    logger.debug("=" * 60)
+    logger.debug("🎯 PST-to-Dynamics 365 Phase 5.1 Foundation")
+    logger.debug("🖥️ Professional Desktop GUI Application")
+    logger.debug("=" * 60)
     
     try:
         app = PSTDynamicsApp()
         return app.run()
     except Exception as e:
-        print(f"❌ Application startup error: {e}")
+        logger.error("❌ Application startup error: {e}")
         return 1
 
 

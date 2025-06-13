@@ -2,6 +2,8 @@
 Phase 5.7 Theme Management System
 =================================
 
+logger = logging.getLogger(__name__)
+
 Advanced theme engine supporting multiple themes with real-time switching,
 system integration, and enterprise customization capabilities.
 
@@ -18,6 +20,7 @@ Phase: 5.7
 """
 
 import sys
+import logging
 import os
 from typing import Dict, Any, Optional, Callable
 from enum import Enum
@@ -244,7 +247,7 @@ class ThemeManager(QObject):
             save_preference: Whether to save this as the user's preference
         """
         if theme_type not in self.theme_definitions:
-            print(f"Warning: Theme {theme_type} not found, using Light theme")
+            logger.debug("Warning: Theme {theme_type} not found, using Light theme")
             theme_type = ThemeType.LIGHT
         
         # Update current theme
@@ -264,7 +267,7 @@ class ThemeManager(QObject):
         # Emit signal
         self.theme_changed.emit(theme_type.value)
         
-        print(f"✅ Theme changed from {old_theme.value} to {theme_type.value}")
+        logger.info("✅ Theme changed from {old_theme.value} to {theme_type.value}")
     
     def _apply_theme_to_application(self):
         """Apply current theme to the entire QApplication"""
@@ -309,7 +312,7 @@ class ThemeManager(QObject):
                 try:
                     widget.apply_theme(theme_def)
                 except Exception as e:
-                    print(f"Warning: Failed to apply theme to widget {widget}: {e}")
+                    logger.debug("Warning: Failed to apply theme to widget {widget}: {e}")
     
     def register_widget(self, widget: QWidget):
         """
@@ -480,7 +483,7 @@ class ThemeManager(QObject):
             required_colors = ['primary', 'secondary', 'background', 'text_primary']
             for key in required_colors:
                 if key not in colors:
-                    print(f"Error: Missing required color '{key}' in custom theme")
+                    logger.debug("Error: Missing required color '{key}' in custom theme")
                     return False
             
             # Use defaults for missing optional definitions
@@ -504,11 +507,11 @@ class ThemeManager(QObject):
             # Save to settings
             self.settings.setValue("theme/custom", custom_theme)
             
-            print(f"✅ Custom theme '{name}' created successfully")
+            logger.info("✅ Custom theme '{name}' created successfully")
             return True
             
         except Exception as e:
-            print(f"❌ Error creating custom theme: {e}")
+            logger.error("❌ Error creating custom theme: {e}")
             return False
     
     def auto_detect_and_apply_system_theme(self):
@@ -517,7 +520,7 @@ class ThemeManager(QObject):
         
         if hasattr(self, 'system_theme'):
             self.set_theme(self.system_theme, save_preference=False)
-            print(f"✅ Applied system theme: {self.system_theme.value}")
+            logger.info("✅ Applied system theme: {self.system_theme.value}")
 
 # Global theme manager instance
 _theme_manager = None
@@ -608,12 +611,12 @@ if __name__ == "__main__":
     window = ThemeTestWindow()
     window.show()
     
-    print("🎨 Phase 5.7 Theme System Test")
-    print("=" * 40)
-    print("✅ Theme Manager initialized")
-    print("✅ Multiple themes available")
-    print("✅ Real-time theme switching")
-    print("✅ Widget registration system")
-    print("✅ System theme detection")
+    logger.debug("🎨 Phase 5.7 Theme System Test")
+    logger.debug("=" * 40)
+    logger.info("✅ Theme Manager initialized")
+    logger.info("✅ Multiple themes available")
+    logger.info("✅ Real-time theme switching")
+    logger.info("✅ Widget registration system")
+    logger.info("✅ System theme detection")
     
     sys.exit(app.exec())

@@ -2,11 +2,16 @@
 PST-to-Dynamics 365 Configuration Manager
 =========================================
 
+logger = logging.getLogger(__name__)
+
 Phase 5.3: Configuration Interface Implementation
 Visual configuration management for all system settings.
 """
 
 import sys
+
+
+import logging
 import os
 import json
 from datetime import datetime
@@ -33,7 +38,7 @@ try:
     BACKEND_AVAILABLE = True
 except ImportError as e:
     BACKEND_AVAILABLE = False
-    print(f"⚠️ Backend modules not available in Configuration Manager: {e}")
+    logger.warning("⚠️ Backend modules not available in Configuration Manager: {e}")
 
 
 class ConfigurationTestThread(QThread):
@@ -469,7 +474,7 @@ class ConfigurationManager(QWidget):
             self.status_label.setText("Configuration loaded successfully")
             
         except Exception as e:
-            print(f"Failed to load configuration: {e}")
+            logger.debug("Failed to load configuration: {e}")
             self.status_label.setText("Using default configuration")
 
 
@@ -477,6 +482,8 @@ def main():
     """Test the Configuration Manager independently"""
     from PyQt6.QtWidgets import QApplication
     import sys
+
+    import logging
     
     app = QApplication(sys.argv)
     

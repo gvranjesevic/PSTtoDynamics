@@ -4,6 +4,8 @@ PST File Analyzer (Aspose.Email version)
 A Python application to analyze PST (Outlook Personal Storage) files
 using the Aspose.Email library for reliable Windows compatibility.
 
+logger = logging.getLogger(__name__)
+
 NOTE: The evaluation version of Aspose.Email has a limitation of only 50 emails
 per folder. To extract all emails, you need either:
 1. A valid Aspose.Email license file
@@ -14,6 +16,7 @@ If you have a license file, place it in the same directory as this script.
 """
 
 import os
+import logging
 import sys
 from datetime import datetime
 from collections import defaultdict, Counter
@@ -25,7 +28,7 @@ try:
     import aspose.email as ae
     from aspose.email.storage.pst import PersonalStorage, StandardIpmFolder
 except ImportError:
-    print("❌ Aspose.Email not found. Install it with: pip install aspose-email")
+    logger.error("❌ Aspose.Email not found. Install it with: pip install aspose-email")
     sys.exit(1)
 
 
@@ -43,17 +46,17 @@ def apply_license():
             try:
                 license = ae.License()
                 license.set_license(license_file)
-                print(f"✅ License applied successfully: {license_file}")
+                logger.info("✅ License applied successfully: {license_file}")
                 return True
             except Exception as e:
-                print(f"⚠️  Error applying license {license_file}: {str(e)}")
+                logger.warning("⚠️  Error applying license {license_file}: {str(e)}")
                 continue
     
-    print("⚠️  No valid license found. Using evaluation version (50 emails per folder limit)")
-    print("   To remove this limitation:")
-    print("   1. Get a free temporary license: https://purchase.aspose.com/temporary-license")
-    print("   2. Place license file in the same directory as this script")
-    print("   3. Or use the pypff/libratom alternatives for unlimited extraction")
+    logger.warning("⚠️  No valid license found. Using evaluation version (50 emails per folder limit)")
+    logger.debug("   To remove this limitation:")
+    logger.debug("   1. Get a free temporary license: https://purchase.aspose.com/temporary-license")
+    logger.debug("   2. Place license file in the same directory as this script")
+    logger.debug("   3. Or use the pypff/libratom alternatives for unlimited extraction")
     return False
 
 
@@ -70,14 +73,14 @@ class PSTAnalyzerAspose:
             if not os.path.exists(self.pst_file_path):
                 raise FileNotFoundError(f"PST file not found: {self.pst_file_path}")
             
-            print(f"✅ Opening PST file: {self.pst_file_path}")
+            logger.info("✅ Opening PST file: {self.pst_file_path}")
             self.pst = PersonalStorage.from_file(self.pst_file_path)
             
-            print(f"📁 PST file opened successfully")
+            logger.info("📁 PST file opened successfully")
             return True
             
         except Exception as e:
-            print(f"❌ Error opening PST file: {str(e)}")
+            logger.error("❌ Error opening PST file: {str(e)}")
             return False
     
     def close_pst_file(self):
@@ -85,13 +88,13 @@ class PSTAnalyzerAspose:
         if self.pst:
             # Aspose PersonalStorage doesn't have dispose method, just set to None
             self.pst = None
-            print("✅ PST file closed successfully")
+            logger.info("✅ PST file closed successfully")
     
     def extract_folder_messages(self, folder, folder_path=""):
         """Recursively extract messages from folders and subfolders."""
         current_path = f"{folder_path}/{folder.display_name}" if folder_path else folder.display_name
         
-        print(f"📂 Processing folder: {current_path}")
+        logger.info("📂 Processing folder: {current_path}")
         
         # Process messages in current folder
         folder_message_count = 0
@@ -101,7 +104,7 @@ class PSTAnalyzerAspose:
             messages = folder.get_contents()  # Get fresh iterator
             
             if total_messages > 0:
-                print(f"  📧 Found {total_messages} messages in {current_path}")
+                logger.debug("  📧 Found {total_messages} messages in {current_path}")
             
             for i, message_info in enumerate(messages):
                 try:
@@ -114,18 +117,18 @@ class PSTAnalyzerAspose:
                         
                     # Progress indicator
                     if (i + 1) % 100 == 0:
-                        print(f"  📧 Processed {i + 1}/{total_messages} messages in {current_path}")
+                        logger.debug("  📧 Processed {i + 1}/{total_messages} messages in {current_path}")
                         
                 except Exception as e:
-                    print(f"⚠️  Error processing message {i+1}/{total_messages} in folder {current_path}: {str(e)}")
+                    logger.warning("⚠️  Error processing message {i+1}/{total_messages} in folder {current_path}: {str(e)}")
                     continue
             
             # Final count for this folder
             if folder_message_count > 0:
-                print(f"  ✅ Completed folder {current_path}: {folder_message_count} messages extracted")
+                logger.debug("  ✅ Completed folder {current_path}: {folder_message_count} messages extracted")
                     
         except Exception as e:
-            print(f"⚠️  Error accessing messages in folder {current_path}: {str(e)}")
+            logger.warning("⚠️  Error accessing messages in folder {current_path}: {str(e)}")
         
         # Process subfolders recursively
         try:
@@ -133,7 +136,7 @@ class PSTAnalyzerAspose:
             for subfolder in subfolders:
                 self.extract_folder_messages(subfolder, current_path)
         except Exception as e:
-            print(f"⚠️  Error processing subfolders in {current_path}: {str(e)}")
+            logger.warning("⚠️  Error processing subfolders in {current_path}: {str(e)}")
     
     def extract_message_info(self, message, folder_path):
         """Extract relevant information from a message object."""
@@ -158,7 +161,7 @@ class PSTAnalyzerAspose:
                         elif hasattr(recipient, 'email_address') and recipient.email_address:
                             recipients_list.append(recipient.email_address)
                     recipients_str = "; ".join(recipients_list) if recipients_list else 'Unknown'
-            except:
+            except (Exception, AttributeError, TypeError, ValueError):
                 pass
             
             # Get dates
@@ -171,7 +174,7 @@ class PSTAnalyzerAspose:
                     delivery_time = message.client_submit_time
                 elif hasattr(message, 'delivery_time') and message.delivery_time:
                     delivery_time = message.delivery_time
-            except:
+            except (Exception, AttributeError, TypeError, ValueError):
                 pass
             
             # Get size and attachments
@@ -182,7 +185,7 @@ class PSTAnalyzerAspose:
                     size = message.message_size or 0
                 if hasattr(message, 'attachments') and message.attachments:
                     attachment_count = message.attachments.count()
-            except:
+            except (Exception, AttributeError, TypeError, ValueError):
                 pass
             
             # Get priority
@@ -190,7 +193,7 @@ class PSTAnalyzerAspose:
             try:
                 if hasattr(message, 'priority'):
                     priority = str(message.priority)
-            except:
+            except (Exception, AttributeError, TypeError, ValueError):
                 pass
             
             email_info = {
@@ -210,17 +213,17 @@ class PSTAnalyzerAspose:
             return email_info
             
         except Exception as e:
-            print(f"⚠️  Error extracting message info: {str(e)}")
+            logger.warning("⚠️  Error extracting message info: {str(e)}")
             return None
     
     def analyze_pst_file(self):
         """Analyze the PST file."""
         if not self.pst:
-            print("❌ PST file not opened. Call open_pst_file() first.")
+            logger.error("❌ PST file not opened. Call open_pst_file() first.")
             return False
         
         try:
-            print("📧 Starting email extraction...")
+            logger.info("📧 Starting email extraction...")
             
             # Get the root folder
             root_folder = self.pst.root_folder
@@ -228,36 +231,36 @@ class PSTAnalyzerAspose:
             # Extract messages from all folders
             self.extract_folder_messages(root_folder)
             
-            print(f"✅ Extracted {len(self.email_data)} emails successfully")
+            logger.info("✅ Extracted {len(self.email_data)} emails successfully")
             return True
             
         except Exception as e:
-            print(f"❌ Error during PST analysis: {str(e)}")
+            logger.error("❌ Error during PST analysis: {str(e)}")
             return False
     
     def generate_statistics(self):
         """Generate comprehensive statistics about the emails."""
         if not self.email_data:
-            print("❌ No email data available. Run analyze_pst_file() first.")
+            logger.error("❌ No email data available. Run analyze_pst_file() first.")
             return
         
-        print("\n" + "="*60)
-        print("📊 PST FILE STATISTICS (Aspose.Email version)")
-        print("="*60)
+        logger.debug("\n" + "="*60)
+        logger.info("📊 PST FILE STATISTICS (Aspose.Email version)")
+        logger.debug("="*60)
         
         # Basic counts
         total_emails = len(self.email_data)
-        print(f"📧 Total Emails: {total_emails:,}")
+        logger.info("📧 Total Emails: {total_emails:,}")
         
         # Folder statistics
         folder_counts = Counter(email['folder'] for email in self.email_data)
-        print(f"\n📁 Emails by Folder:")
+        logger.debug("\n📁 Emails by Folder:")
         folder_table = [[folder, count] for folder, count in folder_counts.most_common(15)]
         print(tabulate(folder_table, headers=['Folder', 'Email Count'], tablefmt='grid'))
         
         # Sender statistics
         sender_counts = Counter(email['sender'] for email in self.email_data if email['sender'] != 'Unknown')
-        print(f"\n👤 Top 15 Senders:")
+        logger.debug("\n👤 Top 15 Senders:")
         sender_table = [[sender, count] for sender, count in sender_counts.most_common(15)]
         print(tabulate(sender_table, headers=['Sender', 'Email Count'], tablefmt='grid'))
         
@@ -268,7 +271,7 @@ class PSTAnalyzerAspose:
             avg_size = total_size / len(sizes)
             max_size = max(sizes)
             
-            print(f"\n💾 Size Statistics:")
+            logger.debug("\n💾 Size Statistics:")
             size_stats = [
                 ['Total Size', f"{total_size / (1024*1024):.2f} MB"],
                 ['Average Size', f"{avg_size / 1024:.2f} KB"],
@@ -281,7 +284,7 @@ class PSTAnalyzerAspose:
         emails_with_attachments = sum(1 for email in self.email_data if email['has_attachments'])
         total_attachments = sum(email['attachment_count'] for email in self.email_data)
         
-        print(f"\n📎 Attachment Statistics:")
+        logger.debug("\n📎 Attachment Statistics:")
         attachment_stats = [
             ['Emails with Attachments', f"{emails_with_attachments:,}"],
             ['Total Attachments', f"{total_attachments:,}"],
@@ -295,7 +298,7 @@ class PSTAnalyzerAspose:
             earliest_date = min(dates)
             latest_date = max(dates)
             
-            print(f"\n📅 Date Range:")
+            logger.debug("\n📅 Date Range:")
             date_stats = [
                 ['Earliest Email', earliest_date.strftime('%Y-%m-%d %H:%M:%S')],
                 ['Latest Email', latest_date.strftime('%Y-%m-%d %H:%M:%S')],
@@ -308,7 +311,7 @@ class PSTAnalyzerAspose:
         priorities = [email['priority'] for email in self.email_data if email['priority'] != 'Normal']
         if priorities:
             priority_counts = Counter(priorities)
-            print(f"\n⚡ Email Priorities (non-normal):")
+            logger.debug("\n⚡ Email Priorities (non-normal):")
             priority_table = [[priority, count] for priority, count in priority_counts.most_common()]
             print(tabulate(priority_table, headers=['Priority', 'Count'], tablefmt='grid'))
         
@@ -326,17 +329,17 @@ class PSTAnalyzerAspose:
             
             if all_words:
                 word_counts = Counter(all_words)
-                print(f"\n🔤 Most Common Subject Words:")
+                logger.debug("\n🔤 Most Common Subject Words:")
                 word_table = [[word, count] for word, count in word_counts.most_common(15)]
                 print(tabulate(word_table, headers=['Word', 'Count'], tablefmt='grid'))
         
-        print("\n" + "="*60)
+        logger.debug("\n" + "="*60)
 
 
 def main():
     """Main function to run the PST analyzer."""
-    print("🔍 PST File Analyzer (Aspose.Email version)")
-    print("="*55)
+    logger.info("🔍 PST File Analyzer (Aspose.Email version)")
+    logger.debug("="*55)
     
     # Try to apply license to remove evaluation limitations
     apply_license()
@@ -344,7 +347,7 @@ def main():
     
     # PST file path
     pst_file_path = r"C:\GitHub-Repos\gvranjesevic@dynamique.com\PSTtoDynamics\PST\gvranjesevic@dynamique.com.001.pst"
-    print(f"📁 Target PST file: {pst_file_path}")
+    logger.info("📁 Target PST file: {pst_file_path}")
     
     # Create analyzer instance
     analyzer = PSTAnalyzerAspose(pst_file_path)
@@ -362,9 +365,9 @@ def main():
         analyzer.generate_statistics()
         
     except KeyboardInterrupt:
-        print("\n⚠️  Analysis interrupted by user")
+        logger.debug("\n⚠️  Analysis interrupted by user")
     except Exception as e:
-        print(f"❌ Unexpected error: {str(e)}")
+        logger.error("❌ Unexpected error: {str(e)}")
         import traceback
         traceback.print_exc()
     finally:

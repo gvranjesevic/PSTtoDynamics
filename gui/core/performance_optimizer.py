@@ -2,6 +2,8 @@
 Phase 5.7 Performance Optimization System
 ========================================
 
+logger = logging.getLogger(__name__)
+
 Advanced performance optimization components for large datasets and responsive UI.
 
 Features:
@@ -17,6 +19,7 @@ Phase: 5.7
 """
 
 import sys
+import logging
 import time
 import psutil
 from typing import Dict, List, Optional, Any, Callable
@@ -69,13 +72,13 @@ class PerformanceMonitor(QObject):
         """Start performance monitoring"""
         self.monitoring_active = True
         self.monitor_timer.start()
-        print("✅ Performance monitoring started")
+        logger.info("✅ Performance monitoring started")
     
     def stop_monitoring(self):
         """Stop performance monitoring"""
         self.monitoring_active = False
         self.monitor_timer.stop()
-        print("⏹️ Performance monitoring stopped")
+        logger.debug("⏹️ Performance monitoring stopped")
     
     def _collect_metrics(self):
         """Collect current performance metrics"""
@@ -117,7 +120,7 @@ class PerformanceMonitor(QObject):
             self.metrics_updated.emit(metrics)
             
         except Exception as e:
-            print(f"Warning: Error collecting performance metrics: {e}")
+            logger.debug("Warning: Error collecting performance metrics: {e}")
     
     def _check_performance_warnings(self, metrics: PerformanceMetrics):
         """Check if any performance thresholds are exceeded"""
@@ -260,7 +263,7 @@ class VirtualTableModel(QAbstractTableModel):
             self.total_columns = info.get('total_columns', 0)
             self.headers = info.get('headers', [])
         except Exception as e:
-            print(f"Warning: Error initializing data info: {e}")
+            logger.debug("Warning: Error initializing data info: {e}")
     
     def rowCount(self, parent=QModelIndex()) -> int:
         return self.total_rows
@@ -303,7 +306,7 @@ class VirtualTableModel(QAbstractTableModel):
                 return QVariant(str(page_data[relative_row][col]))
         
         except Exception as e:
-            print(f"Warning: Error loading data: {e}")
+            logger.debug("Warning: Error loading data: {e}")
         
         return QVariant("")
     
@@ -387,7 +390,7 @@ class ResponsiveLayoutManager(QObject):
             old_mode = self.current_mode
             self.current_mode = new_mode
             self.layout_changed.emit(new_mode)
-            print(f"📱 Layout changed from {old_mode} to {new_mode} (width: {width}px)")
+            logger.debug("📱 Layout changed from {old_mode} to {new_mode} (width: {width}px)")
     
     def _get_layout_mode(self, width: int) -> str:
         """Determine layout mode based on width"""
@@ -420,7 +423,7 @@ class BackgroundTaskManager(QObject):
     def run_background_task(self, task_id: str, task_func: Callable, *args, **kwargs):
         """Run a function in the background"""
         if task_id in self.active_tasks:
-            print(f"Warning: Task {task_id} is already running")
+            logger.debug("Warning: Task {task_id} is already running")
             return
         
         # Create worker thread
@@ -444,7 +447,7 @@ class BackgroundTaskManager(QObject):
         
         # Start thread
         thread.start()
-        print(f"🔄 Started background task: {task_id}")
+        logger.debug("🔄 Started background task: {task_id}")
     
     def _on_task_completed(self, task_id: str, result: Any):
         """Handle task completion"""
@@ -453,7 +456,7 @@ class BackgroundTaskManager(QObject):
             del self.task_threads[task_id]
         
         self.task_completed.emit(task_id, result)
-        print(f"✅ Background task completed: {task_id}")
+        logger.info("✅ Background task completed: {task_id}")
     
     def _on_task_failed(self, task_id: str, error: str):
         """Handle task failure"""
@@ -462,7 +465,7 @@ class BackgroundTaskManager(QObject):
             del self.task_threads[task_id]
         
         self.task_failed.emit(task_id, error)
-        print(f"❌ Background task failed: {task_id} - {error}")
+        logger.error("❌ Background task failed: {task_id} - {error}")
     
     def cancel_task(self, task_id: str):
         """Cancel a running task"""
@@ -474,7 +477,7 @@ class BackgroundTaskManager(QObject):
                 del self.active_tasks[task_id]
                 del self.task_threads[task_id]
             
-            print(f"🛑 Cancelled background task: {task_id}")
+            logger.debug("🛑 Cancelled background task: {task_id}")
 
 class BackgroundWorker(QObject):
     """
@@ -739,7 +742,7 @@ if __name__ == "__main__":
             virtual_table = create_virtual_table(self.sample_data_provider)
             self.content_layout.addWidget(virtual_table)
             
-            print(f"✅ Created virtual table with {len(self.sample_data)} rows")
+            logger.info("✅ Created virtual table with {len(self.sample_data)} rows")
         
         def test_cache(self):
             """Test cache system"""
@@ -756,7 +759,7 @@ if __name__ == "__main__":
                     hits += 1
             
             stats = cache.get_stats()
-            print(f"✅ Cache test: {hits} hits, {stats['hit_ratio']*100:.1f}% hit ratio")
+            logger.info("✅ Cache test: {hits} hits, {stats['hit_ratio']*100:.1f}% hit ratio")
         
         def test_background_task(self):
             """Test background task execution"""
@@ -767,11 +770,11 @@ if __name__ == "__main__":
             
             task_manager = get_task_manager()
             task_manager.task_completed.connect(
-                lambda task_id, result: print(f"✅ {result}")
+                lambda task_id, result: logger.info("✅ {result}")
             )
             
             run_background_task("test_task", long_running_task)
-            print("🔄 Started background task...")
+            logger.debug("🔄 Started background task...")
         
         def test_responsive_layout(self):
             """Test responsive layout changes"""
@@ -787,13 +790,13 @@ if __name__ == "__main__":
             
             for width, height in sizes:
                 self.resize(width, height)
-                print(f"📐 Resized to {width}x{height}")
+                logger.debug("📐 Resized to {width}x{height}")
                 # Small delay to see the change
                 QTimer.singleShot(1000, lambda: None)
         
         def on_layout_changed(self, mode: str):
             """Handle layout mode changes"""
-            print(f"📱 Layout changed to: {mode}")
+            logger.debug("📱 Layout changed to: {mode}")
             
             # You could adjust UI elements based on mode here
             if mode == 'mobile':
@@ -808,12 +811,12 @@ if __name__ == "__main__":
     window = PerformanceTestWindow()
     window.show()
     
-    print("⚡ Phase 5.7 Performance Optimization Test")
-    print("=" * 45)
-    print("✅ Performance Monitoring System")
-    print("✅ Virtual Scrolling Table")
-    print("✅ Intelligent Caching")
-    print("✅ Responsive Layout Manager")
-    print("✅ Background Task Management")
+    logger.debug("⚡ Phase 5.7 Performance Optimization Test")
+    logger.debug("=" * 45)
+    logger.info("✅ Performance Monitoring System")
+    logger.info("✅ Virtual Scrolling Table")
+    logger.info("✅ Intelligent Caching")
+    logger.info("✅ Responsive Layout Manager")
+    logger.info("✅ Background Task Management")
     
     sys.exit(app.exec())

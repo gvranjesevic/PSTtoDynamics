@@ -2,12 +2,15 @@
 Email Import Engine
 ==================
 
+logger = logging.getLogger(__name__)
+
 Main orchestrator for importing emails from PST to Dynamics 365.
 Now enhanced with Phase 3 Analytics for comprehensive import tracking and analysis.
 """
 
 from typing import Dict, List, Optional, Tuple
 import config
+import logging
 import pst_reader
 import dynamics_data
 from datetime import datetime
@@ -22,11 +25,11 @@ try:
     from Phase3_Analytics.phase3_integration import get_phase3_analytics
     PHASE3_AVAILABLE = True
     if getattr(config, 'VERBOSE_STARTUP', True):
-        print("✅ Phase 3 Analytics enabled")
+        logger.info("✅ Phase 3 Analytics enabled")
 except ImportError as e:
     PHASE3_AVAILABLE = False
     if getattr(config, 'VERBOSE_STARTUP', True):
-        print(f"⚠️ Phase 3 Analytics not available: {e}")
+        logger.warning("⚠️ Phase 3 Analytics not available: {e}")
 
 
 class EmailImporter:
@@ -61,7 +64,7 @@ class EmailImporter:
         Returns:
             Dictionary of emails grouped by sender email address
         """
-        print("📧 Reading emails from PST file...")
+        logger.info("📧 Reading emails from PST file...")
         self.import_stats['start_time'] = datetime.now()
         
         emails_by_sender = pst_reader.scan_pst_file(pst_path)
@@ -76,9 +79,9 @@ class EmailImporter:
                                             self.import_stats['total_emails_found'], 
                                             sender_counts)
         
-        print(f"✅ PST scan complete:")
-        print(f"   📧 Total emails: {self.import_stats['total_emails_found']}")
-        print(f"   👥 Unique senders: {self.import_stats['total_senders']}")
+        logger.info("✅ PST scan complete:")
+        logger.debug("   📧 Total emails: {self.import_stats['total_emails_found']}")
+        logger.debug("   👥 Unique senders: {self.import_stats['total_senders']}")
         
         return emails_by_sender
     
@@ -106,12 +109,12 @@ class EmailImporter:
         Returns:
             Dictionary with import results
         """
-        print(f"\n👤 Processing emails for: {sender_email}")
+        logger.debug("\n👤 Processing emails for: {sender_email}")
         
         # Find contact
         contact = self.find_contact_for_sender(sender_email)
         if not contact:
-            print(f"   ❌ No contact found for {sender_email}")
+            logger.debug("   ❌ No contact found for {sender_email}")
             self.import_stats['emails_skipped_no_contact'] += len(emails)
             return {
                 'success': False,
@@ -122,17 +125,17 @@ class EmailImporter:
         
         contact_id = contact['contactid']
         contact_name = contact.get('fullname', 'Unknown')
-        print(f"   ✅ Found contact: {contact_name} ({contact_id})")
+        logger.debug("   ✅ Found contact: {contact_name} ({contact_id})")
         
         # Get existing emails for duplicate detection
-        print(f"   🔍 Checking for existing emails...")
+        logger.debug("   🔍 Checking for existing emails...")
         existing_emails = self.dynamics_data.get_emails_for_contact(contact_id)
         
         # Limit emails in test mode
         emails_to_process = emails
         if test_mode and len(emails) > config.BATCH_SIZE:
             emails_to_process = emails[:config.BATCH_SIZE]
-            print(f"   🧪 Test mode: Processing only {len(emails_to_process)} of {len(emails)} emails")
+            logger.debug("   🧪 Test mode: Processing only {len(emails_to_process)} of {len(emails)} emails")
         
         imported_count = 0
         skipped_count = 0
@@ -142,7 +145,7 @@ class EmailImporter:
             try:
                 # Check for duplicates
                 if self.dynamics_data.is_email_duplicate(email_data, existing_emails):
-                    print(f"   ⏭️  Skipping duplicate: {email_data.get('subject', 'No Subject')[:50]}...")
+                    logger.debug("   ⏭️  Skipping duplicate: {email_data.get('subject', 'No Subject')[:50]}...")
                     skipped_count += 1
                     self.import_stats['emails_skipped_duplicate'] += 1
                     continue
@@ -159,17 +162,17 @@ class EmailImporter:
                     self.import_stats['emails_imported'] += 1
                     
                     if imported_count % 10 == 0:
-                        print(f"   📧 Imported {imported_count} emails so far...")
+                        logger.debug("   📧 Imported {imported_count} emails so far...")
                 else:
                     failed_count += 1
                     self.import_stats['emails_failed'] += 1
                     
             except Exception as e:
-                print(f"   ❌ Error importing email: {e}")
+                logger.debug("   ❌ Error importing email: {e}")
                 failed_count += 1
                 self.import_stats['emails_failed'] += 1
         
-        print(f"   ✅ Sender complete: {imported_count} imported, {skipped_count} skipped, {failed_count} failed")
+        logger.debug("   ✅ Sender complete: {imported_count} imported, {skipped_count} skipped, {failed_count} failed")
         
         return {
             'success': True,
@@ -194,30 +197,30 @@ class EmailImporter:
         if test_mode is None:
             test_mode = config.TEST_MODE_DEFAULT
         
-        print("🚀 Starting Email Import Process")
-        print("=" * 50)
+        logger.info("🚀 Starting Email Import Process")
+        logger.debug("=" * 50)
         
         # Start Phase 3 Analytics session
         if self.analytics:
             self.current_session_id = self.analytics.start_import_session()
         
         if test_mode:
-            print("🧪 Running in TEST MODE - Limited processing")
+            logger.info("🧪 Running in TEST MODE - Limited processing")
         
         # Get emails from PST
         emails_by_sender = self.get_pst_emails(pst_path)
         
         if not emails_by_sender:
-            print("❌ No emails found in PST file")
+            logger.error("❌ No emails found in PST file")
             return {'success': False, 'reason': 'no_emails'}
         
         # Filter to specific sender if requested
         if specific_sender:
             if specific_sender in emails_by_sender:
                 emails_by_sender = {specific_sender: emails_by_sender[specific_sender]}
-                print(f"🎯 Filtering to specific sender: {specific_sender}")
+                logger.debug("🎯 Filtering to specific sender: {specific_sender}")
             else:
-                print(f"❌ Sender not found in PST: {specific_sender}")
+                logger.error("❌ Sender not found in PST: {specific_sender}")
                 return {'success': False, 'reason': 'sender_not_found'}
         
         # Process each sender
@@ -230,11 +233,11 @@ class EmailImporter:
                 
                 # Stop in test mode after processing a few senders
                 if test_mode and self.import_stats['processed_senders'] >= 3:
-                    print("\n🧪 Test mode: Stopping after processing 3 senders")
+                    logger.debug("\n🧪 Test mode: Stopping after processing 3 senders")
                     break
                     
             except Exception as e:
-                print(f"❌ Error processing sender {sender_email}: {e}")
+                logger.error("❌ Error processing sender {sender_email}: {e}")
                 sender_results[sender_email] = {
                     'success': False,
                     'reason': 'processing_error',
@@ -250,7 +253,7 @@ class EmailImporter:
             
             # Run comprehensive post-import analysis
             if config.FeatureFlags.IMPORT_ANALYTICS:
-                print("\n🔍 Running comprehensive post-import analysis...")
+                logger.debug("\n🔍 Running comprehensive post-import analysis...")
                 analytics_report = self.analytics.analyze_imported_data(emails_by_sender)
         
         # Print final summary
@@ -265,67 +268,67 @@ class EmailImporter:
     
     def _print_import_summary(self, sender_results: Dict, analytics_report=None):
         """Prints a summary of the import process."""
-        print("\n" + "=" * 50)
-        print("📊 IMPORT SUMMARY")
-        print("=" * 50)
+        logger.debug("\n" + "=" * 50)
+        logger.info("📊 IMPORT SUMMARY")
+        logger.debug("=" * 50)
         
         duration = None
         if self.import_stats['start_time'] and self.import_stats['end_time']:
             duration = self.import_stats['end_time'] - self.import_stats['start_time']
         
-        print(f"⏱️  Duration: {duration}")
-        print(f"👥 Senders processed: {self.import_stats['processed_senders']}/{self.import_stats['total_senders']}")
-        print(f"📧 Total emails found: {self.import_stats['total_emails_found']}")
-        print(f"✅ Emails imported: {self.import_stats['emails_imported']}")
-        print(f"⏭️  Emails skipped (duplicates): {self.import_stats['emails_skipped_duplicate']}")
-        print(f"👤 Emails skipped (no contact): {self.import_stats['emails_skipped_no_contact']}")
-        print(f"❌ Emails failed: {self.import_stats['emails_failed']}")
+        logger.debug("⏱️  Duration: {duration}")
+        logger.info("👥 Senders processed: {self.import_stats['processed_senders']}/{self.import_stats['total_senders']}")
+        logger.info("📧 Total emails found: {self.import_stats['total_emails_found']}")
+        logger.info("✅ Emails imported: {self.import_stats['emails_imported']}")
+        logger.debug("⏭️  Emails skipped (duplicates): {self.import_stats['emails_skipped_duplicate']}")
+        logger.debug("👤 Emails skipped (no contact): {self.import_stats['emails_skipped_no_contact']}")
+        logger.error("❌ Emails failed: {self.import_stats['emails_failed']}")
         
         # Show successful senders
         successful_senders = [email for email, result in sender_results.items() if result.get('success')]
         if successful_senders:
-            print(f"\n✅ Successfully processed senders:")
+            logger.debug("\n✅ Successfully processed senders:")
             for sender in successful_senders[:5]:  # Show first 5
                 result = sender_results[sender]
-                print(f"   📧 {sender}: {result.get('emails_imported', 0)} imported")
+                logger.debug("   📧 {sender}: {result.get('emails_imported', 0)} imported")
         
         # Show failed senders
         failed_senders = [email for email, result in sender_results.items() if not result.get('success')]
         if failed_senders:
-            print(f"\n❌ Failed senders:")
+            logger.debug("\n❌ Failed senders:")
             for sender in failed_senders[:5]:  # Show first 5
                 result = sender_results[sender]
-                print(f"   ❌ {sender}: {result.get('reason', 'unknown')}")
+                logger.debug("   ❌ {sender}: {result.get('reason', 'unknown')}")
         
         # Show Phase 3 Analytics Summary
         if analytics_report:
-            print(f"\n📊 PHASE 3 ANALYTICS SUMMARY")
-            print("-" * 30)
+            logger.debug("\n📊 PHASE 3 ANALYTICS SUMMARY")
+            logger.debug("-" * 30)
             insights = analytics_report.summary_insights
             
             # Import performance
             perf = insights.get('import_performance', {})
-            print(f"⚡ Processing Speed: {perf.get('processing_speed', 'N/A')}")
-            print(f"📧 Success Rate: {perf.get('success_rate', 0):.1%}")
-            print(f"🔍 Duplicates Found: {perf.get('duplicates_found', 0):,}")
+            logger.debug("⚡ Processing Speed: {perf.get('processing_speed', 'N/A')}")
+            logger.info("📧 Success Rate: {perf.get('success_rate', 0):.1%}")
+            logger.info("🔍 Duplicates Found: {perf.get('duplicates_found', 0):,}")
             
             # Timeline insights
             timeline = insights.get('timeline_insights', {})
-            print(f"📈 Timeline Completeness: {timeline.get('overall_completeness', 'N/A')}")
-            print(f"⚠️  Critical Gaps: {timeline.get('critical_gaps', 0)}")
+            logger.info("📈 Timeline Completeness: {timeline.get('overall_completeness', 'N/A')}")
+            logger.warning("⚠️  Critical Gaps: {timeline.get('critical_gaps', 0)}")
             
             # Sender insights  
             sender = insights.get('sender_insights', {})
-            print(f"👥 Total Senders: {sender.get('total_senders', 0):,}")
-            print(f"⭐ High-Value Contacts: {sender.get('high_value_contacts', 0)}")
+            logger.info("👥 Total Senders: {sender.get('total_senders', 0):,}")
+            logger.debug("⭐ High-Value Contacts: {sender.get('high_value_contacts', 0)}")
             
             # Action items
             if analytics_report.action_items:
-                print(f"\n💡 Key Action Items:")
+                logger.debug("\n💡 Key Action Items:")
                 for i, action in enumerate(analytics_report.action_items[:3], 1):
-                    print(f"   {i}. {action}")
+                    logger.debug("   {i}. {action}")
             
-            print(f"\n📋 Full analytics report: {analytics_report.report_id}")
+            logger.debug("\n📋 Full analytics report: {analytics_report.report_id}")
     
     def quick_test_import(self, sender_email: str = "service@ringcentral.com") -> bool:
         """
@@ -337,8 +340,8 @@ class EmailImporter:
         Returns:
             True if test successful, False otherwise
         """
-        print(f"🧪 Quick Test Import for: {sender_email}")
-        print("-" * 40)
+        logger.info("🧪 Quick Test Import for: {sender_email}")
+        logger.debug("-" * 40)
         
         try:
             result = self.import_all_emails(
@@ -349,17 +352,17 @@ class EmailImporter:
             if result['success']:
                 stats = result['stats']
                 if stats['emails_imported'] > 0:
-                    print(f"✅ Test successful! Imported {stats['emails_imported']} emails")
+                    logger.info("✅ Test successful! Imported {stats['emails_imported']} emails")
                     return True
                 else:
-                    print("⚠️  Test completed but no emails imported")
+                    logger.warning("⚠️  Test completed but no emails imported")
                     return False
             else:
-                print(f"❌ Test failed: {result.get('reason', 'unknown')}")
+                logger.error("❌ Test failed: {result.get('reason', 'unknown')}")
                 return False
                 
         except Exception as e:
-            print(f"❌ Test error: {e}")
+            logger.error("❌ Test error: {e}")
             return False
 
 

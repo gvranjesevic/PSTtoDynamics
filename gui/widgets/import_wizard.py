@@ -2,11 +2,16 @@
 PST-to-Dynamics 365 Import Wizard
 =================================
 
+logger = logging.getLogger(__name__)
+
 Phase 5.2: Import Wizard Implementation
 Complete step-by-step import process with AI intelligence integration.
 """
 
 import sys
+
+
+import logging
 import os
 from datetime import datetime
 from typing import Optional, Dict, Any, List
@@ -33,7 +38,7 @@ try:
     BACKEND_AVAILABLE = True
 except ImportError as e:
     BACKEND_AVAILABLE = False
-    print(f"⚠️ Backend modules not available in Import Wizard: {e}")
+    logger.warning("⚠️ Backend modules not available in Import Wizard: {e}")
 
 
 class ImportProgressThread(QThread):
@@ -1372,6 +1377,8 @@ def main():
     """Test the Import Wizard independently"""
     from PyQt6.QtWidgets import QApplication
     import sys
+
+    import logging
     
     app = QApplication(sys.argv)
     
@@ -1380,12 +1387,12 @@ def main():
     wizard.resize(1000, 700)
     
     def on_completed(success, data):
-        print(f"Wizard completed: {success}")
-        print(f"Data: {data}")
+        logger.debug("Wizard completed: {success}")
+        logger.debug("Data: {data}")
         app.quit()
     
     def on_cancelled():
-        print("Wizard cancelled")
+        logger.debug("Wizard cancelled")
         app.quit()
     
     wizard.wizard_completed.connect(on_completed)

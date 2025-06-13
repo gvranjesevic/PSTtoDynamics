@@ -47,17 +47,17 @@ class Phase4TestingSuite:
             'timestamp': datetime.now().isoformat()
         }
         
-        print(f"{status} | {test_name}")
+        logger.debug("{status} | {test_name}")
         if details:
-            print(f"         Details: {details}")
+            logger.debug("         Details: {details}")
         if error:
-            print(f"         Error: {error}")
+            logger.debug("         Error: {error}")
     
     def test_ml_engine_functionality(self) -> bool:
         """Test ML Pattern Recognition Engine"""
-        print("\n" + "="*60)
-        print("🧠 TESTING ML PATTERN RECOGNITION ENGINE")
-        print("="*60)
+        logger.debug("\n" + "="*60)
+        logger.debug("🧠 TESTING ML PATTERN RECOGNITION ENGINE")
+        logger.debug("="*60)
         
         try:
             from ml_engine import ml_engine, analyze_import_intelligence, train_ml_models
@@ -165,9 +165,9 @@ class Phase4TestingSuite:
     
     def test_smart_optimizer_functionality(self) -> bool:
         """Test Smart Import Optimizer"""
-        print("\n" + "="*60)
-        print("⚡ TESTING SMART IMPORT OPTIMIZER")
-        print("="*60)
+        logger.debug("\n" + "="*60)
+        logger.debug("⚡ TESTING SMART IMPORT OPTIMIZER")
+        logger.debug("="*60)
         
         try:
             from smart_optimizer import smart_optimizer, optimize_import_batch, track_import_performance
@@ -258,9 +258,9 @@ class Phase4TestingSuite:
     
     def test_predictive_analytics_functionality(self) -> bool:
         """Test Predictive Analytics Engine"""
-        print("\n" + "="*60)
-        print("🔮 TESTING PREDICTIVE ANALYTICS ENGINE")
-        print("="*60)
+        logger.debug("\n" + "="*60)
+        logger.debug("🔮 TESTING PREDICTIVE ANALYTICS ENGINE")
+        logger.debug("="*60)
         
         try:
             from predictive_analytics import predictive_analytics, analyze_predictive_intelligence
@@ -356,9 +356,9 @@ class Phase4TestingSuite:
     
     def test_phase4_integration_system(self) -> bool:
         """Test Phase 4 Integration System"""
-        print("\n" + "="*60)
-        print("🔗 TESTING PHASE 4 INTEGRATION SYSTEM")
-        print("="*60)
+        logger.debug("\n" + "="*60)
+        logger.debug("🔗 TESTING PHASE 4 INTEGRATION SYSTEM")
+        logger.debug("="*60)
         
         try:
             from phase4_integration import phase4_system, run_intelligent_import
@@ -453,9 +453,9 @@ class Phase4TestingSuite:
     
     def test_database_functionality(self) -> bool:
         """Test Phase 4 Database Functionality"""
-        print("\n" + "="*60)
-        print("🗄️ TESTING PHASE 4 DATABASE FUNCTIONALITY")
-        print("="*60)
+        logger.debug("\n" + "="*60)
+        logger.debug("🗄️ TESTING PHASE 4 DATABASE FUNCTIONALITY")
+        logger.debug("="*60)
         
         try:
             # Test 1: Analytics Database
@@ -542,9 +542,9 @@ class Phase4TestingSuite:
     
     def test_dependencies_and_imports(self) -> bool:
         """Test Phase 4 Dependencies and Imports"""
-        print("\n" + "="*60)
-        print("📦 TESTING PHASE 4 DEPENDENCIES AND IMPORTS")
-        print("="*60)
+        logger.debug("\n" + "="*60)
+        logger.debug("📦 TESTING PHASE 4 DEPENDENCIES AND IMPORTS")
+        logger.debug("="*60)
         
         try:
             # Test critical ML dependencies
@@ -605,11 +605,11 @@ class Phase4TestingSuite:
     
     def run_comprehensive_testing(self) -> Dict[str, Any]:
         """Run all Phase 4 tests"""
-        print("="*80)
-        print("🧪 COMPREHENSIVE PHASE 4 TESTING SUITE")
-        print("📅 Test Session:", self.test_session_id)
-        print("🕒 Started:", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
-        print("="*80)
+        logger.debug("="*80)
+        logger.info("🧪 COMPREHENSIVE PHASE 4 TESTING SUITE")
+        logger.debug("📅 Test Session:", self.test_session_id)
+        logger.debug("🕒 Started:", datetime.now().strftime("%Y-%m-%d %H:%M:%S"))
+        logger.debug("="*80)
         
         # Run all test suites
         test_suites = [
@@ -624,47 +624,47 @@ class Phase4TestingSuite:
         suite_results = {}
         
         for suite_name, test_function in test_suites:
-            print(f"\n🔍 Running: {suite_name}")
+            logger.debug("\n🔍 Running: {suite_name}")
             try:
                 suite_passed = test_function()
                 suite_results[suite_name] = suite_passed
             except Exception as e:
-                print(f"❌ Test suite {suite_name} failed with error: {e}")
+                logger.error("❌ Test suite {suite_name} failed with error: {e}")
                 suite_results[suite_name] = False
         
         # Generate final report
-        print("\n" + "="*80)
-        print("📊 COMPREHENSIVE TESTING RESULTS")
-        print("="*80)
+        logger.debug("\n" + "="*80)
+        logger.info("📊 COMPREHENSIVE TESTING RESULTS")
+        logger.debug("="*80)
         
-        print(f"🎯 OVERALL STATISTICS:")
-        print(f"   Total Tests: {self.total_tests}")
-        print(f"   ✅ Passed: {self.passed_tests}")
-        print(f"   ❌ Failed: {self.failed_tests}")
-        print(f"   📈 Success Rate: {(self.passed_tests/self.total_tests)*100:.1f}%")
+        logger.debug("🎯 OVERALL STATISTICS:")
+        logger.debug("   Total Tests: {self.total_tests}")
+        logger.debug("   ✅ Passed: {self.passed_tests}")
+        logger.debug("   ❌ Failed: {self.failed_tests}")
+        logger.debug("   📈 Success Rate: {(self.passed_tests/self.total_tests)*100:.1f}%")
         
-        print(f"\n📋 TEST SUITE RESULTS:")
+        logger.debug("\n📋 TEST SUITE RESULTS:")
         for suite_name, passed in suite_results.items():
             status = "✅ PASSED" if passed else "❌ FAILED"
-            print(f"   {status} | {suite_name}")
+            logger.debug("   {status} | {suite_name}")
         
         suites_passed = sum(1 for passed in suite_results.values() if passed)
         total_suites = len(suite_results)
         
-        print(f"\n🎯 SUITE SUMMARY:")
-        print(f"   Suites Passed: {suites_passed}/{total_suites} ({(suites_passed/total_suites)*100:.1f}%)")
+        logger.debug("\n🎯 SUITE SUMMARY:")
+        logger.debug("   Suites Passed: {suites_passed}/{total_suites} ({(suites_passed/total_suites)*100:.1f}%)")
         
         # Determine overall status
         overall_success = self.passed_tests > 0 and (self.passed_tests / self.total_tests) >= 0.8
         
         if overall_success:
-            print(f"\n🎉 PHASE 4 TESTING: SUCCESS!")
-            print(f"✅ System is ready for production deployment")
-            print(f"🚀 Ready for Git cloud push")
+            logger.debug("\n🎉 PHASE 4 TESTING: SUCCESS!")
+            logger.info("✅ System is ready for production deployment")
+            logger.info("🚀 Ready for Git cloud push")
         else:
-            print(f"\n⚠️ PHASE 4 TESTING: NEEDS ATTENTION")
-            print(f"🔧 Some components may need configuration or training data")
-            print(f"📚 System functional but may improve with usage")
+            logger.debug("\n⚠️ PHASE 4 TESTING: NEEDS ATTENTION")
+            logger.debug("🔧 Some components may need configuration or training data")
+            logger.debug("📚 System functional but may improve with usage")
         
         # Compile comprehensive results
         results = {
@@ -683,7 +683,7 @@ class Phase4TestingSuite:
             'ready_for_git_push': overall_success or (self.passed_tests / self.total_tests) >= 0.7
         }
         
-        print("="*80)
+        logger.debug("="*80)
         
         return results
 
@@ -699,24 +699,24 @@ def main():
         with open(results_file, 'w') as f:
             json.dump(results, f, indent=2, default=str)
         
-        print(f"💾 Detailed results saved to: {results_file}")
+        logger.debug("💾 Detailed results saved to: {results_file}")
         
         return results
         
     except Exception as e:
-        print(f"❌ Testing suite failed: {e}")
+        logger.error("❌ Testing suite failed: {e}")
         import traceback
         traceback.print_exc()
         return None
 
 if __name__ == "__main__":
-    print("🚀 Starting Comprehensive Phase 4 Testing...")
+    logger.info("🚀 Starting Comprehensive Phase 4 Testing...")
     results = main()
     
     if results:
         if results['ready_for_git_push']:
-            print("\n✅ PHASE 4 READY FOR CLOUD GIT PUSH!")
+            logger.debug("\n✅ PHASE 4 READY FOR CLOUD GIT PUSH!")
         else:
-            print("\n📚 PHASE 4 FUNCTIONAL - Minor improvements possible")
+            logger.debug("\n📚 PHASE 4 FUNCTIONAL - Minor improvements possible")
     else:
-        print("\n❌ Testing failed - please review errors") 
+        logger.debug("\n❌ Testing failed - please review errors") 

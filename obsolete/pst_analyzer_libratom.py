@@ -5,7 +5,10 @@ A Python application to analyze PST (Outlook Personal Storage) files
 using the libratom library for better Windows compatibility.
 """
 
+logger = logging.getLogger(__name__)
+
 import os
+import logging
 import sys
 import sqlite3
 from datetime import datetime
@@ -19,7 +22,7 @@ try:
     from libratom.lib.pst import PSTFile
     from libratom.lib.core import open_file
 except ImportError:
-    print("❌ libratom not found. Install it with: pip install libratom")
+    logger.error("❌ libratom not found. Install it with: pip install libratom")
     sys.exit(1)
 
 
@@ -35,12 +38,12 @@ class PSTAnalyzerLibratom:
             if not os.path.exists(self.pst_file_path):
                 raise FileNotFoundError(f"PST file not found: {self.pst_file_path}")
             
-            print(f"✅ Opening PST file: {self.pst_file_path}")
+            logger.info("✅ Opening PST file: {self.pst_file_path}")
             
             # Use libratom to process the PST file
             pst_file = PSTFile(self.pst_file_path)
             
-            print("📧 Extracting email messages...")
+            logger.info("📧 Extracting email messages...")
             
             # Extract messages from the PST file
             message_count = 0
@@ -53,17 +56,17 @@ class PSTAnalyzerLibratom:
                         
                         # Progress indicator
                         if message_count % 100 == 0:
-                            print(f"📊 Processed {message_count} messages...")
+                            logger.info("📊 Processed {message_count} messages...")
                             
                 except Exception as e:
-                    print(f"⚠️  Error processing message: {str(e)}")
+                    logger.warning("⚠️  Error processing message: {str(e)}")
                     continue
             
-            print(f"✅ Successfully extracted {len(self.email_data)} emails")
+            logger.info("✅ Successfully extracted {len(self.email_data)} emails")
             return True
             
         except Exception as e:
-            print(f"❌ Error analyzing PST file: {str(e)}")
+            logger.error("❌ Error analyzing PST file: {str(e)}")
             return False
     
     def extract_message_info(self, message):
@@ -107,32 +110,32 @@ class PSTAnalyzerLibratom:
             return email_info
             
         except Exception as e:
-            print(f"⚠️  Error extracting message info: {str(e)}")
+            logger.warning("⚠️  Error extracting message info: {str(e)}")
             return None
     
     def generate_statistics(self):
         """Generate comprehensive statistics about the emails."""
         if not self.email_data:
-            print("❌ No email data available. Run analyze_pst_file() first.")
+            logger.error("❌ No email data available. Run analyze_pst_file() first.")
             return
         
-        print("\n" + "="*60)
-        print("📊 PST FILE STATISTICS (libratom version)")
-        print("="*60)
+        logger.debug("\n" + "="*60)
+        logger.info("📊 PST FILE STATISTICS (libratom version)")
+        logger.debug("="*60)
         
         # Basic counts
         total_emails = len(self.email_data)
-        print(f"📧 Total Emails: {total_emails:,}")
+        logger.info("📧 Total Emails: {total_emails:,}")
         
         # Folder statistics
         folder_counts = Counter(email['folder'] for email in self.email_data)
-        print(f"\n📁 Emails by Folder:")
+        logger.debug("\n📁 Emails by Folder:")
         folder_table = [[folder, count] for folder, count in folder_counts.most_common(10)]
         print(tabulate(folder_table, headers=['Folder', 'Email Count'], tablefmt='grid'))
         
         # Sender statistics
         sender_counts = Counter(email['sender'] for email in self.email_data if email['sender'] != 'Unknown')
-        print(f"\n👤 Top 10 Senders:")
+        logger.debug("\n👤 Top 10 Senders:")
         sender_table = [[sender, count] for sender, count in sender_counts.most_common(10)]
         print(tabulate(sender_table, headers=['Sender', 'Email Count'], tablefmt='grid'))
         
@@ -143,7 +146,7 @@ class PSTAnalyzerLibratom:
             avg_size = total_size / len(sizes)
             max_size = max(sizes)
             
-            print(f"\n💾 Size Statistics:")
+            logger.debug("\n💾 Size Statistics:")
             size_stats = [
                 ['Total Size', f"{total_size / (1024*1024):.2f} MB"],
                 ['Average Size', f"{avg_size / 1024:.2f} KB"],
@@ -156,7 +159,7 @@ class PSTAnalyzerLibratom:
         emails_with_attachments = sum(1 for email in self.email_data if email['has_attachments'])
         total_attachments = sum(email['attachment_count'] for email in self.email_data)
         
-        print(f"\n📎 Attachment Statistics:")
+        logger.debug("\n📎 Attachment Statistics:")
         attachment_stats = [
             ['Emails with Attachments', f"{emails_with_attachments:,}"],
             ['Total Attachments', f"{total_attachments:,}"],
@@ -170,7 +173,7 @@ class PSTAnalyzerLibratom:
             earliest_date = min(dates)
             latest_date = max(dates)
             
-            print(f"\n📅 Date Range:")
+            logger.debug("\n📅 Date Range:")
             date_stats = [
                 ['Earliest Email', earliest_date.strftime('%Y-%m-%d %H:%M:%S')],
                 ['Latest Email', latest_date.strftime('%Y-%m-%d %H:%M:%S')],
@@ -191,11 +194,11 @@ class PSTAnalyzerLibratom:
             
             if all_words:
                 word_counts = Counter(all_words)
-                print(f"\n🔤 Most Common Subject Words:")
+                logger.debug("\n🔤 Most Common Subject Words:")
                 word_table = [[word, count] for word, count in word_counts.most_common(10)]
                 print(tabulate(word_table, headers=['Word', 'Count'], tablefmt='grid'))
         
-        print("\n" + "="*60)
+        logger.debug("\n" + "="*60)
 
 
 def main():
@@ -203,9 +206,9 @@ def main():
     # PST file path
     pst_file_path = r"C:\GitHub-Repos\gvranjesevic@dynamique.com\PSTtoDynamics\PST\gvranjesevic@dynamique.com.001.pst"
     
-    print("🔍 PST File Analyzer (libratom version)")
-    print("="*50)
-    print(f"📁 Target PST file: {pst_file_path}")
+    logger.info("🔍 PST File Analyzer (libratom version)")
+    logger.debug("="*50)
+    logger.info("📁 Target PST file: {pst_file_path}")
     
     # Create analyzer instance
     analyzer = PSTAnalyzerLibratom(pst_file_path)
@@ -219,9 +222,9 @@ def main():
         analyzer.generate_statistics()
         
     except KeyboardInterrupt:
-        print("\n⚠️  Analysis interrupted by user")
+        logger.debug("\n⚠️  Analysis interrupted by user")
     except Exception as e:
-        print(f"❌ Unexpected error: {str(e)}")
+        logger.error("❌ Unexpected error: {str(e)}")
         import traceback
         traceback.print_exc()
 

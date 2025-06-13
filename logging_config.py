@@ -2,6 +2,8 @@
 Comprehensive Logging Configuration System
 ==========================================
 
+logger = logging.getLogger(__name__)
+
 This module provides a centralized logging configuration for the PST-to-Dynamics
 application with multiple output formats, log rotation, and performance monitoring.
 
@@ -233,11 +235,11 @@ class LoggingManager:
         # Setup module-specific loggers
         self._setup_module_loggers()
         
-        print(f"🔧 Logging system initialized")
-        print(f"   📁 Log directory: {self.log_dir.absolute()}")
-        print(f"   📝 Main log: {app_log_file}")
-        print(f"   ❌ Error log: {error_log_file}")
-        print(f"   📊 Performance log: {performance_log_file}")
+        logger.debug("🔧 Logging system initialized")
+        logger.debug("   📁 Log directory: {self.log_dir.absolute()}")
+        logger.debug("   📝 Main log: {app_log_file}")
+        logger.debug("   ❌ Error log: {error_log_file}")
+        logger.debug("   📊 Performance log: {performance_log_file}")
     
     def _setup_module_loggers(self):
         """Setup loggers for specific modules with appropriate levels."""
@@ -384,7 +386,7 @@ class LoggingManager:
                 except OSError:
                     pass  # File might be in use
         
-        print(f"🧹 Cleaned up {removed_count} old log files")
+        logger.debug("🧹 Cleaned up {removed_count} old log files")
 
 
 # Global logging manager instance
@@ -464,7 +466,7 @@ if __name__ != "__main__":
     try:
         get_logging_manager()
     except Exception as e:
-        print(f"⚠️ Failed to initialize logging: {e}")
+        logger.warning("⚠️ Failed to initialize logging: {e}")
         # Fallback to basic logging
         logging.basicConfig(
             level=logging.INFO,

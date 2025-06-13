@@ -53,10 +53,10 @@ try:
         run_background_task, PerformanceWidget
     )
     PHASE_5_7_AVAILABLE = True
-    print("✅ Phase 5.7 enhanced components loaded successfully")
+    logger.info("✅ Phase 5.7 enhanced components loaded successfully")
 except ImportError as e:
     PHASE_5_7_AVAILABLE = False
-    print(f"⚠️ Phase 5.7 components not available: {e}")
+    logger.warning("⚠️ Phase 5.7 components not available: {e}")
 
 # Try to import contact management modules
 try:
@@ -67,10 +67,10 @@ try:
     import auth
     import config
     CONTACT_MODULES_AVAILABLE = True
-    print("✅ Contact management modules loaded successfully")
+    logger.info("✅ Contact management modules loaded successfully")
 except ImportError as e:
     CONTACT_MODULES_AVAILABLE = False
-    print(f"⚠️ Contact management modules not available: {e}")
+    logger.warning("⚠️ Contact management modules not available: {e}")
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -535,7 +535,7 @@ class ContactManagementDashboard(QWidget):
         # Cache manager
         self.cache_manager = get_cache_manager()
         
-        print("✅ Phase 5.7 components initialized for Contact Dashboard")
+        logger.info("✅ Phase 5.7 components initialized for Contact Dashboard")
     
     def _apply_phase_5_7_enhancements(self):
         """Apply Phase 5.7 theme and UX enhancements"""
@@ -564,9 +564,9 @@ class ContactManagementDashboard(QWidget):
                 kb_nav = get_keyboard_navigation_manager(main_window)
                 if kb_nav and hasattr(self, 'control_buttons'):
                     kb_nav.register_navigation_group('contacts', self.control_buttons)
-                    print("✅ Keyboard navigation registered for contacts dashboard")
+                    logger.info("✅ Keyboard navigation registered for contacts dashboard")
         except Exception as e:
-            print(f"Warning: Could not set up keyboard navigation: {e}")
+            logger.debug("Warning: Could not set up keyboard navigation: {e}")
     
     def _add_enhanced_tooltips(self):
         """Add enhanced tooltips to UI elements"""
@@ -860,7 +860,7 @@ class ContactManagementDashboard(QWidget):
                 try:
                     created_date = datetime.fromisoformat(created.replace('Z', '+00:00'))
                     created_str = created_date.strftime('%Y-%m-%d')
-                except:
+                except (Exception, AttributeError, TypeError, ValueError):
                     created_str = created[:10] if len(created) >= 10 else created
             else:
                 created_str = ''
@@ -873,7 +873,7 @@ class ContactManagementDashboard(QWidget):
                 try:
                     modified_date = datetime.fromisoformat(modified.replace('Z', '+00:00'))
                     modified_str = modified_date.strftime('%Y-%m-%d')
-                except:
+                except (Exception, AttributeError, TypeError, ValueError):
                     modified_str = modified[:10] if len(modified) >= 10 else modified
             else:
                 modified_str = ''
@@ -1094,7 +1094,7 @@ class ContactManagementDashboard(QWidget):
                     created_date = datetime.fromisoformat(created_str.replace('Z', '+00:00'))
                     if created_date >= month_start:
                         new_this_month += 1
-                except:
+                except (Exception, AttributeError, TypeError, ValueError):
                     pass
         
         # Unique domains

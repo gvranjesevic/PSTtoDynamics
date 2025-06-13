@@ -3,11 +3,14 @@
 Project Cleanup and Organization Script
 =======================================
 
+logger = logging.getLogger(__name__)
+
 Organizes the PST-to-Dynamics project structure by moving files to appropriate
 directories and cleaning up development artifacts.
 """
 
 import os
+import logging
 import shutil
 import sys
 from pathlib import Path
@@ -24,8 +27,8 @@ class ProjectCleaner:
         
     def organize_project(self) -> bool:
         """Main method to organize the entire project."""
-        print("🧹 Starting project cleanup and organization...")
-        print(f"📁 Project root: {self.project_root}")
+        logger.debug("🧹 Starting project cleanup and organization...")
+        logger.info("📁 Project root: {self.project_root}")
         
         try:
             self._create_directory_structure()
@@ -40,7 +43,7 @@ class ProjectCleaner:
             return True
             
         except Exception as e:
-            print(f"❌ Error during cleanup: {e}")
+            logger.error("❌ Error during cleanup: {e}")
             return False
     
     def _create_directory_structure(self):
@@ -66,7 +69,7 @@ class ProjectCleaner:
             if not dir_path.exists():
                 dir_path.mkdir(parents=True, exist_ok=True)
                 self.created_dirs.append(str(dir_path))
-                print(f"📁 Created directory: {directory}")
+                logger.info("📁 Created directory: {directory}")
     
     def _organize_test_files(self):
         """Move all test files to the tests directory."""
@@ -90,7 +93,7 @@ class ProjectCleaner:
             if not new_path.exists():
                 shutil.move(str(test_file), str(new_path))
                 self.moved_files.append((str(test_file), str(new_path)))
-                print(f"📄 Moved test file: {test_file.name} → tests/")
+                logger.debug("📄 Moved test file: {test_file.name} → tests/")
     
     def _organize_development_files(self):
         """Move development files to development directory."""
@@ -124,7 +127,7 @@ class ProjectCleaner:
             if not new_path.exists():
                 shutil.move(str(phase_file), str(new_path))
                 self.moved_files.append((str(phase_file), str(new_path)))
-                print(f"📄 Moved phase file: {phase_file.name} → development/phases/")
+                logger.debug("📄 Moved phase file: {phase_file.name} → development/phases/")
         
         # Move other development files
         scripts_dir = self.project_root / "development" / "scripts"
@@ -136,7 +139,7 @@ class ProjectCleaner:
             if not new_path.exists():
                 shutil.move(str(dev_file), str(new_path))
                 self.moved_files.append((str(dev_file), str(new_path)))
-                print(f"📄 Moved script: {dev_file.name} → development/scripts/")
+                logger.debug("📄 Moved script: {dev_file.name} → development/scripts/")
     
     def _organize_documentation(self):
         """Move documentation files to docs directory."""
@@ -163,7 +166,7 @@ class ProjectCleaner:
                 if not new_path.exists():
                     shutil.move(str(doc_file), str(new_path))
                     self.moved_files.append((str(doc_file), str(new_path)))
-                    print(f"📄 Moved documentation: {doc_file.name} → docs/")
+                    logger.debug("📄 Moved documentation: {doc_file.name} → docs/")
     
     def _organize_phase_files(self):
         """Move phase-related files to development/phases."""
@@ -187,7 +190,7 @@ class ProjectCleaner:
             if pycache_dir.is_dir():
                 shutil.rmtree(pycache_dir)
                 self.deleted_files.append(str(pycache_dir))
-                print(f"🗑️ Removed: {pycache_dir.relative_to(self.project_root)}")
+                logger.debug("🗑️ Removed: {pycache_dir.relative_to(self.project_root)}")
         
         # Clean .pyc files
         for pyc_file in self.project_root.rglob("*.pyc"):
@@ -203,7 +206,7 @@ class ProjectCleaner:
                 if not important_files:
                     shutil.rmtree(build_path)
                     self.deleted_files.append(str(build_path))
-                    print(f"🗑️ Removed build directory: {build_dir}")
+                    logger.debug("🗑️ Removed build directory: {build_dir}")
     
     def _update_gitignore(self):
         """Update .gitignore with common Python and project-specific patterns."""
@@ -278,51 +281,51 @@ class ProjectCleaner:
                 f.write('\n# Added by cleanup script\n')
                 for pattern in patterns_to_add:
                     f.write(f'{pattern}\n')
-            print(f"📝 Updated .gitignore with {len(new_patterns)} new patterns")
+            logger.debug("📝 Updated .gitignore with {len(new_patterns)} new patterns")
     
     def _print_summary(self):
         """Print a summary of all cleanup actions."""
-        print("\n" + "="*50)
-        print("🎉 Project cleanup completed!")
-        print("="*50)
+        logger.debug("\n" + "="*50)
+        logger.info("🎉 Project cleanup completed!")
+        logger.debug("="*50)
         
         if self.created_dirs:
-            print(f"\n📁 Created {len(self.created_dirs)} directories:")
+            logger.debug("\n📁 Created {len(self.created_dirs)} directories:")
             for directory in self.created_dirs[-5:]:  # Show last 5
-                print(f"   • {directory}")
+                logger.debug("   • {directory}")
             if len(self.created_dirs) > 5:
-                print(f"   ... and {len(self.created_dirs) - 5} more")
+                logger.debug("   ... and {len(self.created_dirs) - 5} more")
         
         if self.moved_files:
-            print(f"\n📄 Moved {len(self.moved_files)} files:")
+            logger.debug("\n📄 Moved {len(self.moved_files)} files:")
             for old_path, new_path in self.moved_files[-5:]:  # Show last 5
                 old_name = Path(old_path).name
                 new_dir = Path(new_path).parent.name
-                print(f"   • {old_name} → {new_dir}/")
+                logger.debug("   • {old_name} → {new_dir}/")
             if len(self.moved_files) > 5:
-                print(f"   ... and {len(self.moved_files) - 5} more")
+                logger.debug("   ... and {len(self.moved_files) - 5} more")
         
         if self.deleted_files:
-            print(f"\n🗑️ Cleaned up {len(self.deleted_files)} artifacts")
+            logger.debug("\n🗑️ Cleaned up {len(self.deleted_files)} artifacts")
         
-        print(f"\n✨ Project is now organized and clean!")
-        print("\nRecommended next steps:")
-        print("1. Review the moved files in development/ directory")
-        print("2. Update import statements if needed")
-        print("3. Run tests to ensure everything still works")
-        print("4. Commit the organized structure to git")
+        logger.debug("\n✨ Project is now organized and clean!")
+        logger.debug("\nRecommended next steps:")
+        logger.debug("1. Review the moved files in development/ directory")
+        logger.debug("2. Update import statements if needed")
+        logger.debug("3. Run tests to ensure everything still works")
+        logger.debug("4. Commit the organized structure to git")
 
 def main():
     """Main function to run project cleanup."""
-    print("🧹 PST-to-Dynamics Project Cleanup")
-    print("=" * 40)
+    logger.debug("🧹 PST-to-Dynamics Project Cleanup")
+    logger.debug("=" * 40)
     
     cleaner = ProjectCleaner()
     
     # Ask for confirmation
     response = input("This will reorganize files in the project. Continue? (y/N): ")
     if response.lower() not in ['y', 'yes']:
-        print("❌ Cleanup cancelled.")
+        logger.error("❌ Cleanup cancelled.")
         return False
     
     success = cleaner.organize_project()

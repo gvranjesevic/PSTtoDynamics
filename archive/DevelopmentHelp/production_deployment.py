@@ -2,6 +2,8 @@
 Production Deployment Script
 ===========================
 
+logger = logging.getLogger(__name__)
+
 Prepares and validates the PST-to-Dynamics system for production deployment
 with Phase 2 enhancements:
 - System validation and health checks
@@ -14,6 +16,7 @@ Phase: Production Deployment
 """
 
 import sys
+import logging
 import os
 import time
 from datetime import datetime
@@ -23,8 +26,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 def validate_system_requirements():
     """Validate system requirements for production deployment."""
-    print("📋 SYSTEM REQUIREMENTS VALIDATION")
-    print("=" * 60)
+    logger.debug("📋 SYSTEM REQUIREMENTS VALIDATION")
+    logger.debug("=" * 60)
     
     requirements_passed = 0
     total_requirements = 0
@@ -34,10 +37,10 @@ def validate_system_requirements():
         total_requirements += 1
         python_version = sys.version_info
         if python_version >= (3, 8):
-            print(f"✅ Python version: {python_version.major}.{python_version.minor}.{python_version.micro}")
+            logger.info("✅ Python version: {python_version.major}.{python_version.minor}.{python_version.micro}")
             requirements_passed += 1
         else:
-            print(f"❌ Python version: {python_version.major}.{python_version.minor}.{python_version.micro} (requires 3.8+)")
+            logger.error("❌ Python version: {python_version.major}.{python_version.minor}.{python_version.micro} (requires 3.8+)")
         
         # Check required modules
         required_modules = [
@@ -49,10 +52,10 @@ def validate_system_requirements():
             total_requirements += 1
             try:
                 __import__(module)
-                print(f"✅ Module: {module}")
+                logger.info("✅ Module: {module}")
                 requirements_passed += 1
             except ImportError as e:
-                print(f"❌ Module: {module} - {e}")
+                logger.error("❌ Module: {module} - {e}")
         
         # Check PST file
         total_requirements += 1
@@ -60,10 +63,10 @@ def validate_system_requirements():
         pst_path = config.CURRENT_PST_PATH
         if os.path.exists(pst_path):
             file_size = os.path.getsize(pst_path) / (1024 * 1024)  # MB
-            print(f"✅ PST file: {pst_path} ({file_size:.1f} MB)")
+            logger.info("✅ PST file: {pst_path} ({file_size:.1f} MB)")
             requirements_passed += 1
         else:
-            print(f"❌ PST file: {pst_path} (not found)")
+            logger.error("❌ PST file: {pst_path} (not found)")
         
         # Check configuration
         total_requirements += 1
@@ -73,23 +76,23 @@ def validate_system_requirements():
         for setting in required_config:
             if not hasattr(config, setting) or not getattr(config, setting):
                 config_valid = False
-                print(f"❌ Config missing: {setting}")
+                logger.error("❌ Config missing: {setting}")
         
         if config_valid:
-            print("✅ Configuration: All required settings present")
+            logger.info("✅ Configuration: All required settings present")
             requirements_passed += 1
         
-        print(f"\n📊 Requirements Summary: {requirements_passed}/{total_requirements} passed")
+        logger.debug("\n📊 Requirements Summary: {requirements_passed}/{total_requirements} passed")
         return requirements_passed >= total_requirements * 0.8  # 80% threshold
         
     except Exception as e:
-        print(f"❌ System validation failed: {e}")
+        logger.error("❌ System validation failed: {e}")
         return False
 
 def validate_feature_configuration():
     """Validate feature flag configuration for production."""
-    print("\n🏁 FEATURE CONFIGURATION VALIDATION")
-    print("=" * 60)
+    logger.debug("\n🏁 FEATURE CONFIGURATION VALIDATION")
+    logger.debug("=" * 60)
     
     try:
         import config
@@ -108,82 +111,82 @@ def validate_feature_configuration():
             ('BULK_PROCESSING', config.FeatureFlags.BULK_PROCESSING)
         ]
         
-        print("📋 Phase 1 Features (Required):")
+        logger.debug("📋 Phase 1 Features (Required):")
         phase1_enabled = 0
         for name, enabled in phase1_features:
             status = "✅ ENABLED" if enabled else "❌ DISABLED"
-            print(f"   {name:<20} {status}")
+            logger.debug("   {name:<20} {status}")
             if enabled:
                 phase1_enabled += 1
         
-        print("\n📋 Phase 2 Features (Recommended):")
+        logger.debug("\n📋 Phase 2 Features (Recommended):")
         phase2_enabled = 0
         for name, enabled in phase2_features:
             status = "✅ ENABLED" if enabled else "⚠️ DISABLED"
-            print(f"   {name:<20} {status}")
+            logger.debug("   {name:<20} {status}")
             if enabled:
                 phase2_enabled += 1
         
-        print(f"\n📊 Feature Summary:")
-        print(f"   Phase 1: {phase1_enabled}/{len(phase1_features)} enabled")
-        print(f"   Phase 2: {phase2_enabled}/{len(phase2_features)} enabled")
+        logger.debug("\n📊 Feature Summary:")
+        logger.debug("   Phase 1: {phase1_enabled}/{len(phase1_features)} enabled")
+        logger.debug("   Phase 2: {phase2_enabled}/{len(phase2_features)} enabled")
         
         # Deployment recommendations
         if phase1_enabled == len(phase1_features) and phase2_enabled >= 2:
-            print("\n🎉 OPTIMAL CONFIGURATION!")
-            print("✅ All required features enabled, Phase 2 enhancements active")
+            logger.debug("\n🎉 OPTIMAL CONFIGURATION!")
+            logger.info("✅ All required features enabled, Phase 2 enhancements active")
             return True
         elif phase1_enabled == len(phase1_features):
-            print("\n✅ MINIMAL CONFIGURATION")
-            print("✅ All required features enabled, some Phase 2 features disabled")
+            logger.debug("\n✅ MINIMAL CONFIGURATION")
+            logger.info("✅ All required features enabled, some Phase 2 features disabled")
             return True
         else:
-            print("\n❌ INSUFFICIENT CONFIGURATION")
-            print("🔧 Required Phase 1 features disabled")
+            logger.debug("\n❌ INSUFFICIENT CONFIGURATION")
+            logger.debug("🔧 Required Phase 1 features disabled")
             return False
             
     except Exception as e:
-        print(f"❌ Feature validation failed: {e}")
+        logger.error("❌ Feature validation failed: {e}")
         return False
 
 def test_authentication():
     """Test authentication to Dynamics 365."""
-    print("\n🔐 AUTHENTICATION TESTING")
-    print("=" * 60)
+    logger.debug("\n🔐 AUTHENTICATION TESTING")
+    logger.debug("=" * 60)
     
     try:
         import auth
         
         auth_instance = auth.get_auth()
         
-        print("🔐 Testing Dynamics 365 authentication...")
+        logger.info("🔐 Testing Dynamics 365 authentication...")
         success = auth_instance.authenticate()
         
         if success:
-            print("✅ Authentication successful!")
+            logger.info("✅ Authentication successful!")
             
             # Test connection
-            print("🌐 Testing Dynamics 365 connection...")
+            logger.debug("🌐 Testing Dynamics 365 connection...")
             connection_success = auth_instance.test_connection()
             
             if connection_success:
-                print("✅ Connection test successful!")
+                logger.info("✅ Connection test successful!")
                 return True
             else:
-                print("❌ Connection test failed!")
+                logger.error("❌ Connection test failed!")
                 return False
         else:
-            print("❌ Authentication failed!")
+            logger.error("❌ Authentication failed!")
             return False
             
     except Exception as e:
-        print(f"❌ Authentication testing failed: {e}")
+        logger.error("❌ Authentication testing failed: {e}")
         return False
 
 def optimize_for_production():
     """Apply production optimizations."""
-    print("\n⚡ PRODUCTION OPTIMIZATION")
-    print("=" * 60)
+    logger.debug("\n⚡ PRODUCTION OPTIMIZATION")
+    logger.debug("=" * 60)
     
     try:
         import config
@@ -192,11 +195,11 @@ def optimize_for_production():
         # Check bulk processing settings
         processor = bulk_processor.BulkProcessor()
         
-        print("📦 Bulk Processing Configuration:")
-        print(f"   Max emails per session: {processor.max_emails_per_session:,}")
-        print(f"   Batch size: {processor.batch_size_bulk}")
-        print(f"   Memory optimization: {processor.memory_optimization}")
-        print(f"   Checkpoint interval: {processor.checkpoint_interval}")
+        logger.debug("📦 Bulk Processing Configuration:")
+        logger.debug("   Max emails per session: {processor.max_emails_per_session:,}")
+        logger.debug("   Batch size: {processor.batch_size_bulk}")
+        logger.debug("   Memory optimization: {processor.memory_optimization}")
+        logger.debug("   Checkpoint interval: {processor.checkpoint_interval}")
         
         # Production recommendations
         recommendations = []
@@ -211,35 +214,35 @@ def optimize_for_production():
             recommendations.append("Consider reducing batch size for stability")
         
         if recommendations:
-            print("\n⚠️ Production Recommendations:")
+            logger.debug("\n⚠️ Production Recommendations:")
             for rec in recommendations:
-                print(f"   📝 {rec}")
+                logger.debug("   📝 {rec}")
         else:
-            print("\n✅ Optimal production configuration!")
+            logger.debug("\n✅ Optimal production configuration!")
         
         # Check contact creation settings
-        print("\n👥 Contact Creation Configuration:")
-        print(f"   Auto-create missing: {config.CONTACT_CREATION['AUTO_CREATE_MISSING']}")
-        print(f"   Max per batch: {config.CONTACT_CREATION['MAX_CONTACTS_PER_BATCH']}")
-        print(f"   Validation enabled: {config.CONTACT_CREATION['VALIDATE_EMAIL_FORMAT']}")
+        logger.debug("\n👥 Contact Creation Configuration:")
+        logger.debug("   Auto-create missing: {config.CONTACT_CREATION['AUTO_CREATE_MISSING']}")
+        logger.debug("   Max per batch: {config.CONTACT_CREATION['MAX_CONTACTS_PER_BATCH']}")
+        logger.debug("   Validation enabled: {config.CONTACT_CREATION['VALIDATE_EMAIL_FORMAT']}")
         
         # Check comparison settings
-        print("\n🔍 Comparison Configuration:")
-        print(f"   Message-ID matching: {config.ADVANCED_COMPARISON['USE_MESSAGE_ID']}")
-        print(f"   Content hash matching: {config.ADVANCED_COMPARISON['USE_CONTENT_HASH']}")
-        print(f"   Subject similarity threshold: {config.ADVANCED_COMPARISON['SUBJECT_SIMILARITY_THRESHOLD']}")
-        print(f"   Content similarity threshold: {config.ADVANCED_COMPARISON['CONTENT_SIMILARITY_THRESHOLD']}")
+        logger.debug("\n🔍 Comparison Configuration:")
+        logger.debug("   Message-ID matching: {config.ADVANCED_COMPARISON['USE_MESSAGE_ID']}")
+        logger.debug("   Content hash matching: {config.ADVANCED_COMPARISON['USE_CONTENT_HASH']}")
+        logger.debug("   Subject similarity threshold: {config.ADVANCED_COMPARISON['SUBJECT_SIMILARITY_THRESHOLD']}")
+        logger.debug("   Content similarity threshold: {config.ADVANCED_COMPARISON['CONTENT_SIMILARITY_THRESHOLD']}")
         
         return True
         
     except Exception as e:
-        print(f"❌ Production optimization failed: {e}")
+        logger.error("❌ Production optimization failed: {e}")
         return False
 
 def create_deployment_report():
     """Create a deployment readiness report."""
-    print("\n📊 DEPLOYMENT READINESS REPORT")
-    print("=" * 60)
+    logger.debug("\n📊 DEPLOYMENT READINESS REPORT")
+    logger.debug("=" * 60)
     
     report = {
         'timestamp': datetime.now().isoformat(),
@@ -282,44 +285,44 @@ def create_deployment_report():
         
         report['readiness_score'] = readiness_score
         
-        print(f"📊 Deployment Readiness Score: {readiness_score:.1f}%")
-        print(f"📅 Report Generated: {report['timestamp']}")
-        print(f"🐍 Python Version: {report['system_info']['python_version']}")
-        print(f"💻 Platform: {report['system_info']['platform']}")
+        logger.info("📊 Deployment Readiness Score: {readiness_score:.1f}%")
+        logger.debug("📅 Report Generated: {report['timestamp']}")
+        logger.debug("🐍 Python Version: {report['system_info']['python_version']}")
+        logger.debug("💻 Platform: {report['system_info']['platform']}")
         
-        print(f"\n🏁 Features Enabled: {enabled_features}/{total_features}")
+        logger.debug("\n🏁 Features Enabled: {enabled_features}/{total_features}")
         for feature, enabled in report['features_enabled'].items():
             status = "✅" if enabled else "❌"
-            print(f"   {status} {feature}")
+            logger.debug("   {status} {feature}")
         
-        print(f"\n⚡ Performance Configuration:")
-        print(f"   📧 Max emails/session: {report['performance']['max_emails_per_session']:,}")
-        print(f"   📦 Batch size: {report['performance']['batch_size']}")
-        print(f"   💾 Memory optimization: {report['performance']['memory_optimization']}")
+        logger.debug("\n⚡ Performance Configuration:")
+        logger.debug("   📧 Max emails/session: {report['performance']['max_emails_per_session']:,}")
+        logger.debug("   📦 Batch size: {report['performance']['batch_size']}")
+        logger.debug("   💾 Memory optimization: {report['performance']['memory_optimization']}")
         
         # Overall assessment
         if readiness_score >= 90:
-            print(f"\n🎉 EXCELLENT READINESS!")
-            print("✅ System is fully ready for production deployment")
+            logger.debug("\n🎉 EXCELLENT READINESS!")
+            logger.info("✅ System is fully ready for production deployment")
         elif readiness_score >= 70:
-            print(f"\n✅ GOOD READINESS")
-            print("⚠️ System is ready with some features disabled")
+            logger.debug("\n✅ GOOD READINESS")
+            logger.warning("⚠️ System is ready with some features disabled")
         else:
-            print(f"\n⚠️ LIMITED READINESS")
-            print("🔧 Additional configuration needed")
+            logger.debug("\n⚠️ LIMITED READINESS")
+            logger.debug("🔧 Additional configuration needed")
         
         return report
         
     except Exception as e:
-        print(f"❌ Report generation failed: {e}")
+        logger.error("❌ Report generation failed: {e}")
         return None
 
 def main():
     """Run complete production deployment validation."""
-    print("🚀 PRODUCTION DEPLOYMENT VALIDATION")
-    print("=" * 80)
-    print("🎯 Validating system readiness for production use")
-    print("=" * 80)
+    logger.info("🚀 PRODUCTION DEPLOYMENT VALIDATION")
+    logger.debug("=" * 80)
+    logger.debug("🎯 Validating system readiness for production use")
+    logger.debug("=" * 80)
     
     start_time = time.time()
     
@@ -352,34 +355,34 @@ def main():
     total_validations = len(validation_results)
     
     # Results summary
-    print(f"\n{'='*80}")
-    print("📊 PRODUCTION DEPLOYMENT VALIDATION RESULTS")
-    print("=" * 80)
+    logger.debug("\n{'='*80}")
+    logger.info("📊 PRODUCTION DEPLOYMENT VALIDATION RESULTS")
+    logger.debug("=" * 80)
     
     for validation_name, success in validation_results:
         status = "✅ PASS" if success else "❌ FAIL"
-        print(f"{validation_name:<25} {status}")
+        logger.debug("{validation_name:<25} {status}")
     
-    print(f"\n📈 Overall Results:")
-    print(f"   ✅ Validations Passed: {passed_validations}/{total_validations}")
-    print(f"   ⏱️ Total Time: {total_time:.1f} seconds")
+    logger.debug("\n📈 Overall Results:")
+    logger.debug("   ✅ Validations Passed: {passed_validations}/{total_validations}")
+    logger.debug("   ⏱️ Total Time: {total_time:.1f} seconds")
     
     # Final deployment decision
     if passed_validations >= total_validations - 1:  # Allow 1 failure
-        print("\n🎉 PRODUCTION DEPLOYMENT APPROVED!")
-        print("✅ System is ready for production use")
-        print("🚀 You can proceed with importing emails using Phase 2 features")
+        logger.debug("\n🎉 PRODUCTION DEPLOYMENT APPROVED!")
+        logger.info("✅ System is ready for production use")
+        logger.info("🚀 You can proceed with importing emails using Phase 2 features")
         
-        print(f"\n📋 Next Steps:")
-        print("   1. Run the main email import with: python email_importer.py")
-        print("   2. Monitor bulk processing with checkpoint recovery")
-        print("   3. Use auto-contact creation for missing senders")
-        print("   4. Benefit from 95% duplicate detection accuracy")
+        logger.debug("\n📋 Next Steps:")
+        logger.debug("   1. Run the main email import with: python email_importer.py")
+        logger.debug("   2. Monitor bulk processing with checkpoint recovery")
+        logger.debug("   3. Use auto-contact creation for missing senders")
+        logger.debug("   4. Benefit from 95% duplicate detection accuracy")
         
         return True
     else:
-        print("\n❌ PRODUCTION DEPLOYMENT NOT READY")
-        print("🔧 Resolve validation failures before deploying")
+        logger.debug("\n❌ PRODUCTION DEPLOYMENT NOT READY")
+        logger.debug("🔧 Resolve validation failures before deploying")
         return False
 
 if __name__ == "__main__":

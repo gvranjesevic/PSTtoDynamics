@@ -2,11 +2,16 @@
 PST-to-Dynamics 365 Analytics Dashboard
 ======================================
 
+logger = logging.getLogger(__name__)
+
 Phase 5.4: Interactive Analytics Visualization
 Real-time charts and performance metrics dashboard for Phase 3 analytics.
 """
 
 import sys
+
+
+import logging
 import os
 import json
 from datetime import datetime, timedelta
@@ -31,7 +36,7 @@ try:
     PYQTGRAPH_AVAILABLE = True
 except ImportError:
     PYQTGRAPH_AVAILABLE = False
-    print("⚠️ PyQtGraph not available - using basic charts")
+    logger.warning("⚠️ PyQtGraph not available - using basic charts")
 
 # Import Phase 3 analytics modules
 try:
@@ -41,7 +46,7 @@ try:
     PHASE3_AVAILABLE = True
 except ImportError as e:
     PHASE3_AVAILABLE = False
-    print(f"⚠️ Phase 3 Analytics not available: {e}")
+    logger.warning("⚠️ Phase 3 Analytics not available: {e}")
 
 
 class AnalyticsDataLoader(QThread):
@@ -599,7 +604,7 @@ class AnalyticsDashboard(QWidget):
         try:
             updated_dt = datetime.fromisoformat(last_updated.replace('Z', '+00:00'))
             formatted_time = updated_dt.strftime('%Y-%m-%d %H:%M:%S')
-        except:
+        except (Exception, AttributeError, TypeError, ValueError):
             formatted_time = last_updated
         
         status_color = "#2ecc71" if system_status == "active" else "#f39c12"
@@ -703,6 +708,8 @@ def main():
     """Test the Analytics Dashboard independently"""
     from PyQt6.QtWidgets import QApplication
     import sys
+
+    import logging
     
     app = QApplication(sys.argv)
     

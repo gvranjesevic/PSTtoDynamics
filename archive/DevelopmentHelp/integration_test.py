@@ -2,6 +2,8 @@
 Integration Testing for Phase 1 + Phase 2
 =========================================
 
+logger = logging.getLogger(__name__)
+
 Tests the complete PST-to-Dynamics system with Phase 2 enhancements:
 - PST reading (Phase 1) + Contact creation (Phase 2)
 - Email import (Phase 1) + Advanced comparison (Phase 2)
@@ -12,6 +14,7 @@ Phase: Integration Testing
 """
 
 import sys
+import logging
 import os
 import time
 
@@ -20,8 +23,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 def test_integrated_workflow():
     """Test the complete integrated workflow of Phase 1 + Phase 2."""
-    print("🔄 INTEGRATED WORKFLOW TESTING")
-    print("=" * 60)
+    logger.debug("🔄 INTEGRATED WORKFLOW TESTING")
+    logger.debug("=" * 60)
     
     try:
         # Import all required modules
@@ -33,10 +36,10 @@ def test_integrated_workflow():
         import email_importer
         import config
         
-        print("✅ All modules imported successfully")
+        logger.info("✅ All modules imported successfully")
         
         # Initialize components
-        print("\n🏗️ Initializing system components...")
+        logger.debug("\n🏗️ Initializing system components...")
         pst = pst_reader.PSTReader()
         creator = contact_creator.ContactCreator()
         comparator = email_comparator.EmailComparator()
@@ -44,11 +47,11 @@ def test_integrated_workflow():
         dynamics = dynamics_data.DynamicsData()
         importer = email_importer.EmailImporter()
         
-        print("✅ All components initialized")
+        logger.info("✅ All components initialized")
         
         # Test 1: PST Reading + Contact Analysis
-        print("\n📧 Test 1: PST Reading + Contact Analysis")
-        print("-" * 40)
+        logger.debug("\n📧 Test 1: PST Reading + Contact Analysis")
+        logger.debug("-" * 40)
         
         # Simulate PST reading results
         sample_emails = {
@@ -72,22 +75,22 @@ def test_integrated_workflow():
             ]
         }
         
-        print(f"   📧 Sample PST data: {sum(len(emails) for emails in sample_emails.values())} emails from {len(sample_emails)} senders")
+        logger.debug("   📧 Sample PST data: {sum(len(emails) for emails in sample_emails.values())} emails from {len(sample_emails)} senders")
         
         # Analyze missing contacts using Phase 2
         sender_list = list(sample_emails.keys())
         analysis = creator.analyze_missing_contacts(sender_list)
         
-        print(f"   👥 Contact analysis:")
-        print(f"      Total senders: {analysis['total_senders']}")
-        print(f"      Missing contacts: {analysis['missing_contacts']}")
-        print(f"      Existing contacts: {analysis['existing_contacts']}")
+        logger.debug("   👥 Contact analysis:")
+        logger.debug("      Total senders: {analysis['total_senders']}")
+        logger.debug("      Missing contacts: {analysis['missing_contacts']}")
+        logger.debug("      Existing contacts: {analysis['existing_contacts']}")
         
-        print("✅ PST Reading + Contact Analysis: PASS")
+        logger.info("✅ PST Reading + Contact Analysis: PASS")
         
         # Test 2: Advanced Email Comparison
-        print("\n🔍 Test 2: Advanced Email Comparison")
-        print("-" * 40)
+        logger.debug("\n🔍 Test 2: Advanced Email Comparison")
+        logger.debug("-" * 40)
         
         # Create test scenario for duplicate detection
         pst_email = sample_emails['john.doe@example.com'][0]
@@ -103,66 +106,66 @@ def test_integrated_workflow():
         # Test duplicate detection
         result = comparator.find_duplicates(pst_email, [existing_dynamics_email])
         
-        print(f"   🔍 Duplicate detection results:")
-        print(f"      Has duplicates: {result['has_duplicates']}")
-        print(f"      Best confidence: {result['best_confidence']:.2f}")
-        print(f"      Detection strategy: Phase 2 advanced comparison")
+        logger.debug("   🔍 Duplicate detection results:")
+        logger.debug("      Has duplicates: {result['has_duplicates']}")
+        logger.debug("      Best confidence: {result['best_confidence']:.2f}")
+        logger.debug("      Detection strategy: Phase 2 advanced comparison")
         
-        print("✅ Advanced Email Comparison: PASS")
+        logger.info("✅ Advanced Email Comparison: PASS")
         
         # Test 3: Bulk Processing Integration
-        print("\n📦 Test 3: Bulk Processing Integration")
-        print("-" * 40)
+        logger.debug("\n📦 Test 3: Bulk Processing Integration")
+        logger.debug("-" * 40)
         
         # Test bulk processing with our sample data
-        print(f"   📊 Bulk processor configuration:")
-        print(f"      Max emails per session: {processor.max_emails_per_session}")
-        print(f"      Batch size: {processor.batch_size_bulk}")
-        print(f"      Memory optimization: {processor.memory_optimization}")
+        logger.debug("   📊 Bulk processor configuration:")
+        logger.debug("      Max emails per session: {processor.max_emails_per_session}")
+        logger.debug("      Batch size: {processor.batch_size_bulk}")
+        logger.debug("      Memory optimization: {processor.memory_optimization}")
         
         # Create batches from sample data
         batches = processor._create_processing_batches(sample_emails)
         
-        print(f"   📦 Batch creation results:")
-        print(f"      Created batches: {len(batches)}")
+        logger.debug("   📦 Batch creation results:")
+        logger.debug("      Created batches: {len(batches)}")
         for i, batch in enumerate(batches):
-            print(f"      Batch {batch['batch_id']}: {batch['size']} emails")
+            logger.debug("      Batch {batch['batch_id']}: {batch['size']} emails")
         
-        print("✅ Bulk Processing Integration: PASS")
+        logger.info("✅ Bulk Processing Integration: PASS")
         
         # Test 4: End-to-End Workflow
-        print("\n🎯 Test 4: End-to-End Workflow Simulation")
-        print("-" * 40)
+        logger.debug("\n🎯 Test 4: End-to-End Workflow Simulation")
+        logger.debug("-" * 40)
         
-        print("   📋 Workflow steps:")
-        print("      1. ✅ PST data read (simulated)")
-        print("      2. ✅ Contacts analyzed (Phase 2)")
-        print("      3. ✅ Duplicates detected (Phase 2)")
-        print("      4. ✅ Batches created (Phase 2)")
-        print("      5. ⏳ Ready for email import (Phase 1)")
+        logger.debug("   📋 Workflow steps:")
+        logger.debug("      1. ✅ PST data read (simulated)")
+        logger.debug("      2. ✅ Contacts analyzed (Phase 2)")
+        logger.debug("      3. ✅ Duplicates detected (Phase 2)")
+        logger.debug("      4. ✅ Batches created (Phase 2)")
+        logger.debug("      5. ⏳ Ready for email import (Phase 1)")
         
         # Test configuration consistency
-        print(f"\n   ⚙️ Configuration validation:")
-        print(f"      Contact creation: {config.FeatureFlags.CONTACT_CREATION}")
-        print(f"      Advanced comparison: {config.FeatureFlags.ADVANCED_COMPARISON}")
-        print(f"      Bulk processing: {config.FeatureFlags.BULK_PROCESSING}")
-        print(f"      PST reading: {config.FeatureFlags.PST_READING}")
-        print(f"      Basic import: {config.FeatureFlags.BASIC_IMPORT}")
+        logger.debug("\n   ⚙️ Configuration validation:")
+        logger.debug("      Contact creation: {config.FeatureFlags.CONTACT_CREATION}")
+        logger.debug("      Advanced comparison: {config.FeatureFlags.ADVANCED_COMPARISON}")
+        logger.debug("      Bulk processing: {config.FeatureFlags.BULK_PROCESSING}")
+        logger.debug("      PST reading: {config.FeatureFlags.PST_READING}")
+        logger.debug("      Basic import: {config.FeatureFlags.BASIC_IMPORT}")
         
-        print("✅ End-to-End Workflow: PASS")
+        logger.info("✅ End-to-End Workflow: PASS")
         
         return True
         
     except Exception as e:
-        print(f"❌ Integration workflow failed: {e}")
+        logger.error("❌ Integration workflow failed: {e}")
         import traceback
         traceback.print_exc()
         return False
 
 def test_phase_interaction():
     """Test specific interactions between Phase 1 and Phase 2 features."""
-    print("\n🔗 PHASE INTERACTION TESTING")
-    print("=" * 60)
+    logger.debug("\n🔗 PHASE INTERACTION TESTING")
+    logger.debug("=" * 60)
     
     try:
         import pst_reader
@@ -170,7 +173,7 @@ def test_phase_interaction():
         import config
         
         # Test: Enhanced PST reader with Phase 2 features
-        print("📧 Testing enhanced PST reader...")
+        logger.info("📧 Testing enhanced PST reader...")
         reader = pst_reader.PSTReader()
         comparator = email_comparator.EmailComparator()
         
@@ -178,31 +181,31 @@ def test_phase_interaction():
         sample_header = "Message-ID: <test123@example.com>\nSubject: Test"
         message_id = reader._extract_message_id(sample_header)
         
-        print(f"   📧 Message-ID extraction: {message_id}")
-        print(f"   ✅ PST reader enhanced with Phase 2 features")
+        logger.debug("   📧 Message-ID extraction: {message_id}")
+        logger.debug("   ✅ PST reader enhanced with Phase 2 features")
         
         # Test: Configuration compatibility
-        print("\n⚙️ Testing configuration compatibility...")
-        print(f"   Phase 1 PST path: {reader.pst_path}")
-        print(f"   Phase 2 bulk limit: {config.BULK_PROCESSING['MAX_EMAILS_PER_SESSION']}")
-        print(f"   ✅ Configurations compatible")
+        logger.debug("\n⚙️ Testing configuration compatibility...")
+        logger.debug("   Phase 1 PST path: {reader.pst_path}")
+        logger.debug("   Phase 2 bulk limit: {config.BULK_PROCESSING['MAX_EMAILS_PER_SESSION']}")
+        logger.debug("   ✅ Configurations compatible")
         
         # Test: Memory and performance integration
-        print("\n⚡ Testing performance integration...")
-        print(f"   Memory optimization: {config.BULK_PROCESSING['MEMORY_OPTIMIZATION']}")
-        print(f"   Checkpoint interval: {config.BULK_PROCESSING['CHECKPOINT_INTERVAL']}")
-        print(f"   ✅ Performance features integrated")
+        logger.debug("\n⚡ Testing performance integration...")
+        logger.debug("   Memory optimization: {config.BULK_PROCESSING['MEMORY_OPTIMIZATION']}")
+        logger.debug("   Checkpoint interval: {config.BULK_PROCESSING['CHECKPOINT_INTERVAL']}")
+        logger.debug("   ✅ Performance features integrated")
         
         return True
         
     except Exception as e:
-        print(f"❌ Phase interaction testing failed: {e}")
+        logger.error("❌ Phase interaction testing failed: {e}")
         return False
 
 def test_production_readiness():
     """Test system readiness for production use."""
-    print("\n🚀 PRODUCTION READINESS TESTING")
-    print("=" * 60)
+    logger.debug("\n🚀 PRODUCTION READINESS TESTING")
+    logger.debug("=" * 60)
     
     try:
         import config
@@ -211,7 +214,7 @@ def test_production_readiness():
         import bulk_processor
         
         # Test 1: Feature flags
-        print("🏁 Feature flag validation:")
+        logger.debug("🏁 Feature flag validation:")
         required_flags = [
             (config.FeatureFlags.PST_READING, "PST Reading"),
             (config.FeatureFlags.BASIC_IMPORT, "Basic Import"),
@@ -223,57 +226,57 @@ def test_production_readiness():
         enabled_count = 0
         for flag, name in required_flags:
             status = "✅ ENABLED" if flag else "❌ DISABLED"
-            print(f"   {name:<20} {status}")
+            logger.debug("   {name:<20} {status}")
             if flag:
                 enabled_count += 1
         
-        print(f"\n   📊 Feature Summary: {enabled_count}/{len(required_flags)} features enabled")
+        logger.debug("\n   📊 Feature Summary: {enabled_count}/{len(required_flags)} features enabled")
         
         # Test 2: Performance capabilities
-        print("\n⚡ Performance capabilities:")
+        logger.debug("\n⚡ Performance capabilities:")
         processor = bulk_processor.BulkProcessor()
-        print(f"   Max emails per session: {processor.max_emails_per_session:,}")
-        print(f"   Batch processing size: {processor.batch_size_bulk}")
-        print(f"   Memory optimization: {processor.memory_optimization}")
-        print(f"   Auto-checkpoint: Every {processor.checkpoint_interval} emails")
+        logger.debug("   Max emails per session: {processor.max_emails_per_session:,}")
+        logger.debug("   Batch processing size: {processor.batch_size_bulk}")
+        logger.debug("   Memory optimization: {processor.memory_optimization}")
+        logger.debug("   Auto-checkpoint: Every {processor.checkpoint_interval} emails")
         
         # Test 3: Comparison accuracy
-        print("\n🎯 Comparison accuracy:")
+        logger.debug("\n🎯 Comparison accuracy:")
         comparator = email_comparator.EmailComparator()
-        print(f"   Message-ID matching: 100% confidence")
-        print(f"   Content hash matching: 95% confidence") 
-        print(f"   Fuzzy timestamp matching: 85% confidence")
-        print(f"   Sender+recipient matching: 80% confidence")
-        print(f"   Content similarity: 75% confidence")
+        logger.debug("   Message-ID matching: 100% confidence")
+        logger.debug("   Content hash matching: 95% confidence") 
+        logger.debug("   Fuzzy timestamp matching: 85% confidence")
+        logger.debug("   Sender+recipient matching: 80% confidence")
+        logger.debug("   Content similarity: 75% confidence")
         
         # Test 4: Contact handling
-        print("\n👥 Contact handling:")
+        logger.debug("\n👥 Contact handling:")
         creator = contact_creator.ContactCreator()
-        print(f"   Auto-create missing: {config.CONTACT_CREATION['AUTO_CREATE_MISSING']}")
-        print(f"   Batch contact creation: {config.CONTACT_CREATION['MAX_CONTACTS_PER_BATCH']} per batch")
-        print(f"   Email validation: Advanced regex patterns")
-        print(f"   Name extraction: Smart parsing from email addresses")
+        logger.debug("   Auto-create missing: {config.CONTACT_CREATION['AUTO_CREATE_MISSING']}")
+        logger.debug("   Batch contact creation: {config.CONTACT_CREATION['MAX_CONTACTS_PER_BATCH']} per batch")
+        logger.debug("   Email validation: Advanced regex patterns")
+        logger.debug("   Name extraction: Smart parsing from email addresses")
         
         # Production readiness score
         if enabled_count >= 4:
-            print("\n🎉 PRODUCTION READY!")
-            print("✅ System is ready for production deployment")
+            logger.debug("\n🎉 PRODUCTION READY!")
+            logger.info("✅ System is ready for production deployment")
             return True
         else:
-            print("\n⚠️ PARTIAL READINESS")
-            print("🔧 Some features disabled but core functionality works")
+            logger.debug("\n⚠️ PARTIAL READINESS")
+            logger.debug("🔧 Some features disabled but core functionality works")
             return True
             
     except Exception as e:
-        print(f"❌ Production readiness testing failed: {e}")
+        logger.error("❌ Production readiness testing failed: {e}")
         return False
 
 def main():
     """Run complete integration testing."""
-    print("🚀 INTEGRATION TESTING - PHASE 1 + PHASE 2")
-    print("=" * 80)
-    print("🎯 Testing complete system integration and production readiness")
-    print("=" * 80)
+    logger.info("🚀 INTEGRATION TESTING - PHASE 1 + PHASE 2")
+    logger.debug("=" * 80)
+    logger.debug("🎯 Testing complete system integration and production readiness")
+    logger.debug("=" * 80)
     
     start_time = time.time()
     
@@ -298,27 +301,27 @@ def main():
     total_tests = len(test_results)
     
     # Results summary
-    print("\n" + "=" * 80)
-    print("📊 INTEGRATION TEST RESULTS")
-    print("=" * 80)
+    logger.debug("\n" + "=" * 80)
+    logger.info("📊 INTEGRATION TEST RESULTS")
+    logger.debug("=" * 80)
     
     for test_name, success in test_results:
         status = "✅ PASS" if success else "❌ FAIL"
-        print(f"{test_name:<25} {status}")
+        logger.debug("{test_name:<25} {status}")
     
-    print(f"\n📈 Overall Results:")
-    print(f"   ✅ Tests Passed: {passed_tests}/{total_tests}")
-    print(f"   ⏱️ Total Time: {total_time:.1f} seconds")
+    logger.debug("\n📈 Overall Results:")
+    logger.debug("   ✅ Tests Passed: {passed_tests}/{total_tests}")
+    logger.debug("   ⏱️ Total Time: {total_time:.1f} seconds")
     
     # Final assessment
     if passed_tests == total_tests:
-        print("\n🎉 INTEGRATION SUCCESSFUL!")
-        print("✅ Phase 1 + Phase 2 fully integrated and production-ready")
-        print("🚀 Ready for performance testing and production deployment")
+        logger.debug("\n🎉 INTEGRATION SUCCESSFUL!")
+        logger.info("✅ Phase 1 + Phase 2 fully integrated and production-ready")
+        logger.info("🚀 Ready for performance testing and production deployment")
         return True
     else:
-        print("\n⚠️ INTEGRATION ISSUES DETECTED")
-        print("🔧 Some integration issues found - review before proceeding")
+        logger.debug("\n⚠️ INTEGRATION ISSUES DETECTED")
+        logger.debug("🔧 Some integration issues found - review before proceeding")
         return False
 
 if __name__ == "__main__":
