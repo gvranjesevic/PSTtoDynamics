@@ -3,9 +3,13 @@ Unit tests for the sync monitoring dashboard components.
 """
 
 import unittest
+import sys
+import os
 from datetime import datetime
-from PyQt5.QtWidgets import QApplication
-from PyQt5.QtCore import Qt
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from PyQt6.QtWidgets import QApplication
+from PyQt6.QtCore import Qt
 from sync.sync_engine import SyncEngine
 from gui.widgets.sync_monitoring_dashboard import (
     SyncMetricsWidget,

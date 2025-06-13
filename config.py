@@ -7,13 +7,49 @@ Modify these settings based on your environment and requirements.
 """
 
 import os
+from typing import Optional
 
 # === DYNAMICS 365 AUTHENTICATION ===
-USERNAME = "gvranjesevic@dynamique.com"
-PASSWORD = "#SanDiegoChicago77"  # TODO: Move to secure storage in production
-TENANT_DOMAIN = "dynamique.com"
-CLIENT_ID = "51f81489-12ee-4a9e-aaae-a2591f45987d"
-CRM_BASE_URL = "https://dynglobal.crm.dynamics.com/api/data/v9.2"
+USERNAME = os.getenv("DYNAMICS_USERNAME", "gvranjesevic@dynamique.com")
+PASSWORD = os.getenv("DYNAMICS_PASSWORD")  # Now uses environment variable for security
+TENANT_DOMAIN = os.getenv("DYNAMICS_TENANT_DOMAIN", "dynamique.com")
+CLIENT_ID = os.getenv("DYNAMICS_CLIENT_ID", "51f81489-12ee-4a9e-aaae-a2591f45987d")
+CRM_BASE_URL = os.getenv("DYNAMICS_CRM_URL", "https://dynglobal.crm.dynamics.com/api/data/v9.2")
+
+# === SECURE CREDENTIAL MANAGEMENT ===
+def get_secure_password() -> Optional[str]:
+    """
+    Get password from secure storage or environment variable.
+    Priority: Environment Variable > Keyring > User Input
+    """
+    # First try environment variable
+    password = os.getenv("DYNAMICS_PASSWORD")
+    if password:
+        return password
+    
+    # Try keyring for secure storage (optional dependency)
+    try:
+        import keyring
+        password = keyring.get_password("PST-to-Dynamics", USERNAME)
+        if password:
+            return password
+    except ImportError:
+        pass  # keyring not available
+    
+    # If no secure storage available, prompt user (GUI will handle this)
+    return None
+
+def set_secure_password(password: str) -> bool:
+    """
+    Store password securely using keyring if available.
+    Returns True if stored successfully, False otherwise.
+    """
+    try:
+        import keyring
+        keyring.set_password("PST-to-Dynamics", USERNAME, password)
+        return True
+    except ImportError:
+        return False  # keyring not available
 
 # === PST FILE CONFIGURATION ===
 DEFAULT_PST_PATH = r"C:\Users\gvran\Desktop\Old PST Files\gvranjesevic@mvp4me.com.pst"
@@ -76,8 +112,11 @@ def validate_config():
     if BATCH_SIZE < 1 or BATCH_SIZE > 1000:
         errors.append("BATCH_SIZE must be between 1 and 1000")
     
-    if not USERNAME or not PASSWORD:
-        errors.append("USERNAME and PASSWORD must be configured")
+    if not USERNAME:
+        errors.append("USERNAME must be configured")
+    
+    if not get_secure_password():
+        errors.append("PASSWORD must be configured via environment variable DYNAMICS_PASSWORD or secure storage")
     
     return errors
 

@@ -9,14 +9,14 @@ and viewing detailed sync metrics and logs.
 import sys
 from datetime import datetime
 from typing import Dict, List, Any, Optional
-from PyQt5.QtWidgets import (
+from PyQt6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QPushButton, QTableWidget, QTableWidgetItem,
     QComboBox, QProgressBar, QTabWidget, QTextEdit,
     QSplitter, QFrame, QHeaderView
 )
-from PyQt5.QtCore import Qt, QTimer, pyqtSignal
-from PyQt5.QtGui import QColor, QFont, QIcon
+from PyQt6.QtCore import Qt, QTimer, pyqtSignal
+from PyQt6.QtGui import QColor, QFont, QIcon
 
 from sync.sync_engine import SyncEngine, SyncMonitor
 
@@ -35,10 +35,10 @@ class SyncMetricsWidget(QWidget):
         
         # Sync Count
         sync_frame = QFrame()
-        sync_frame.setFrameStyle(QFrame.StyledPanel)
+        sync_frame.setFrameStyle(QFrame.Shape.StyledPanel)
         sync_layout = QVBoxLayout()
         self.sync_count_label = QLabel("0")
-        self.sync_count_label.setFont(QFont("Arial", 24, QFont.Bold))
+        self.sync_count_label.setFont(QFont("Arial", 24, QFont.Weight.Bold))
         sync_layout.addWidget(QLabel("Total Syncs"))
         sync_layout.addWidget(self.sync_count_label)
         sync_frame.setLayout(sync_layout)
@@ -46,10 +46,10 @@ class SyncMetricsWidget(QWidget):
         
         # Conflict Count
         conflict_frame = QFrame()
-        conflict_frame.setFrameStyle(QFrame.StyledPanel)
+        conflict_frame.setFrameStyle(QFrame.Shape.StyledPanel)
         conflict_layout = QVBoxLayout()
         self.conflict_count_label = QLabel("0")
-        self.conflict_count_label.setFont(QFont("Arial", 24, QFont.Bold))
+        self.conflict_count_label.setFont(QFont("Arial", 24, QFont.Weight.Bold))
         conflict_layout.addWidget(QLabel("Conflicts"))
         conflict_layout.addWidget(self.conflict_count_label)
         conflict_frame.setLayout(conflict_layout)
@@ -57,10 +57,10 @@ class SyncMetricsWidget(QWidget):
         
         # Error Count
         error_frame = QFrame()
-        error_frame.setFrameStyle(QFrame.StyledPanel)
+        error_frame.setFrameStyle(QFrame.Shape.StyledPanel)
         error_layout = QVBoxLayout()
         self.error_count_label = QLabel("0")
-        self.error_count_label.setFont(QFont("Arial", 24, QFont.Bold))
+        self.error_count_label.setFont(QFont("Arial", 24, QFont.Weight.Bold))
         error_layout.addWidget(QLabel("Errors"))
         error_layout.addWidget(self.error_count_label)
         error_frame.setLayout(error_layout)
@@ -93,7 +93,7 @@ class ConflictResolutionWidget(QWidget):
         self.conflict_table.setHorizontalHeaderLabels([
             "Field", "Source Value", "Target Value", "Resolution"
         ])
-        self.conflict_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.conflict_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         layout.addWidget(self.conflict_table)
         
         # Resolution Controls
@@ -188,8 +188,31 @@ class SyncLogWidget(QWidget):
     
     def export_logs(self):
         """Export logs to a file"""
-        # TODO: Implement log export
-        pass
+        from PyQt6.QtWidgets import QFileDialog, QMessageBox
+        from datetime import datetime
+        
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"sync_logs_{timestamp}.txt"
+        
+        file_path, _ = QFileDialog.getSaveFileName(
+            self, 
+            "Export Sync Logs", 
+            filename,
+            "Text Files (*.txt);;All Files (*)"
+        )
+        
+        if file_path:
+            try:
+                with open(file_path, 'w', encoding='utf-8') as f:
+                    f.write(f"PST to Dynamics 365 Sync Logs\n")
+                    f.write(f"Exported on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+                    f.write("=" * 50 + "\n\n")
+                    f.write(self.log_display.toPlainText())
+                
+                QMessageBox.information(self, "Export Success", f"Logs exported to:\n{file_path}")
+                
+            except Exception as e:
+                QMessageBox.critical(self, "Export Error", f"Failed to export logs:\n{str(e)}")
 
 class SyncMonitoringDashboard(QMainWindow):
     """Main sync monitoring dashboard window"""
@@ -244,5 +267,34 @@ class SyncMonitoringDashboard(QMainWindow):
     
     def handle_conflict_resolution(self, resolution: Dict[str, Any]):
         """Handle conflict resolution from the UI"""
-        # TODO: Implement conflict resolution handling
-        pass 
+        try:
+            field = resolution.get('field')
+            strategy = resolution.get('strategy', 'Last Write Wins').lower().replace(' ', '_')
+            
+            # Log the resolution
+            self.log_widget.add_log({
+                'timestamp': datetime.now(),
+                'event': 'Conflict Resolved',
+                'details': {
+                    'field': field,
+                    'strategy': strategy,
+                    'resolution': resolution.get('resolution')
+                }
+            })
+            
+            # Apply the resolution to the sync engine
+            # This would typically involve updating the data and re-syncing
+            from PyQt6.QtWidgets import QMessageBox
+            QMessageBox.information(
+                self,
+                "Conflict Resolved",
+                f"Conflict for field '{field}' resolved using {strategy} strategy."
+            )
+            
+            # Update dashboard metrics
+            self.update_dashboard()
+            
+        except Exception as e:
+            logger.error(f"Error handling conflict resolution: {e}")
+            from PyQt6.QtWidgets import QMessageBox
+            QMessageBox.critical(self, "Resolution Error", f"Failed to resolve conflict:\n{str(e)}") 

@@ -5,6 +5,9 @@
 PyQt6>=6.6.0
 PyQt6-tools>=6.4.2
 
+# SVG Support for icons
+PyQt6-Qt6>=6.6.0
+
 # Advanced Charts and Visualizations
 pyqtgraph>=0.13.0
 
@@ -19,4 +22,7 @@ pyinstaller>=6.0.0
 
 # Additional GUI utilities
 pillow>=10.0.0  # Image processing for icons/graphics
-darkdetect>=0.8.0  # System theme detection 
+darkdetect>=0.8.0  # System theme detection
+
+# Secure password storage
+keyring>=24.0.0 

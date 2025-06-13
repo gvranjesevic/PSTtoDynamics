@@ -275,18 +275,139 @@ class DataValidator:
         """Check if two data dicts are consistent (all fields match)."""
         return data1 == data2
 
-# --- Integration Stubs ---
+# --- Integration Implementations ---
 class PSTDataSource:
-    """Stub for PST data source integration."""
+    """PST data source integration using existing PST reader."""
+    
+    def __init__(self, pst_path: str = None):
+        self.pst_path = pst_path
+        if not pst_path:
+            from config import CURRENT_PST_PATH
+            self.pst_path = CURRENT_PST_PATH
+    
     def get_contact(self, contact_id: str) -> Dict[str, Any]:
-        # TODO: Implement actual PST reading
-        return {'id': contact_id, 'name': 'PST User', 'email': 'pst@example.com'}
+        """Get contact data from PST file."""
+        try:
+            from pst_reader import PSTReader
+            reader = PSTReader(self.pst_path)
+            
+            # Search for emails related to this contact
+            emails = reader.get_emails_by_sender(contact_id)
+            if emails:
+                # Extract contact info from the first email
+                email = emails[0]
+                return {
+                    'id': contact_id,
+                    'name': email.get('sender_name', ''),
+                    'email': contact_id,
+                    'last_contact': email.get('received_time'),
+                    'email_count': len(emails)
+                }
+            else:
+                return {'id': contact_id, 'name': '', 'email': contact_id}
+                
+        except Exception as e:
+            logger.error(f"Error reading PST contact {contact_id}: {e}")
+            return {'id': contact_id, 'name': 'PST User', 'email': contact_id, 'error': str(e)}
+    
+    def get_emails_for_contact(self, contact_email: str, limit: int = 100) -> List[Dict[str, Any]]:
+        """Get emails for a specific contact from PST."""
+        try:
+            from pst_reader import PSTReader
+            reader = PSTReader(self.pst_path)
+            return reader.get_emails_by_sender(contact_email, limit=limit)
+        except Exception as e:
+            logger.error(f"Error reading PST emails for {contact_email}: {e}")
+            return []
 
 class DynamicsDataSource:
-    """Stub for Dynamics 365 data source integration."""
+    """Dynamics 365 data source integration using existing auth system."""
+    
+    def __init__(self):
+        self.access_token = None
+        self._authenticate()
+    
+    def _authenticate(self):
+        """Authenticate with Dynamics 365."""
+        try:
+            from auth import get_access_token
+            from config import get_secure_password, USERNAME
+            
+            password = get_secure_password()
+            if not password:
+                raise ValueError("No password configured for Dynamics authentication")
+            
+            self.access_token = get_access_token(USERNAME, password)
+            if not self.access_token:
+                raise ValueError("Failed to authenticate with Dynamics 365")
+                
+        except Exception as e:
+            logger.error(f"Dynamics authentication failed: {e}")
+            raise
+    
     def get_contact(self, contact_id: str) -> Dict[str, Any]:
-        # TODO: Implement actual Dynamics 365 API call
-        return {'id': contact_id, 'name': 'Dynamics User', 'email': 'dynamics@example.com'}
+        """Get contact data from Dynamics 365."""
+        try:
+            from dynamics_data import DynamicsDataManager
+            
+            if not self.access_token:
+                self._authenticate()
+            
+            manager = DynamicsDataManager(self.access_token)
+            contact = manager.get_contact_by_email(contact_id)
+            
+            if contact:
+                return {
+                    'id': contact_id,
+                    'name': contact.get('fullname', ''),
+                    'email': contact_id,
+                    'dynamics_id': contact.get('contactid'),
+                    'last_modified': contact.get('modifiedon'),
+                    'created_on': contact.get('createdon')
+                }
+            else:
+                return {'id': contact_id, 'name': 'Dynamics User', 'email': contact_id}
+                
+        except Exception as e:
+            logger.error(f"Error reading Dynamics contact {contact_id}: {e}")
+            return {'id': contact_id, 'name': 'Dynamics User', 'email': contact_id, 'error': str(e)}
+    
+    def create_contact(self, contact_data: Dict[str, Any]) -> bool:
+        """Create a new contact in Dynamics 365."""
+        try:
+            from contact_creator import ContactCreator
+            
+            if not self.access_token:
+                self._authenticate()
+            
+            creator = ContactCreator(self.access_token)
+            result = creator.create_contact_from_email(
+                contact_data.get('email', ''),
+                contact_data.get('name', '')
+            )
+            
+            return result.get('success', False)
+            
+        except Exception as e:
+            logger.error(f"Error creating Dynamics contact: {e}")
+            return False
+    
+    def import_email(self, email_data: Dict[str, Any], contact_id: str) -> bool:
+        """Import an email to Dynamics 365."""
+        try:
+            from email_importer import EmailImporter
+            
+            if not self.access_token:
+                self._authenticate()
+            
+            importer = EmailImporter(self.access_token)
+            result = importer.import_single_email(email_data, contact_id)
+            
+            return result.get('success', False)
+            
+        except Exception as e:
+            logger.error(f"Error importing email to Dynamics: {e}")
+            return False
 
 # Stub for dashboard/reporting interface
 class SyncDashboard:

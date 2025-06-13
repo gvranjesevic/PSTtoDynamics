@@ -46,6 +46,14 @@ except ImportError as e:
     BACKEND_AVAILABLE = False
     print(f"⚠️ Backend modules not available: {e}")
 
+# Import application icon
+try:
+    from gui.resources.app_icon import get_app_icon, get_app_pixmap
+    ICON_AVAILABLE = True
+except ImportError:
+    ICON_AVAILABLE = False
+    print("⚠️ Application icon not available")
+
 # Add import for the sync monitoring dashboard
 from gui.widgets.sync_monitoring_dashboard import SyncMonitoringDashboard
 from sync.sync_engine import SyncEngine
@@ -617,6 +625,13 @@ class MainWindow(QMainWindow):
         """Setup the main window interface"""
         self.setWindowTitle("PST to Dynamics 365 - AI Email Import System")
         self.setGeometry(100, 100, 1400, 900)
+        
+        # Set application icon
+        try:
+            from gui.resources.app_icon import get_app_icon
+            self.setWindowIcon(get_app_icon(32))
+        except ImportError:
+            pass  # Fallback to default icon
         
         # Central widget with splitter
         central_widget = QWidget()

@@ -1,0 +1,23 @@
+# PST to Dynamics 365 Import System - Environment Configuration
+# Copy this file to .env and fill in your actual values
+# Never commit the .env file to version control
+
+# === DYNAMICS 365 AUTHENTICATION ===
+DYNAMICS_USERNAME=your.email@company.com
+DYNAMICS_PASSWORD=your_secure_password_here
+DYNAMICS_TENANT_DOMAIN=company.com
+DYNAMICS_CLIENT_ID=your-client-id-here
+DYNAMICS_CRM_URL=https://yourorg.crm.dynamics.com/api/data/v9.2
+
+# === OPTIONAL CONFIGURATION ===
+# Override default PST file path
+# PST_FILE_PATH=C:\path\to\your\file.pst
+
+# Override default log level (DEBUG, INFO, WARNING, ERROR)
+# LOG_LEVEL=INFO
+
+# Override default batch size (1-1000)
+# BATCH_SIZE=50
+
+# Enable/disable test mode (true/false)
+# TEST_MODE=true 
