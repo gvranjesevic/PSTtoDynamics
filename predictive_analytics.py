@@ -1156,20 +1156,20 @@ if __name__ == "__main__":
         forecast_days=30
     )
     
-    print("\n=== PREDICTIVE ANALYTICS RESULTS ===")
-    print(f"Timeline predictions: {len(results['timeline_predictions'])}")
-    print(f"Sender forecasts: {len(results['sender_forecasts'])}")
-    print(f"Business insights: {len(results['business_insights'])}")
-    print(f"Import predictions: {len(results['import_predictions'])}")
+    logger.debug("\n=== PREDICTIVE ANALYTICS RESULTS ===")
+    logger.debug("Timeline predictions: {len(results['timeline_predictions'])}")
+    logger.debug("Sender forecasts: {len(results['sender_forecasts'])}")
+    logger.debug("Business insights: {len(results['business_insights'])}")
+    logger.debug("Import predictions: {len(results['import_predictions'])}")
     
-    print("\n=== PREDICTIVE SUMMARY ===")
+    logger.debug("\n=== PREDICTIVE SUMMARY ===")
     summary = results['summary']
     for category, data in summary.items():
         if isinstance(data, dict):
-            print(f"{category.upper()}:")
+            logger.debug("{category.upper()}:")
             for key, value in data.items():
-                print(f"  {key}: {value}")
+                logger.debug("  {key}: {value}")
         else:
-            print(f"{category}: {data}")
+            logger.debug("{category}: {data}")
     
-    print("\n✅ Predictive Analytics Engine Phase 4.3 testing completed successfully!") 
+    logger.debug("\n✅ Predictive Analytics Engine Phase 4.3 testing completed successfully!") 

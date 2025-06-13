@@ -1,3 +1,4 @@
+
 """
 PST Reader Module
 ================
@@ -6,7 +7,10 @@ Handles reading and extracting emails from PST files using Outlook COM.
 """
 
 import win32com.client
+import logging
 import os
+
+logger = logging.getLogger(__name__)
 import re
 from typing import Dict, List, Optional
 from collections import defaultdict
@@ -40,11 +44,11 @@ class PSTReader:
             bool: True if connection successful, False otherwise
         """
         if not os.path.exists(self.pst_path):
-            print(f"❌ PST file not found: {self.pst_path}")
+            logger.error("❌ PST file not found: {self.pst_path}")
             return False
         
         try:
-            print(f"📁 Connecting to PST: {self.pst_path}")
+            logger.info("📁 Connecting to PST: {self.pst_path}")
             
             # Initialize Outlook application
             self.outlook = win32com.client.Dispatch("Outlook.Application")
@@ -54,13 +58,13 @@ class PSTReader:
             for store in self.namespace.Stores:
                 if self.pst_path.lower() in str(store.FilePath).lower():
                     self.pst_store = store
-                    print("   ✅ PST already loaded in Outlook")
+                    logger.debug("   ✅ PST already loaded in Outlook")
                     return True
             
             # If not loaded, add it temporarily
             self.namespace.AddStore(self.pst_path)
             self.temp_store_added = True
-            print("   ✅ PST temporarily added to Outlook")
+            logger.debug("   ✅ PST temporarily added to Outlook")
             
             # Find the newly added store
             for store in self.namespace.Stores:
@@ -68,11 +72,11 @@ class PSTReader:
                     self.pst_store = store
                     return True
             
-            print("   ❌ Could not access PST store after adding")
+            logger.debug("   ❌ Could not access PST store after adding")
             return False
             
         except Exception as e:
-            print(f"❌ Error connecting to PST: {e}")
+            logger.error("❌ Error connecting to PST: {e}")
             return False
     
     def disconnect(self):
@@ -80,9 +84,9 @@ class PSTReader:
         if self.temp_store_added and self.pst_store:
             try:
                 self.namespace.RemoveStore(self.pst_store.StoreID)
-                print("   🧹 Cleaned up temporary PST store")
+                logger.debug("   🧹 Cleaned up temporary PST store")
             except Exception as e:
-                print(f"   ⚠️ Could not clean up PST store: {e}")
+                logger.debug("   ⚠️ Could not clean up PST store: {e}")
         
         self.outlook = None
         self.namespace = None
@@ -140,7 +144,7 @@ class PSTReader:
                         sender_email = self.extract_email_address(recipient.Address)
                         if sender_email:
                             break
-            except:
+            except (AttributeError, TypeError, ValueError):
                 pass
         
         # Method 3: Try Sender property
@@ -148,7 +152,7 @@ class PSTReader:
             try:
                 if hasattr(item.Sender, 'Address'):
                     sender_email = self.extract_email_address(item.Sender.Address)
-            except:
+            except (AttributeError, TypeError, ValueError):
                 pass
         
         return sender_email
@@ -204,7 +208,7 @@ class PSTReader:
                     message_id = item.PropertyAccessor.GetProperty("http://schemas.microsoft.com/mapi/proptag/0x1035001E")
                     if message_id:
                         return message_id.strip('<>')
-                except:
+                except (Exception, AttributeError, TypeError, ValueError):
                     pass
             
             # Try Internet Message-ID property  
@@ -212,7 +216,7 @@ class PSTReader:
                 message_id = item.PropertyAccessor.GetProperty("http://schemas.microsoft.com/mapi/proptag/0x1035001F")
                 if message_id:
                     return message_id.strip('<>')
-            except:
+            except (Exception, AttributeError, TypeError, ValueError):
                 pass
                 
             # Alternative property tags for Message-ID
@@ -226,7 +230,7 @@ class PSTReader:
                     message_id = item.PropertyAccessor.GetProperty(prop)
                     if message_id:
                         return message_id.strip('<>')
-                except:
+                except (Exception, AttributeError, TypeError, ValueError):
                     continue
                     
         except Exception as e:
@@ -261,7 +265,7 @@ class PSTReader:
                     return_path = item.PropertyAccessor.GetProperty("http://schemas.microsoft.com/mapi/proptag/0x1046001E")
                     if return_path:
                         headers['Return-Path'] = return_path
-                except:
+                except (Exception, AttributeError, TypeError, ValueError):
                     pass
                 
                 try:
@@ -269,7 +273,7 @@ class PSTReader:
                     reply_to = item.PropertyAccessor.GetProperty("http://schemas.microsoft.com/mapi/proptag/0x1042001E")
                     if reply_to:
                         headers['Reply-To'] = reply_to
-                except:
+                except (Exception, AttributeError, TypeError, ValueError):
                     pass
                     
         except Exception as e:
@@ -294,7 +298,7 @@ class PSTReader:
         indent = "   " + "  " * depth
         
         try:
-            print(f"{indent}📁 Scanning folder: {folder.Name}")
+            logger.debug("{indent}📁 Scanning folder: {folder.Name}")
             items = folder.Items
             
             folder_emails = 0
@@ -340,22 +344,22 @@ class PSTReader:
                     
                     # Progress indicator
                     if total_emails % 50 == 0:
-                        print(f"   📧 Processed {total_emails} emails so far...")
+                        logger.debug("   📧 Processed {total_emails} emails so far...")
                         
                 except Exception as e:
-                    print(f"{indent}  ⚠️ Error processing email: {e}")
+                    logger.debug("{indent}  ⚠️ Error processing email: {e}")
             
-            print(f"{indent}  ✅ Found {folder_emails} emails in this folder")
+            logger.debug("{indent}  ✅ Found {folder_emails} emails in this folder")
             
             # Recursively scan subfolders
             try:
                 for subfolder in folder.Folders:
                     total_emails = self._scan_folder_recursive(subfolder, emails_by_sender, total_emails, depth + 1)
             except Exception as e:
-                print(f"{indent}  ⚠️ Error scanning subfolders: {e}")
+                logger.debug("{indent}  ⚠️ Error scanning subfolders: {e}")
                 
         except Exception as e:
-            print(f"{indent}❌ Error scanning folder {folder.Name}: {e}")
+            logger.debug("{indent}❌ Error scanning folder {folder.Name}: {e}")
         
         return total_emails
     
@@ -370,32 +374,32 @@ class PSTReader:
             if not self.connect():
                 return {}
         
-        print(f"📧 Starting email scan...")
+        logger.info("📧 Starting email scan...")
         
         emails_by_sender = defaultdict(list)
         total_emails = 0
         
         try:
             root_folder = self.pst_store.GetRootFolder()
-            print(f"   📂 Root folder: {root_folder.Name}")
+            logger.debug("   📂 Root folder: {root_folder.Name}")
             
             total_emails = self._scan_folder_recursive(root_folder, emails_by_sender, total_emails)
             
-            print(f"\n✅ PST scan complete!")
-            print(f"   📧 Total emails found: {total_emails}")
-            print(f"   👥 Unique senders: {len(emails_by_sender)}")
+            logger.debug("\n✅ PST scan complete!")
+            logger.debug("   📧 Total emails found: {total_emails}")
+            logger.debug("   👥 Unique senders: {len(emails_by_sender)}")
             
             # Show top senders
             if emails_by_sender:
-                print(f"\n📊 Top email senders:")
+                logger.debug("\n📊 Top email senders:")
                 sorted_senders = sorted(emails_by_sender.items(), key=lambda x: len(x[1]), reverse=True)
                 for i, (sender, emails) in enumerate(sorted_senders[:10]):
-                    print(f"   {i+1:2d}. {sender:<40} ({len(emails):3d} emails)")
+                    logger.debug("   {i+1:2d}. {sender:<40} ({len(emails):3d} emails)")
             
             return dict(emails_by_sender)
             
         except Exception as e:
-            print(f"❌ Error during PST scan: {e}")
+            logger.error("❌ Error during PST scan: {e}")
             return {}
 
 

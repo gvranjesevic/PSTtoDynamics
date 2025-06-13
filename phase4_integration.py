@@ -668,14 +668,14 @@ if __name__ == "__main__":
     
     # Train the system first
     training_results = phase4_system.train_system_intelligence()
-    print("\n=== PHASE 4 SYSTEM TRAINING ===")
-    print(f"Training timestamp: {training_results['timestamp']}")
-    print("Training Results:")
+    logger.debug("\n=== PHASE 4 SYSTEM TRAINING ===")
+    logger.debug("Training timestamp: {training_results['timestamp']}")
+    logger.debug("Training Results:")
     for component, result in training_results.get('training_results', {}).items():
-        print(f"  {component}: {result}")
-    print("Recommendations:")
+        logger.debug("  {component}: {result}")
+    logger.debug("Recommendations:")
     for rec in training_results.get('recommendations', []):
-        print(f"  - {rec}")
+        logger.debug("  - {rec}")
     
     # Test intelligent import
     sample_emails = [
@@ -711,32 +711,32 @@ if __name__ == "__main__":
         import_config={'enable_ml': True, 'enable_optimization': True, 'enable_predictions': True}
     )
     
-    print(f"\n=== INTELLIGENT IMPORT RESULTS ===")
-    print(f"Session ID: {results['session_id']}")
+    logger.debug("\n=== INTELLIGENT IMPORT RESULTS ===")
+    logger.debug("Session ID: {results['session_id']}")
     
     # Pre-analysis results
     pre_analysis = results.get('pre_analysis', {})
-    print(f"ML Analysis: {len(pre_analysis.get('ml_analysis', {}))} components")
-    print(f"Optimization: {len(pre_analysis.get('optimization', {}))} metrics")
-    print(f"Predictions: {len(pre_analysis.get('predictions', {}))} forecasts")
-    print(f"Recommendations: {len(pre_analysis.get('recommendations', []))}")
+    logger.debug("ML Analysis: {len(pre_analysis.get('ml_analysis', {}))} components")
+    logger.debug("Optimization: {len(pre_analysis.get('optimization', {}))} metrics")
+    logger.debug("Predictions: {len(pre_analysis.get('predictions', {}))} forecasts")
+    logger.debug("Recommendations: {len(pre_analysis.get('recommendations', []))}")
     
     # Import results
     import_results = results.get('import_results', {})
     actual_import = import_results.get('import_results', {})
-    print(f"Successful emails: {actual_import.get('successful_emails', 0)}")
-    print(f"Failed emails: {actual_import.get('failed_emails', 0)}")
-    print(f"Processing time: {actual_import.get('processing_time', 0):.1f}s")
+    logger.debug("Successful emails: {actual_import.get('successful_emails', 0)}")
+    logger.debug("Failed emails: {actual_import.get('failed_emails', 0)}")
+    logger.debug("Processing time: {actual_import.get('processing_time', 0):.1f}s")
     
     # System status
     system_status = results.get('final_summary', {})
-    print(f"System ready: {system_status.get('system_ready', False)}")
-    print(f"Active sessions: {system_status.get('active_sessions', 0)}")
+    logger.debug("System ready: {system_status.get('system_ready', False)}")
+    logger.debug("Active sessions: {system_status.get('active_sessions', 0)}")
     
     capabilities = system_status.get('capabilities', {})
-    print("Capabilities:")
+    logger.debug("Capabilities:")
     for capability, enabled in capabilities.items():
-        print(f"  {capability}: {'✅' if enabled else '❌'}")
+        logger.debug("  {capability}: {'✅' if enabled else '❌'}")
     
-    print("\n✅ Phase 4 Integration testing completed successfully!")
-    print("🚀 Complete intelligent email import system is operational!") 
+    logger.debug("\n✅ Phase 4 Integration testing completed successfully!")
+    logger.info("🚀 Complete intelligent email import system is operational!") 

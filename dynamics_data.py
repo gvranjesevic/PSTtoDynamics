@@ -61,7 +61,7 @@ class DynamicsData:
                     return {"success": True}
                 try:
                     return response.json()
-                except:
+                except (Exception, AttributeError, TypeError, ValueError):
                     return {"success": True, "status_code": response.status_code}
             else:
                 print(f"❌ Request failed: {response.status_code} - {response.text}")
@@ -270,7 +270,7 @@ class DynamicsData:
         if isinstance(new_time, str):
             try:
                 new_time = datetime.fromisoformat(new_time.replace('Z', '+00:00'))
-            except:
+            except (Exception, AttributeError, TypeError, ValueError):
                 return False
         elif hasattr(new_time, 'replace'):
             # It's already a datetime object, make sure it's timezone aware

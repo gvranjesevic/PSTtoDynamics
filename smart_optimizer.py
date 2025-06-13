@@ -730,7 +730,7 @@ class SmartImportOptimizer:
                              ((datetime.now() - timedelta(hours=24)).isoformat(),))
                 summary['optimization_status']['recommendations_generated'] = cursor.fetchone()[0]
                 conn.close()
-            except:
+            except (Exception, AttributeError, TypeError, ValueError):
                 pass
             
             return summary
@@ -816,14 +816,14 @@ if __name__ == "__main__":
         characteristics={'has_attachments': True, 'avg_size': 50000}
     )
     
-    print("\n=== SMART OPTIMIZATION RESULTS ===")
-    print(f"Optimized batch size: {test_result['optimized_batch_size']}")
-    print(f"Estimated duration: {test_result['estimated_duration']:.1f} seconds")
-    print(f"Predicted memory usage: {test_result['predicted_resources']['memory']:.1%}")
-    print(f"Predicted CPU usage: {test_result['predicted_resources']['cpu']:.1%}")
-    print(f"Confidence: {test_result['confidence']:.1%}")
-    print(f"Risk factors: {len(test_result['risk_factors'])}")
-    print(f"Recommendations: {len(test_result['recommendations'])}")
+    logger.debug("\n=== SMART OPTIMIZATION RESULTS ===")
+    logger.debug("Optimized batch size: {test_result['optimized_batch_size']}")
+    logger.debug("Estimated duration: {test_result['estimated_duration']:.1f} seconds")
+    logger.debug("Predicted memory usage: {test_result['predicted_resources']['memory']:.1%}")
+    logger.debug("Predicted CPU usage: {test_result['predicted_resources']['cpu']:.1%}")
+    logger.debug("Confidence: {test_result['confidence']:.1%}")
+    logger.debug("Risk factors: {len(test_result['risk_factors'])}")
+    logger.debug("Recommendations: {len(test_result['recommendations'])}")
     
     # Simulate batch tracking
     batch_id = smart_optimizer.start_batch_tracking(50, 150)
@@ -831,12 +831,12 @@ if __name__ == "__main__":
     
     tracking_result = track_import_performance(batch_id, 150, 145, 5, 45.0)
     
-    print(f"\n=== PERFORMANCE TRACKING ===")
-    print(f"Batch ID: {tracking_result['batch_id']}")
-    print(f"Performance tracked: {tracking_result['performance_tracked']}")
-    print(f"Recommendations available: {tracking_result['recommendations_available']}")
+    logger.debug("\n=== PERFORMANCE TRACKING ===")
+    logger.debug("Batch ID: {tracking_result['batch_id']}")
+    logger.debug("Performance tracked: {tracking_result['performance_tracked']}")
+    logger.debug("Recommendations available: {tracking_result['recommendations_available']}")
     
     # Stop monitoring
     smart_optimizer.stop_performance_monitoring()
     
-    print("\n✅ Smart Import Optimizer Phase 4.2 testing completed successfully!") 
+    logger.debug("\n✅ Smart Import Optimizer Phase 4.2 testing completed successfully!") 

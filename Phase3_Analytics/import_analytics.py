@@ -28,7 +28,7 @@ import sys
 
 # Add parent directory to path for imports
 sys.path.append('..')
-from config import *
+import config
 
 # Optional psutil for resource monitoring
 try:

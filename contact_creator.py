@@ -222,7 +222,7 @@ class ContactCreator:
             
             return company_name
             
-        except:
+        except (Exception, AttributeError, TypeError, ValueError):
             return ''
     
     def _split_full_name(self, full_name: str) -> Dict:
