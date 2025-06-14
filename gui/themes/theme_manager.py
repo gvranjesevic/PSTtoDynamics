@@ -2,8 +2,6 @@
 Phase 5.7 Theme Management System
 =================================
 
-logger = logging.getLogger(__name__)
-
 Advanced theme engine supporting multiple themes with real-time switching,
 system integration, and enterprise customization capabilities.
 
@@ -22,6 +20,8 @@ Phase: 5.7
 import sys
 import logging
 import os
+
+logger = logging.getLogger(__name__)
 from typing import Dict, Any, Optional, Callable
 from enum import Enum
 from PyQt6.QtWidgets import QApplication, QWidget
@@ -34,6 +34,7 @@ class ThemeType(Enum):
     DARK = "dark"
     CORPORATE = "corporate"
     HIGH_CONTRAST = "high_contrast"
+    LINKEDIN_BLUE = "linkedin_blue"
     CUSTOM = "custom"
 
 class ThemeManager(QObject):
@@ -48,7 +49,7 @@ class ThemeManager(QObject):
     def __init__(self):
         super().__init__()
         self.settings = QSettings("Dynamique", "PSTtoDynamics365")
-        self.current_theme = ThemeType.LIGHT
+        self.current_theme = ThemeType.LINKEDIN_BLUE
         self.registered_widgets = []
         self.theme_definitions = {}
         
@@ -179,6 +180,63 @@ class ThemeManager(QObject):
                 'xxl': 52
             }
         }
+        
+        # LinkedIn Blue Theme Definition
+        self.theme_definitions[ThemeType.LINKEDIN_BLUE] = {
+            'name': 'LinkedIn Blue',
+            'description': 'Professional LinkedIn-inspired blue theme with modern aesthetics',
+            'colors': {
+                'primary': '#0077B5',        # LinkedIn signature blue
+                'secondary': '#005885',      # Darker LinkedIn blue
+                'accent': '#00A0DC',         # Lighter LinkedIn blue
+                'success': '#057642',        # LinkedIn green
+                'warning': '#F5C75D',        # LinkedIn gold
+                'error': '#CC1016',          # LinkedIn red
+                'neutral': '#666666',        # LinkedIn gray
+                'background': '#F3F6F8',     # LinkedIn light background
+                'surface': '#FFFFFF',        # Pure white surfaces
+                'surface_secondary': '#F9FAFB', # Slightly off-white
+                'text_primary': '#000000',   # LinkedIn black text
+                'text_secondary': '#666666', # LinkedIn gray text
+                'text_muted': '#999999',     # Muted text
+                'border': '#D0D7DE',         # LinkedIn border gray
+                'border_light': '#E8EBED',   # Lighter border
+                'shadow': 'rgba(0, 119, 181, 0.15)', # LinkedIn blue shadow
+                'hover': '#004471',          # Darker blue for hover states
+                'active': '#003A5C',         # Even darker for active states
+                'focus': '#0077B5',          # LinkedIn blue for focus
+                'disabled': '#CCCCCC'        # Disabled state
+            },
+            'fonts': {
+                'primary': 'Segoe UI',       # Professional font
+                'secondary': 'Arial',        # Fallback
+                'code': 'Consolas',          # Code font
+                'size_base': 14,
+                'size_small': 12,
+                'size_large': 16,
+                'size_title': 20,
+                'size_heading': 18,
+                'weight_normal': 400,
+                'weight_medium': 500,
+                'weight_bold': 600
+            },
+            'spacing': {
+                'xs': 4,
+                'sm': 8,
+                'md': 16,
+                'lg': 24,
+                'xl': 32,
+                'xxl': 48
+            },
+            'borders': {
+                'radius_small': 4,
+                'radius_medium': 8,
+                'radius_large': 12,
+                'width_thin': 1,
+                'width_medium': 2,
+                'width_thick': 3
+            }
+        }
     
     def _setup_system_detection(self):
         """Set up automatic system theme detection (Windows 10/11)"""
@@ -208,14 +266,14 @@ class ThemeManager(QObject):
     
     def _load_saved_theme(self):
         """Load previously saved theme preference"""
-        saved_theme = self.settings.value("theme/current", ThemeType.LIGHT.value)
+        saved_theme = self.settings.value("theme/current", ThemeType.LINKEDIN_BLUE.value)
         
         # Validate saved theme
         try:
             theme_type = ThemeType(saved_theme)
             self.current_theme = theme_type
         except ValueError:
-            self.current_theme = ThemeType.LIGHT
+            self.current_theme = ThemeType.LINKEDIN_BLUE
     
     def get_available_themes(self) -> Dict[ThemeType, Dict]:
         """Get all available themes with their metadata"""
@@ -267,7 +325,7 @@ class ThemeManager(QObject):
         # Emit signal
         self.theme_changed.emit(theme_type.value)
         
-        logger.info("✅ Theme changed from {old_theme.value} to {theme_type.value}")
+        logger.info(f"✅ Theme changed from {old_theme.value} to {theme_type.value}")
     
     def _apply_theme_to_application(self):
         """Apply current theme to the entire QApplication"""

@@ -66,6 +66,14 @@ except ImportError:
     THREAD_MANAGER_AVAILABLE = False
     logger.warning("⚠️ Thread manager not available")
 
+# Import theme manager
+try:
+    from gui.themes.theme_manager import ThemeManager, ThemeType
+    THEME_MANAGER_AVAILABLE = True
+except ImportError:
+    THEME_MANAGER_AVAILABLE = False
+    logger.warning("⚠️ Theme manager not available")
+
 # Add import for the sync monitoring dashboard
 from gui.widgets.sync_monitoring_dashboard import SyncMonitoringDashboard
 from sync.sync_engine import SyncEngine
@@ -557,6 +565,16 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.status_monitor = None
+        
+        # Initialize theme manager and set LinkedIn Blue theme
+        try:
+            from gui.themes.theme_manager import ThemeManager, ThemeType
+            self.theme_manager = ThemeManager()
+            self.theme_manager.set_theme(ThemeType.LINKEDIN_BLUE)
+            logger.info("✅ LinkedIn Blue theme applied")
+        except ImportError:
+            logger.warning("⚠️ Theme manager not available")
+        
         self.setup_ui()
         self.show_welcome_if_first_run()
         self.start_monitoring()

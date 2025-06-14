@@ -420,7 +420,7 @@ if __name__ == "__main__":
     # Test structured logging functions
     log_operation("email_import", "success", duration=45.2, email_count=150)
     log_performance("import_speed", 3.33, "emails/second", batch_size=50)
-    log_security_event("license_validation", "high", "Aspose license validated successfully")
+    log_security_event("pst_validation", "high", "PST file access validated successfully (win32com)")
     log_user_action("admin", "start_import", "pst_file", file_size="2.5GB")
     
     # Test exception logging

@@ -3,9 +3,6 @@
 PST-to-Dynamics 365 GUI Launcher
 ================================
 
-logger = logging.getLogger(__name__)
-
-Phase 5.1 Foundation Launch Script
 Quick launcher for the desktop GUI application.
 """
 
@@ -13,11 +10,17 @@ import sys
 import logging
 import os
 
+# Setup logging first
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+logger = logging.getLogger(__name__)
+
 # Add current directory to path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
-# Import Aspose license validator
-from aspose_license_validator import require_aspose_license
+# NOTE: Removed Aspose license validation - using free win32com.client instead
 
 def check_dependencies():
     """Check if all required dependencies are available"""
@@ -31,64 +34,51 @@ def check_dependencies():
         logger.error("❌ PyQt6: Not available")
     
     try:
-        import qtawesome
-        logger.info("✅ QtAwesome: Available")
-    except ImportError:
-        logger.warning("⚠️ QtAwesome: Not available (optional)")
-    
-    try:
         import pyqtgraph
         logger.info("✅ PyQtGraph: Available")
     except ImportError:
-        logger.warning("⚠️ PyQtGraph: Not available (optional)")
+        missing_deps.append("pyqtgraph")
+        logger.error("❌ PyQtGraph: Not available")
+    
+    try:
+        import win32com.client
+        logger.info("✅ win32com: Available (for PST reading)")
+    except ImportError:
+        missing_deps.append("pywin32")
+        logger.error("❌ win32com: Not available - install pywin32")
     
     if missing_deps:
-        logger.debug("\n❌ Missing required dependencies: {', '.join(missing_deps)}")
-        logger.debug("Please install with: pip install PyQt6")
+        logger.error(f"❌ Missing dependencies: {', '.join(missing_deps)}")
         return False
     
     return True
 
 def launch_gui():
-    """Launch the GUI application"""
+    """Launch the main GUI application"""
     logger.info("🚀 Launching PST-to-Dynamics 365 GUI...")
-    logger.debug("=" * 50)
     
-    # Validate Aspose license first (allow evaluation mode for testing)
-    try:
-        require_aspose_license(allow_evaluation=True)
-        logger.info("✅ Aspose.Email license validated")
-    except Exception as e:
-        logger.error(f"❌ Aspose.Email license validation failed: {e}")
-        logger.error("Please ensure you have a valid Aspose.Email license or are running in evaluation mode")
-        return 1
+    # NOTE: Removed Aspose license validation - using free win32com.client for PST reading
+    logger.info("✅ Using free win32com.client for PST processing")
     
     # Check dependencies
     if not check_dependencies():
-        return 1
+        logger.error("❌ Cannot launch - missing required dependencies")
+        input("Press Enter to exit...")
+        return
     
-    logger.debug("\n📋 Phase 5.1 Foundation Features:")
-    logger.debug("   ✅ Main window framework")
-    logger.debug("   ✅ Navigation sidebar")
-    logger.debug("   ✅ Menu and toolbar system")
-    logger.debug("   ✅ Status monitoring")
-    logger.debug("   ✅ Professional styling")
-    
-    logger.debug("\n🎯 Starting application...")
-    logger.debug("=" * 50)
-    
+    # Import and launch GUI
     try:
-        # Import and run the GUI
         from gui.main_window import main
-        return main()
+        logger.info("🎯 Starting main application...")
+        main()
         
     except ImportError as e:
-        logger.error("❌ Import error: {e}")
-        logger.debug("Please ensure all files are in the correct location.")
-        return 1
+        logger.error(f"❌ Could not import GUI modules: {e}")
+        input("Press Enter to exit...")
+        
     except Exception as e:
-        logger.error("❌ Startup error: {e}")
-        return 1
+        logger.error(f"❌ Application error: {e}")
+        input("Press Enter to exit...")
 
 if __name__ == "__main__":
-    sys.exit(launch_gui()) 
+    launch_gui() 

@@ -1,4 +1,3 @@
-aspose.email-for-python-via-net>=25.5,<26.0
 pandas>=2.0.3,<3.0
 python-dateutil>=2.8.2,<3.0
 tabulate>=0.9.0,<1.0
