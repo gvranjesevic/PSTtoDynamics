@@ -161,12 +161,10 @@ class TestNavigationFunctionality(unittest.TestCase):
             self.assertIsNotNone(selected_button)
     
     def test_status_update(self):
-        """Test status indicator updates"""
-        test_status = "Test Status"
-        test_color = "#ff0000"
-        
-        self.sidebar.update_status(test_status, test_color)
-        self.assertEqual(self.sidebar.status_label.text(), test_status)
+        """Test status indicator updates - SKIPPED: Status indicator removed for compact design"""
+        # Status indicator was removed from sidebar for more compact design
+        # Status updates now only go to the main status bar
+        self.skipTest("Status indicator removed from sidebar for compact design")
 
 
 class TestApplicationLaunch(unittest.TestCase):

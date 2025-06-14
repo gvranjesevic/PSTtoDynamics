@@ -2,8 +2,6 @@
 Phase 5.7 Performance Optimization System
 ========================================
 
-logger = logging.getLogger(__name__)
-
 Advanced performance optimization components for large datasets and responsive UI.
 
 Features:
@@ -34,6 +32,9 @@ from PyQt6.QtCore import (
     QAbstractTableModel, QModelIndex, QVariant
 )
 from PyQt6.QtGui import QPainter, QColor, QBrush
+
+# Setup logging
+logger = logging.getLogger(__name__)
 
 @dataclass
 class PerformanceMetrics:

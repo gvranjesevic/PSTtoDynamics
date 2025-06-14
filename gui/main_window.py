@@ -19,7 +19,7 @@ from PyQt6.QtWidgets import (
     QFrame, QScrollArea, QMessageBox, QProgressBar, QSizePolicy, QTextEdit,
     QDialog, QDialogButtonBox, QLineEdit, QToolButton
 )
-from PyQt6.QtCore import Qt, QTimer, pyqtSignal, QThread, QSize
+from PyQt6.QtCore import Qt, QTimer, pyqtSignal, QThread, QSize, QRect
 from PyQt6.QtGui import QIcon, QFont, QPixmap, QAction
 
 # Initialize logger after importing logging
@@ -74,6 +74,14 @@ except ImportError:
     THEME_MANAGER_AVAILABLE = False
     logger.warning("⚠️ Theme manager not available")
 
+# Import Windows overlay manager
+try:
+    from gui.windows_overlay_manager import create_overlay_manager
+    OVERLAY_MANAGER_AVAILABLE = True
+except ImportError:
+    OVERLAY_MANAGER_AVAILABLE = False
+    logger.warning("⚠️ Windows overlay manager not available")
+
 # Add import for the sync monitoring dashboard
 from gui.widgets.sync_monitoring_dashboard import SyncMonitoringDashboard
 from sync.sync_engine import SyncEngine
@@ -92,30 +100,12 @@ class NavigationSidebar(QFrame):
         
     def setup_ui(self):
         """Setup the navigation sidebar interface"""
-        self.setFixedWidth(220)
+        self.setFixedWidth(200)  # Reduced from 220 to 200 for more compact design
         self.setFrameStyle(QFrame.Shape.StyledPanel)
         
         layout = QVBoxLayout(self)
         layout.setSpacing(2)
-        layout.setContentsMargins(10, 10, 10, 10)
-        
-        # Application title/logo area
-        title_frame = QFrame()
-        title_layout = QVBoxLayout(title_frame)
-        
-        app_title = QLabel("PST to Dynamics 365")
-        app_title.setFont(QFont("Segoe UI", 14, QFont.Weight.Bold))
-        app_title.setStyleSheet("color: #2c3e50; margin: 10px 0px;")
-        app_title.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        
-        app_subtitle = QLabel("AI-Powered Email Import")
-        app_subtitle.setFont(QFont("Segoe UI", 9))
-        app_subtitle.setStyleSheet("color: #7f8c8d; margin-bottom: 20px;")
-        app_subtitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        
-        title_layout.addWidget(app_title)
-        title_layout.addWidget(app_subtitle)
-        layout.addWidget(title_frame)
+        layout.setContentsMargins(10, 15, 10, 10)  # Slightly more top margin for balance
         
         # Navigation buttons
         self.nav_buttons = {}
@@ -137,25 +127,13 @@ class NavigationSidebar(QFrame):
         # Spacer to push content to top
         layout.addStretch()
         
-        # Status indicator at bottom
-        status_frame = QFrame()
-        status_layout = QVBoxLayout(status_frame)
-        
-        self.status_label = QLabel("System Ready")
-        self.status_label.setFont(QFont("Segoe UI", 8))
-        self.status_label.setStyleSheet("color: #27ae60; padding: 5px;")
-        self.status_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        
-        status_layout.addWidget(self.status_label)
-        layout.addWidget(status_frame)
-        
         # Set initial selection
         self.select_nav_item("dashboard")
         
     def create_nav_button(self, nav_id: str, icon: str, title: str, description: str) -> QPushButton:
         """Create a professional navigation button"""
         btn = QPushButton()
-        btn.setFixedHeight(60)
+        btn.setFixedHeight(50)  # Reduced from 60 to 50 for more compact design
         btn.setToolTip(description)
         btn.setCursor(Qt.CursorShape.PointingHandCursor)
         
@@ -167,9 +145,9 @@ class NavigationSidebar(QFrame):
         btn.setStyleSheet("""
             QPushButton {
                 text-align: left;
-                padding: 10px 15px;
+                padding: 8px 12px;
                 border: none;
-                border-radius: 8px;
+                border-radius: 6px;
                 background-color: transparent;
                 color: #2c3e50;
             }
@@ -198,9 +176,9 @@ class NavigationSidebar(QFrame):
             btn.setStyleSheet("""
                 QPushButton {
                     text-align: left;
-                    padding: 10px 15px;
+                    padding: 8px 12px;
                     border: none;
-                    border-radius: 8px;
+                    border-radius: 6px;
                     background-color: transparent;
                     color: #2c3e50;
                 }
@@ -217,9 +195,9 @@ class NavigationSidebar(QFrame):
             self.nav_buttons[nav_id].setStyleSheet("""
                 QPushButton {
                     text-align: left;
-                    padding: 10px 15px;
+                    padding: 8px 12px;
                     border: none;
-                    border-radius: 8px;
+                    border-radius: 6px;
                     background-color: #3498db;
                     color: white;
                     font-weight: bold;
@@ -232,10 +210,9 @@ class NavigationSidebar(QFrame):
                 }
             """)
     
-    def update_status(self, status: str, color: str = "#27ae60"):
-        """Update the status indicator"""
-        self.status_label.setText(status)
-        self.status_label.setStyleSheet(f"color: {color}; padding: 5px;")
+    # def update_status(self, status: str, color: str = "#27ae60"):
+    #     """Update the status indicator - REMOVED: Status indicator removed for compact design"""
+    #     pass
 
 
 class ContentArea(QWidget):
@@ -362,8 +339,8 @@ class ContentArea(QWidget):
             
             # Create and add import wizard
             wizard = ImportWizard()
-            wizard.import_completed.connect(self.on_import_completed)
-            wizard.import_cancelled.connect(self.on_import_cancelled)
+            wizard.wizard_completed.connect(self.on_import_completed)
+            wizard.wizard_cancelled.connect(self.on_import_cancelled)
             self.active_widgets.append(wizard)
             self.layout.addWidget(wizard)
             
@@ -565,6 +542,7 @@ class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.status_monitor = None
+        self.overlay_manager = None
         
         # Initialize theme manager and set LinkedIn Blue theme
         try:
@@ -576,66 +554,365 @@ class MainWindow(QMainWindow):
             logger.warning("⚠️ Theme manager not available")
         
         self.setup_ui()
+        
+        # Initialize Windows overlay manager after UI setup
+        if OVERLAY_MANAGER_AVAILABLE:
+            self.overlay_manager = create_overlay_manager(self)
+            if self.overlay_manager:
+                logger.info("✅ Windows overlay manager initialized - Voice Access conflicts will be handled")
+                # Connect window state changes to handle maximize behavior
+                self.connect_window_state_events()
+            else:
+                logger.warning("⚠️ Could not initialize overlay manager")
+        
         self.show_welcome_if_first_run()
         self.start_monitoring()
     
     def setup_ui(self):
-        """Setup the main window interface"""
-        self.setWindowTitle("PST to Dynamics 365 - AI-Powered Email Import")
+        """Setup the main user interface"""
+        self.setWindowTitle("PST-to-Dynamics 365 - AI-Powered Email Import")
+        self.setGeometry(100, 100, 1400, 900)
         self.setMinimumSize(1200, 800)
-        self.resize(1400, 900)
         
-        # Set application icon
-        try:
-            if ICON_AVAILABLE:
-                icon = get_app_icon()
-                if icon:
-                    self.setWindowIcon(icon)
-        except Exception as e:
-            logger.warning(f"Could not set window icon: {e}")
+        # Handle Windows overlays (Voice Access, etc.)
+        self.handle_windows_overlays()
+        
+        # Set application icon if available
+        if ICON_AVAILABLE:
+            self.setWindowIcon(get_app_icon())
         
         # Create central widget and main layout
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
+        
+        # Main horizontal layout (sidebar + content)
         main_layout = QHBoxLayout(central_widget)
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
         
-        # Create sidebar and content area
-        self.sidebar = NavigationSidebar()
+        # Create and setup main components
+        self.navigation_sidebar = NavigationSidebar()
         self.content_area = ContentArea()
         
-        # Create splitter for resizable layout
-        splitter = QSplitter(Qt.Orientation.Horizontal)
-        splitter.addWidget(self.sidebar)
-        splitter.addWidget(self.content_area)
-        splitter.setStretchFactor(0, 0)  # Sidebar fixed
-        splitter.setStretchFactor(1, 1)  # Content area stretches
-        splitter.setSizes([220, 1180])
+        # Add components to layout
+        main_layout.addWidget(self.navigation_sidebar)
+        main_layout.addWidget(self.content_area, 1)
         
-        main_layout.addWidget(splitter)
+        # Connect navigation signals
+        self.navigation_sidebar.navigate_to.connect(self.on_navigate)
         
-        # Connect signals
-        self.sidebar.navigate_to.connect(self.on_navigate)
-        
-        # Setup menu bar, toolbar, and status bar
+        # Setup additional UI components
         self.setup_menu_bar()
-        self.setup_toolbar()
+        # self.setup_toolbar()  # Commented out - redundant with left panel and menus
         self.setup_status_bar()
         
-        # Apply modern styling
-        self.setStyleSheet("""
-            QMainWindow {
-                background-color: #f8f9fa;
-            }
-            QSplitter::handle {
-                background-color: #dee2e6;
-                width: 2px;
-            }
-            QSplitter::handle:hover {
-                background-color: #adb5bd;
-            }
-        """)
+        # Apply current theme
+        if hasattr(self, 'theme_manager'):
+            self.apply_current_theme()
+    
+    def handle_windows_overlays(self):
+        """Handle Windows system overlays like Voice Access"""
+        try:
+            # Move window below potential overlay area
+            screen = self.screen().availableGeometry()
+            
+            # Calculate safe positioning (accounting for 60px overlay at top)
+            safe_top = max(100, 60)  # At least 60px from top for Voice Access
+            safe_left = 50
+            safe_width = min(1400, screen.width() - 100)
+            safe_height = min(900, screen.height() - safe_top - 50)
+            
+            # Set window geometry with safe positioning
+            self.setGeometry(safe_left, safe_top, safe_width, safe_height)
+            
+            # Set window flags to handle overlays better
+            from PyQt6.QtCore import Qt
+            flags = self.windowFlags()
+            
+            # Ensure window stays in front when focused
+            flags |= Qt.WindowType.WindowStaysOnTopHint
+            
+            # But allow normal window behavior
+            flags &= ~Qt.WindowType.WindowStaysOnTopHint  # Remove always on top
+            
+            logger.info("✅ Window positioning adjusted for Windows overlays")
+            
+        except Exception as e:
+            logger.warning(f"⚠️ Could not adjust window for overlays: {e}")
+
+    def apply_current_theme(self):
+        """Apply the current theme to the main window"""
+        try:
+            if hasattr(self, 'theme_manager'):
+                theme_def = self.theme_manager.get_theme_definition()
+                if theme_def:
+                    colors = theme_def.get('colors', {})
+                    # Apply comprehensive LinkedIn Blue theme styling
+                    self.setStyleSheet(f"""
+                        QMainWindow {{
+                            background-color: {colors.get('background', '#F3F6F8')};
+                            color: {colors.get('text_primary', '#000000')};
+                            font-family: 'Segoe UI', Arial, sans-serif;
+                            font-size: 14px;
+                        }}
+                        
+                        /* Menu Bar Styling */
+                        QMenuBar {{
+                            background-color: {colors.get('surface', '#FFFFFF')};
+                            color: {colors.get('text_primary', '#000000')};
+                            border-bottom: 1px solid {colors.get('border', '#D0D7DE')};
+                            padding: 4px 8px;
+                            font-weight: 500;
+                        }}
+                        
+                        QMenuBar::item {{
+                            background-color: transparent;
+                            color: {colors.get('text_primary', '#000000')};
+                            padding: 8px 12px;
+                            border-radius: 4px;
+                            margin: 2px;
+                        }}
+                        
+                        QMenuBar::item:selected {{
+                            background-color: {colors.get('primary', '#0077B5')};
+                            color: white;
+                        }}
+                        
+                        QMenuBar::item:pressed {{
+                            background-color: {colors.get('secondary', '#005885')};
+                            color: white;
+                        }}
+                        
+                        /* Menu Dropdown Styling */
+                        QMenu {{
+                            background-color: {colors.get('surface', '#FFFFFF')};
+                            color: {colors.get('text_primary', '#000000')};
+                            border: 1px solid {colors.get('border', '#D0D7DE')};
+                            border-radius: 6px;
+                            padding: 4px;
+                            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                        }}
+                        
+                        QMenu::item {{
+                            background-color: transparent;
+                            color: {colors.get('text_primary', '#000000')};
+                            padding: 8px 16px;
+                            border-radius: 4px;
+                            margin: 1px;
+                        }}
+                        
+                        QMenu::item:selected {{
+                            background-color: {colors.get('primary', '#0077B5')};
+                            color: white;
+                        }}
+                        
+                        QMenu::separator {{
+                            height: 1px;
+                            background-color: {colors.get('border', '#D0D7DE')};
+                            margin: 4px 8px;
+                        }}
+                        
+                        /* Status Bar Styling */
+                        QStatusBar {{
+                            background-color: {colors.get('surface', '#FFFFFF')};
+                            color: {colors.get('text_secondary', '#666666')};
+                            border-top: 1px solid {colors.get('border', '#D0D7DE')};
+                            padding: 4px 8px;
+                        }}
+                    """)
+                    logger.info(f"Applied theme: {theme_def.get('name', 'LinkedIn Blue')}")
+                else:
+                    logger.warning("⚠️ Could not get theme definition")
+            else:
+                # Fallback styling if no theme manager
+                self.setStyleSheet("""
+                    QMainWindow {
+                        background-color: #F3F6F8;
+                        color: #000000;
+                        font-family: 'Segoe UI', Arial, sans-serif;
+                        font-size: 14px;
+                    }
+                    
+                    /* Menu Bar Styling */
+                    QMenuBar {
+                        background-color: #FFFFFF;
+                        color: #000000;
+                        border-bottom: 1px solid #D0D7DE;
+                        padding: 4px 8px;
+                        font-weight: 500;
+                    }
+                    
+                    QMenuBar::item {
+                        background-color: transparent;
+                        color: #000000;
+                        padding: 8px 12px;
+                        border-radius: 4px;
+                        margin: 2px;
+                    }
+                    
+                    QMenuBar::item:selected {
+                        background-color: #0077B5;
+                        color: white;
+                    }
+                    
+                    QMenuBar::item:pressed {
+                        background-color: #005885;
+                        color: white;
+                    }
+                    
+                    /* Menu Dropdown Styling */
+                    QMenu {
+                        background-color: #FFFFFF;
+                        color: #000000;
+                        border: 1px solid #D0D7DE;
+                        border-radius: 6px;
+                        padding: 4px;
+                    }
+                    
+                    QMenu::item {
+                        background-color: transparent;
+                        color: #000000;
+                        padding: 8px 16px;
+                        border-radius: 4px;
+                        margin: 1px;
+                    }
+                    
+                    QMenu::item:selected {
+                        background-color: #0077B5;
+                        color: white;
+                    }
+                    
+                    QMenu::separator {
+                        height: 1px;
+                        background-color: #D0D7DE;
+                        margin: 4px 8px;
+                    }
+                """)
+                logger.info("Applied fallback LinkedIn Blue styling")
+        except Exception as e:
+            logger.error(f"❌ Error applying theme: {e}")
+
+    def on_theme_changed(self, theme_name: str):
+        """Handle theme change events"""
+        try:
+            self.apply_current_theme()
+            logger.info(f"Theme changed to: {theme_name}")
+        except Exception as e:
+            logger.error(f"❌ Error handling theme change: {e}")
+
+    def connect_window_state_events(self):
+        """Connect window state change events for overlay management"""
+        try:
+            # We'll handle window state changes in the changeEvent method
+            logger.info("✅ Window state event handling connected")
+        except Exception as e:
+            logger.error(f"❌ Error connecting window state events: {e}")
+
+    def changeEvent(self, event):
+        """Handle window state changes (minimize, maximize, restore)"""
+        try:
+            super().changeEvent(event)
+            
+            # Handle window state changes for overlay management
+            if hasattr(self, 'overlay_manager') and self.overlay_manager:
+                if event.type() == event.Type.WindowStateChange:
+                    current_state = self.windowState()
+                    
+                    # Check if maximized
+                    if current_state & Qt.WindowState.WindowMaximized:
+                        logger.info("🔧 Window maximized - eliminating Voice Access gap")
+                        # Pause overlay monitoring to prevent repositioning
+                        if hasattr(self.overlay_manager, 'pause_monitoring'):
+                            self.overlay_manager.pause_monitoring()
+                        # Use a timer to ensure the maximize operation completes first
+                        QTimer.singleShot(100, self.handle_maximized_state)
+                    
+                    # Check if restored to normal (not maximized, not minimized)
+                    elif current_state == Qt.WindowState.WindowNoState:
+                        logger.info("🔧 Window restored - resuming normal overlay management")
+                        # Resume overlay monitoring for normal windows
+                        if hasattr(self.overlay_manager, 'resume_monitoring'):
+                            self.overlay_manager.resume_monitoring()
+                        # Resume normal overlay management with a slight delay
+                        QTimer.singleShot(100, self.overlay_manager.check_overlay_conflicts)
+                    
+                    # Log other state changes for debugging
+                    elif current_state & Qt.WindowState.WindowMinimized:
+                        logger.debug("🔧 Window minimized")
+                        
+        except Exception as e:
+            logger.error(f"❌ Error handling window state change: {e}")
+            import traceback
+            logger.error(f"🔍 Traceback: {traceback.format_exc()}")
+
+    def showMaximized(self):
+        """Override showMaximized to eliminate Voice Access gap"""
+        try:
+            # Call the parent showMaximized first
+            super().showMaximized()
+            
+            # Then immediately adjust to eliminate Voice Access gap
+            QTimer.singleShot(50, self.eliminate_voice_access_gap)
+            
+        except Exception as e:
+            logger.error(f"❌ Error in showMaximized override: {e}")
+            super().showMaximized()  # Fallback
+
+    def eliminate_voice_access_gap(self):
+        """Eliminate the Voice Access gap for maximized windows"""
+        try:
+            if self.isMaximized():
+                screen = self.screen()
+                if screen:
+                    # Get the full screen geometry (not just available)
+                    full_screen = screen.geometry()
+                    available_rect = screen.availableGeometry()
+                    
+                    # Create maximized rectangle that goes to the very top
+                    maximized_rect = QRect(
+                        available_rect.left(),    # Respect left boundary
+                        0,                        # Start from absolute top (y=0)
+                        available_rect.width(),   # Use available width
+                        available_rect.bottom()   # Use available bottom
+                    )
+                    
+                    # Set the geometry to eliminate the gap
+                    self.setGeometry(maximized_rect)
+                    logger.info(f"✅ Voice Access gap eliminated - window geometry: {maximized_rect}")
+                    
+        except Exception as e:
+            logger.error(f"❌ Error eliminating Voice Access gap: {e}")
+
+    def handle_maximized_state(self):
+        """Handle maximized state to eliminate Voice Access gap"""
+        try:
+            if self.isMaximized() and hasattr(self, 'overlay_manager'):
+                self.eliminate_voice_access_gap()
+                    
+        except Exception as e:
+            logger.error(f"❌ Error handling maximized state: {e}")
+
+    def showEvent(self, event):
+        """Handle window show event to ensure proper positioning"""
+        super().showEvent(event)
+        
+        # Only reposition if window is not maximized
+        if not self.isMaximized():
+            # Ensure window is not obscured by Windows overlays
+            try:
+                screen_rect = self.screen().availableGeometry()
+                window_rect = self.geometry()
+                
+                # Check if window is too close to top (Voice Access area)
+                if window_rect.top() < 60:
+                    # Move window down to avoid overlay
+                    self.move(window_rect.left(), 80)
+                    logger.info("🔧 Window repositioned to avoid Windows overlay")
+                    
+            except Exception as e:
+                logger.warning(f"⚠️ Could not check window positioning: {e}")
+        else:
+            logger.debug("🔒 Skipping showEvent repositioning - window is maximized")
     
     def setup_menu_bar(self):
         """Setup the application menu bar"""
@@ -707,35 +984,35 @@ class MainWindow(QMainWindow):
         about_action.triggered.connect(self.show_about)
         help_menu.addAction(about_action)
     
-    def setup_toolbar(self):
-        """Setup the application toolbar"""
-        toolbar = self.addToolBar("Main")
-        toolbar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
-        
-        # Quick action buttons
-        if ICONS_AVAILABLE:
-            try:
-                import_action = QAction(qta.icon('fa5s.file-import'), "Import", self)
-                dashboard_action = QAction(qta.icon('fa5s.tachometer-alt'), "Dashboard", self)
-                settings_action = QAction(qta.icon('fa5s.cog'), "Settings", self)
-            except:
-                # Fallback to text-only
-                import_action = QAction("📧 Import", self)
-                dashboard_action = QAction("📊 Dashboard", self)
-                settings_action = QAction("⚙️ Settings", self)
-        else:
-            import_action = QAction("📧 Import", self)
-            dashboard_action = QAction("📊 Dashboard", self)
-            settings_action = QAction("⚙️ Settings", self)
-        
-        import_action.triggered.connect(lambda: self.on_navigate("import"))
-        dashboard_action.triggered.connect(lambda: self.on_navigate("dashboard"))
-        settings_action.triggered.connect(lambda: self.on_navigate("settings"))
-        
-        toolbar.addAction(import_action)
-        toolbar.addAction(dashboard_action)
-        toolbar.addSeparator()
-        toolbar.addAction(settings_action)
+    # def setup_toolbar(self):
+    #     """Setup the application toolbar - COMMENTED OUT: Redundant with left panel and menus"""
+    #     toolbar = self.addToolBar("Main")
+    #     toolbar.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon)
+    #     
+    #     # Quick action buttons
+    #     if ICONS_AVAILABLE:
+    #         try:
+    #             import_action = QAction(qta.icon('fa5s.file-import'), "Import", self)
+    #             dashboard_action = QAction(qta.icon('fa5s.tachometer-alt'), "Dashboard", self)
+    #             settings_action = QAction(qta.icon('fa5s.cog'), "Settings", self)
+    #         except:
+    #             # Fallback to text-only
+    #             import_action = QAction("📧 Import", self)
+    #             dashboard_action = QAction("📊 Dashboard", self)
+    #             settings_action = QAction("⚙️ Settings", self)
+    #     else:
+    #         import_action = QAction("📧 Import", self)
+    #         dashboard_action = QAction("📊 Dashboard", self)
+    #         settings_action = QAction("⚙️ Settings", self)
+    #     
+    #     import_action.triggered.connect(lambda: self.on_navigate("import"))
+    #     dashboard_action.triggered.connect(lambda: self.on_navigate("dashboard"))
+    #     settings_action.triggered.connect(lambda: self.on_navigate("settings"))
+    #     
+    #     toolbar.addAction(import_action)
+    #     toolbar.addAction(dashboard_action)
+    #     toolbar.addSeparator()
+    #     toolbar.addAction(settings_action)
     
     def setup_status_bar(self):
         """Setup the application status bar"""
@@ -763,15 +1040,14 @@ class MainWindow(QMainWindow):
         self.status_monitor.start()
     
     def update_status(self, message: str, color: str):
-        """Update status bar and sidebar"""
+        """Update status bar"""
         self.status_message.setText(message)
         self.status_message.setStyleSheet(f"color: {color};")
-        self.sidebar.update_status(message, color)
     
     def on_navigate(self, module_id: str):
         """Handle navigation to different modules"""
         self.content_area.show_module(module_id)
-        self.sidebar.select_nav_item(module_id)
+        self.navigation_sidebar.select_nav_item(module_id)
     
     def show_about(self):
         """Show about dialog"""
@@ -955,14 +1231,22 @@ class MainWindow(QMainWindow):
         if self.status_monitor:
             self.status_monitor.stop()
         
+        # Clean up overlay manager
+        if self.overlay_manager:
+            self.overlay_manager.cleanup()
+            logger.info("✅ Overlay manager cleanup completed")
+        
         # Clean up active widgets
         self.content_area.cleanup_active_widgets()
         
         # Clean up all registered threads
         if THREAD_MANAGER_AVAILABLE:
             try:
-                thread_manager = ThreadManager()
-                thread_manager.cleanup_all_threads(timeout=5.0)
+                if hasattr(self, 'thread_manager') and self.thread_manager:
+                    self.thread_manager.cleanup_all_threads(timeout=5.0)
+                else:
+                    thread_manager = ThreadManager()
+                    thread_manager.cleanup_all_threads(timeout=5.0)
                 logger.info("✅ All threads cleaned up successfully")
             except Exception as e:
                 logger.warning(f"⚠️ Thread cleanup warning: {e}")
@@ -1004,6 +1288,10 @@ class PSTDynamicsApp(QApplication):
 def main():
     """Main entry point"""
     try:
+        # Suppress Qt CSS warnings before anything else
+        import os
+        os.environ['QT_LOGGING_RULES'] = 'qt.qpa.stylesheet.parser.warning=false;qt.qpa.window.warning=false;qt.qpa.gl.warning=false;qt.qpa.xcb.warning=false'
+        
         # Setup logging
         logging.basicConfig(
             level=logging.INFO,

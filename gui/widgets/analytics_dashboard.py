@@ -2,15 +2,11 @@
 PST-to-Dynamics 365 Analytics Dashboard
 ======================================
 
-logger = logging.getLogger(__name__)
-
 Phase 5.4: Interactive Analytics Visualization
 Real-time charts and performance metrics dashboard for Phase 3 analytics.
 """
 
 import sys
-
-
 import logging
 import os
 import json
@@ -29,6 +25,9 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt, pyqtSignal, QThread, QTimer, QDate
 from PyQt6.QtGui import QFont, QPixmap, QIcon, QPalette
 
+# Setup logging
+logger = logging.getLogger(__name__)
+
 # Import PyQtGraph for advanced charting
 try:
     import pyqtgraph as pg
@@ -46,7 +45,7 @@ try:
     PHASE3_AVAILABLE = True
 except ImportError as e:
     PHASE3_AVAILABLE = False
-    logger.warning("⚠️ Phase 3 Analytics not available: {e}")
+    logger.warning("⚠️ Phase 3 Analytics not available")
 
 
 class AnalyticsDataLoader(QThread):

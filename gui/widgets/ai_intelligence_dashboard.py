@@ -34,6 +34,12 @@ try:
     PYQTGRAPH_AVAILABLE = True
 except ImportError:
     PYQTGRAPH_AVAILABLE = False
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+if not PYQTGRAPH_AVAILABLE:
     logger.warning("⚠️ PyQtGraph not available - using fallback charts")
 
 # Import Phase 4 AI components
@@ -48,11 +54,7 @@ try:
     logger.info("✅ Phase 4 AI components loaded successfully")
 except ImportError as e:
     PHASE4_AVAILABLE = False
-    logger.warning("⚠️ Phase 4 AI components not available: {e}")
-
-# Configure logging
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+    logger.warning("⚠️ Phase 4 AI components not available")
 
 class AIDataLoader(QThread):
     """Background thread for loading AI data and running analysis"""
@@ -106,9 +108,13 @@ class AIDataLoader(QThread):
     
     def stop(self):
         """Stop the data loader thread"""
-        self.running = False
-        self.quit()
-        self.wait()
+        try:
+            self.running = False
+            self.quit()
+            self.wait()
+        except RuntimeError:
+            # Qt object already deleted - safe to ignore
+            pass
     
     def _generate_sample_ai_data(self) -> Dict[str, Any]:
         """Generate sample AI data for testing"""
@@ -264,15 +270,16 @@ class AIMetricCard(QFrame):
     def enterEvent(self, event):
         """Handle mouse enter event"""
         super().enterEvent(event)
+        # Use margin changes instead of transform (Qt doesn't support CSS transform)
         self.setStyleSheet(self.styleSheet().replace(
-            "margin: 8px;", "margin: 4px; transform: scale(1.02);"
+            "margin: 8px;", "margin: 4px; border: 3px solid #3b82f6;"
         ))
     
     def leaveEvent(self, event):
         """Handle mouse leave event"""
         super().leaveEvent(event)
         self.setStyleSheet(self.styleSheet().replace(
-            "margin: 4px; transform: scale(1.02);", "margin: 8px;"
+            "margin: 4px; border: 3px solid #3b82f6;", "margin: 8px;"
         ))
 
 class AIPerformanceChart(QWidget):
@@ -931,18 +938,28 @@ class AIIntelligenceDashboard(QWidget):
     
     def closeEvent(self, event):
         """Handle widget close event"""
-        if self.data_loader:
-            self.data_loader.stop()
+        try:
+            if hasattr(self, 'data_loader') and self.data_loader:
+                self.data_loader.stop()
+        except (RuntimeError, AttributeError):
+            pass
         
-        if hasattr(self, 'refresh_timer'):
-            self.refresh_timer.stop()
+        try:
+            if hasattr(self, 'refresh_timer') and self.refresh_timer:
+                self.refresh_timer.stop()
+        except (RuntimeError, AttributeError):
+            pass
         
         super().closeEvent(event)
     
     def __del__(self):
         """Cleanup on destruction"""
-        if hasattr(self, 'data_loader') and self.data_loader:
-            self.data_loader.stop()
+        try:
+            if hasattr(self, 'data_loader') and self.data_loader:
+                self.data_loader.stop()
+        except (RuntimeError, AttributeError):
+            # Qt object already deleted or attribute doesn't exist - safe to ignore
+            pass
 
 def main():
     """Standalone testing function"""

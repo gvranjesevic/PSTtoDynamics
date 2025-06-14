@@ -589,51 +589,73 @@ class NotificationWidget(QFrame):
     
     def show_animated(self):
         """Show notification with animation"""
-        self.show()
-        
-        # Slide in from right
-        self.slide_animation = QPropertyAnimation(self, b"pos")
-        self.slide_animation.setDuration(400)
-        self.slide_animation.setStartValue(QPoint(self.x() + 100, self.y()))
-        self.slide_animation.setEndValue(QPoint(self.x(), self.y()))
-        self.slide_animation.setEasingCurve(QEasingCurve.Type.OutBack)
-        
-        # Fade in
-        self.opacity_effect = QGraphicsOpacityEffect()
-        self.setGraphicsEffect(self.opacity_effect)
-        
-        self.fade_animation = QPropertyAnimation(self.opacity_effect, b"opacity")
-        self.fade_animation.setDuration(400)
-        self.fade_animation.setStartValue(0.0)
-        self.fade_animation.setEndValue(1.0)
-        
-        # Combine animations
-        self.show_group = QParallelAnimationGroup()
-        self.show_group.addAnimation(self.slide_animation)
-        self.show_group.addAnimation(self.fade_animation)
-        self.show_group.start()
+        try:
+            self.show()
+            
+            # Slide in from right - only if widget still exists
+            if not self.isVisible():
+                return
+                
+            self.slide_animation = QPropertyAnimation(self, b"pos")
+            self.slide_animation.setDuration(400)
+            self.slide_animation.setStartValue(QPoint(self.x() + 100, self.y()))
+            self.slide_animation.setEndValue(QPoint(self.x(), self.y()))
+            self.slide_animation.setEasingCurve(QEasingCurve.Type.OutBack)
+            
+            # Fade in
+            self.opacity_effect = QGraphicsOpacityEffect()
+            self.setGraphicsEffect(self.opacity_effect)
+            
+            self.fade_animation = QPropertyAnimation(self.opacity_effect, b"opacity")
+            self.fade_animation.setDuration(400)
+            self.fade_animation.setStartValue(0.0)
+            self.fade_animation.setEndValue(1.0)
+            
+            # Combine animations - with safety check
+            self.show_group = QParallelAnimationGroup()
+            self.show_group.addAnimation(self.slide_animation)
+            self.show_group.addAnimation(self.fade_animation)
+            self.show_group.start()
+        except RuntimeError:
+            # Widget was deleted - show without animation
+            try:
+                self.show()
+            except RuntimeError:
+                pass
     
     def close_animated(self):
         """Close notification with animation"""
-        # Slide out to right
-        self.slide_out = QPropertyAnimation(self, b"pos")
-        self.slide_out.setDuration(300)
-        self.slide_out.setStartValue(self.pos())
-        self.slide_out.setEndValue(QPoint(self.x() + 100, self.y()))
-        self.slide_out.setEasingCurve(QEasingCurve.Type.InQuart)
-        
-        # Fade out
-        self.fade_out = QPropertyAnimation(self.opacity_effect, b"opacity")
-        self.fade_out.setDuration(300)
-        self.fade_out.setStartValue(1.0)
-        self.fade_out.setEndValue(0.0)
-        
-        # Combine animations
-        self.hide_group = QParallelAnimationGroup()
-        self.hide_group.addAnimation(self.slide_out)
-        self.hide_group.addAnimation(self.fade_out)
-        self.hide_group.finished.connect(self.closed.emit)
-        self.hide_group.start()
+        try:
+            # Check if widget still exists and has opacity effect
+            if not hasattr(self, 'opacity_effect') or not self.opacity_effect:
+                self.closed.emit()
+                return
+                
+            # Slide out to right
+            self.slide_out = QPropertyAnimation(self, b"pos")
+            self.slide_out.setDuration(300)
+            self.slide_out.setStartValue(self.pos())
+            self.slide_out.setEndValue(QPoint(self.x() + 100, self.y()))
+            self.slide_out.setEasingCurve(QEasingCurve.Type.InQuart)
+            
+            # Fade out
+            self.fade_out = QPropertyAnimation(self.opacity_effect, b"opacity")
+            self.fade_out.setDuration(300)
+            self.fade_out.setStartValue(1.0)
+            self.fade_out.setEndValue(0.0)
+            
+            # Combine animations
+            self.hide_group = QParallelAnimationGroup()
+            self.hide_group.addAnimation(self.slide_out)
+            self.hide_group.addAnimation(self.fade_out)
+            self.hide_group.finished.connect(self.closed.emit)
+            self.hide_group.start()
+        except RuntimeError:
+            # Widget was deleted - emit signal and return
+            try:
+                self.closed.emit()
+            except RuntimeError:
+                pass
 
 class AccessibilityManager(QObject):
     """

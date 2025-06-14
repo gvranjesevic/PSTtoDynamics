@@ -53,10 +53,8 @@ try:
         run_background_task, PerformanceWidget
     )
     PHASE_5_7_AVAILABLE = True
-    logger.info("✅ Phase 5.7 enhanced components loaded successfully")
 except ImportError as e:
     PHASE_5_7_AVAILABLE = False
-    logger.warning("⚠️ Phase 5.7 components not available: {e}")
 
 # Try to import contact management modules
 try:
@@ -67,14 +65,23 @@ try:
     import auth
     import config
     CONTACT_MODULES_AVAILABLE = True
-    logger.info("✅ Contact management modules loaded successfully")
 except ImportError as e:
     CONTACT_MODULES_AVAILABLE = False
-    logger.warning("⚠️ Contact management modules not available: {e}")
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# Log import status after logger is defined
+if PHASE_5_7_AVAILABLE:
+    logger.info("✅ Phase 5.7 enhanced components loaded successfully")
+else:
+    logger.warning("⚠️ Phase 5.7 components not available")
+
+if CONTACT_MODULES_AVAILABLE:
+    logger.info("✅ Contact management modules loaded successfully")
+else:
+    logger.warning("⚠️ Contact management modules not available")
 
 class ContactDataLoader(QThread):
     """Background thread for loading contact data with Phase 5.7 performance optimization"""
@@ -549,11 +556,19 @@ class ContactManagementDashboard(QWidget):
         # Add tooltips to main buttons
         self._add_enhanced_tooltips()
         
-        # Show welcome notification
-        QTimer.singleShot(1000, lambda: show_notification(
-            self, "🚀 Contact Management Dashboard Enhanced with Phase 5.7 Features", 
-            NotificationType.SUCCESS, duration=3000
-        ))
+        # Show welcome notification with safety check
+        def safe_show_notification():
+            try:
+                if self and not self.isHidden():
+                    show_notification(
+                        self, "🚀 Contact Management Dashboard Enhanced with Phase 5.7 Features", 
+                        NotificationType.SUCCESS, duration=3000
+                    )
+            except RuntimeError:
+                # Widget was deleted - ignore safely
+                pass
+        
+        QTimer.singleShot(1000, safe_show_notification)
     
     def _setup_keyboard_navigation(self):
         """Set up keyboard navigation for dashboard"""
@@ -1252,10 +1267,18 @@ class ContactManagementDashboard(QWidget):
             theme_type = self.theme_selector.currentData()
             if theme_type and self.theme_manager:
                 self.theme_manager.set_theme(theme_type)
-                show_notification(
-                    self, f"Theme changed to {self.theme_selector.currentText()}", 
-                    NotificationType.INFO, duration=2000
-                )
+                # Safe notification with widget check
+                def safe_theme_notification():
+                    try:
+                        if self and not self.isHidden():
+                            show_notification(
+                                self, f"Theme changed to {self.theme_selector.currentText()}", 
+                                NotificationType.INFO, duration=2000
+                            )
+                    except RuntimeError:
+                        pass
+                
+                QTimer.singleShot(100, safe_theme_notification)
 
 def main():
     """Standalone testing function"""
