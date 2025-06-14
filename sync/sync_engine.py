@@ -172,17 +172,38 @@ class RecoveryManager:
                 self.failure_count = 0
                 return result
                 
-            except Exception as e:
+            except (ConnectionError, TimeoutError, OSError) as e:
+                # Network and connection related errors
                 last_exception = e
                 self.failure_count += 1
                 
                 if attempt < self.max_retries:
                     delay = self._calculate_delay(attempt)
-                    self.logger.warning(f"Operation failed (attempt {attempt + 1}/{self.max_retries + 1}), "
+                    self.logger.warning(f"Connection error (attempt {attempt + 1}/{self.max_retries + 1}), "
                                       f"retrying in {delay:.2f}s: {str(e)}")
                     time.sleep(delay)
                 else:
-                    self.logger.error(f"Operation failed after {self.max_retries + 1} attempts: {str(e)}")
+                    self.logger.error(f"Connection failed after {self.max_retries + 1} attempts: {str(e)}")
+            except (ValueError, TypeError, KeyError) as e:
+                # Data validation and structure errors - don't retry
+                self.logger.error(f"Data validation error, not retrying: {str(e)}")
+                raise SyncValidationException(f"Data validation failed: {str(e)}")
+            except DatabaseException as e:
+                # Database specific errors
+                last_exception = e
+                self.failure_count += 1
+                
+                if attempt < self.max_retries:
+                    delay = self._calculate_delay(attempt)
+                    self.logger.warning(f"Database error (attempt {attempt + 1}/{self.max_retries + 1}), "
+                                      f"retrying in {delay:.2f}s: {str(e)}")
+                    time.sleep(delay)
+                else:
+                    self.logger.error(f"Database operation failed after {self.max_retries + 1} attempts: {str(e)}")
+            except Exception as e:
+                # Unexpected errors - log and don't retry
+                self.logger.error(f"Unexpected error during operation: {str(e)}")
+                raise SyncException(f"Unexpected error: {str(e)}")
         
         if self.failure_count >= self.circuit_breaker_threshold:
             self.circuit_open_time = datetime.now()

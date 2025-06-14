@@ -1,6 +1,9 @@
-# PST File Analyzer
+# PST to Dynamics 365
 
-A Python application for analyzing Microsoft Outlook PST (Personal Storage Table) files and extracting comprehensive email statistics.
+**Version:** 1.0.1 (Hardening Release)
+**Company:** Dynamique Solutions
+
+A professional desktop application for importing, synchronizing, and managing contacts and emails between PST files and Microsoft Dynamics 365, with advanced AI, analytics, and a modern GUI.
 
 ## Features
 

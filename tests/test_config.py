@@ -66,51 +66,55 @@ class TestConfiguration(unittest.TestCase):
         password = config.get_secure_password()
         self.assertIsNone(password)
     
-    @unittest.skip("Keyring mocking issues - skipping for now")
     def test_secure_password_from_keyring(self):
         """Test getting password from keyring when environment variable is not set."""
         test_password = "keyring_password"
         
         # Remove environment variable
+        env_backup = os.environ.get('DYNAMICS_PASSWORD')
         if 'DYNAMICS_PASSWORD' in os.environ:
             del os.environ['DYNAMICS_PASSWORD']
         
-        # Mock keyring to be available and return password
-        mock_keyring = MagicMock()
-        mock_keyring.get_password.return_value = test_password
-        
-        # Patch the keyring module in sys.modules and mock the import
-        with patch.dict('sys.modules', {'keyring': mock_keyring}):
-            # Reload config to pick up the mocked keyring
-            import importlib
-            importlib.reload(config)
-            try:
+        try:
+            # Mock keyring module completely
+            mock_keyring = MagicMock()
+            mock_keyring.get_password.return_value = test_password
+            
+            # Patch the keyring import inside the function
+            with patch.dict('sys.modules', {'keyring': mock_keyring}):
+                # Test the function directly
                 password = config.get_secure_password()
                 self.assertEqual(password, test_password)
-            finally:
-                # Reload config again to restore original state
-                importlib.reload(config)
+                
+                # Verify keyring was called correctly
+                mock_keyring.get_password.assert_called_once_with(
+                    "PST-to-Dynamics", 
+                    config.USERNAME
+                )
+        finally:
+            # Restore environment variable
+            if env_backup is not None:
+                os.environ['DYNAMICS_PASSWORD'] = env_backup
     
-    @unittest.skip("Keyring mocking issues - skipping for now")
     def test_set_secure_password_success(self):
         """Test setting password in keyring successfully."""
         test_password = "new_secure_password"
         
-        # Mock keyring to be available
+        # Mock keyring module completely
         mock_keyring = MagicMock()
         mock_keyring.set_password.return_value = None  # keyring.set_password returns None on success
         
-        # Patch the keyring module in sys.modules and mock the import
+        # Patch the keyring import inside the function
         with patch.dict('sys.modules', {'keyring': mock_keyring}):
-            # Reload config to pick up the mocked keyring
-            import importlib
-            importlib.reload(config)
-            try:
-                result = config.set_secure_password(test_password)
-                self.assertTrue(result)
-            finally:
-                # Reload config again to restore original state
-                importlib.reload(config)
+            result = config.set_secure_password(test_password)
+            self.assertTrue(result)
+            
+            # Verify keyring was called correctly
+            mock_keyring.set_password.assert_called_once_with(
+                "PST-to-Dynamics",
+                config.USERNAME,
+                test_password
+            )
     
     def test_set_secure_password_no_keyring(self):
         """Test setting password when keyring is not available."""

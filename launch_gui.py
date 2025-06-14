@@ -16,6 +16,9 @@ import os
 # Add current directory to path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+# Import Aspose license validator
+from aspose_license_validator import require_aspose_license
+
 def check_dependencies():
     """Check if all required dependencies are available"""
     missing_deps = []
@@ -51,7 +54,16 @@ def launch_gui():
     logger.info("🚀 Launching PST-to-Dynamics 365 GUI...")
     logger.debug("=" * 50)
     
-    # Check dependencies first
+    # Validate Aspose license first (allow evaluation mode for testing)
+    try:
+        require_aspose_license(allow_evaluation=True)
+        logger.info("✅ Aspose.Email license validated")
+    except Exception as e:
+        logger.error(f"❌ Aspose.Email license validation failed: {e}")
+        logger.error("Please ensure you have a valid Aspose.Email license or are running in evaluation mode")
+        return 1
+    
+    # Check dependencies
     if not check_dependencies():
         return 1
     

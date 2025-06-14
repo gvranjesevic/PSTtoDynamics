@@ -58,6 +58,14 @@ except ImportError:
     ICON_AVAILABLE = False
     logger.warning("⚠️ Application icon not available")
 
+# Import thread manager
+try:
+    from thread_manager import ThreadManager
+    THREAD_MANAGER_AVAILABLE = True
+except ImportError:
+    THREAD_MANAGER_AVAILABLE = False
+    logger.warning("⚠️ Thread manager not available")
+
 # Add import for the sync monitoring dashboard
 from gui.widgets.sync_monitoring_dashboard import SyncMonitoringDashboard
 from sync.sync_engine import SyncEngine
@@ -931,6 +939,15 @@ class MainWindow(QMainWindow):
         
         # Clean up active widgets
         self.content_area.cleanup_active_widgets()
+        
+        # Clean up all registered threads
+        if THREAD_MANAGER_AVAILABLE:
+            try:
+                thread_manager = ThreadManager()
+                thread_manager.cleanup_all_threads(timeout=5.0)
+                logger.info("✅ All threads cleaned up successfully")
+            except Exception as e:
+                logger.warning(f"⚠️ Thread cleanup warning: {e}")
         
         event.accept()
 
