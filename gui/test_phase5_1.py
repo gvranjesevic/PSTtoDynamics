@@ -80,7 +80,7 @@ class TestPhase51Foundation(unittest.TestCase):
         test_modules = ["dashboard", "import", "analytics", "ai", "contacts", "settings"]
         for module_id in test_modules:
             try:
-                content_area.show_module(module_id)
+            content_area.show_module(module_id)
                 # Just verify the method runs without error
                 self.assertTrue(True)
             except Exception as e:

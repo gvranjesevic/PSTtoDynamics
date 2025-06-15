@@ -109,9 +109,9 @@ class AIDataLoader(QThread):
     def stop(self):
         """Stop the data loader thread"""
         try:
-            self.running = False
-            self.quit()
-            self.wait()
+        self.running = False
+        self.quit()
+        self.wait()
         except RuntimeError:
             # Qt object already deleted - safe to ignore
             pass
@@ -940,13 +940,13 @@ class AIIntelligenceDashboard(QWidget):
         """Handle widget close event"""
         try:
             if hasattr(self, 'data_loader') and self.data_loader:
-                self.data_loader.stop()
+            self.data_loader.stop()
         except (RuntimeError, AttributeError):
             pass
         
         try:
             if hasattr(self, 'refresh_timer') and self.refresh_timer:
-                self.refresh_timer.stop()
+            self.refresh_timer.stop()
         except (RuntimeError, AttributeError):
             pass
         
@@ -955,8 +955,8 @@ class AIIntelligenceDashboard(QWidget):
     def __del__(self):
         """Cleanup on destruction"""
         try:
-            if hasattr(self, 'data_loader') and self.data_loader:
-                self.data_loader.stop()
+        if hasattr(self, 'data_loader') and self.data_loader:
+            self.data_loader.stop()
         except (RuntimeError, AttributeError):
             # Qt object already deleted or attribute doesn't exist - safe to ignore
             pass

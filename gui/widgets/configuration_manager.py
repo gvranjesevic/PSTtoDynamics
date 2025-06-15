@@ -2,21 +2,20 @@
 PST-to-Dynamics 365 Configuration Manager
 =========================================
 
-logger = logging.getLogger(__name__)
-
 Phase 5.3: Configuration Interface Implementation
 Visual configuration management for all system settings.
 """
 
 import sys
-
-
 import logging
 import os
 import json
 from datetime import datetime
 from typing import Dict, Any, Optional, List
 from pathlib import Path
+
+# Define logger after logging import
+logger = logging.getLogger(__name__)
 
 from PyQt6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QGridLayout,
@@ -27,6 +26,7 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtCore import Qt, pyqtSignal, QThread, QTimer, QSettings
 from PyQt6.QtGui import QFont, QPixmap, QIcon, QPalette, QFontMetrics
+from PyQt6.QtWidgets import QApplication
 
 # Import backend configuration modules
 try:
@@ -310,46 +310,6 @@ class DynamicsAuthWidget(QWidget):
         }
 
 
-class ConfigFooter(QWidget):
-    """Fixed footer with status label and Save button"""
-
-    def __init__(self, on_save_clicked):
-        super().__init__()
-        self.setFixedHeight(60)
-        self.setStyleSheet(
-            """
-            background-color: white;
-            border-top: 1px solid #E1E4E8;
-            """
-        )
-
-        layout = QHBoxLayout(self)
-        layout.setContentsMargins(20, 0, 20, 0)
-
-        self.status_label = QLabel("Configuration ready for modification")
-        self.status_label.setStyleSheet("color: #0077B5; font-size: 11px;")
-        layout.addWidget(self.status_label)
-        layout.addStretch()
-
-        self.save_button = QPushButton("Save Settings")
-        self.save_button.setStyleSheet(
-            """
-            QPushButton {
-                background-color: #0077B5;
-                color: white;
-                border: none;
-                padding: 8px 20px;
-                border-radius: 4px;
-                font-weight: bold;
-            }
-            QPushButton:hover { background-color: #006097; }
-            QPushButton:pressed { background-color: #004B7A; }
-            """
-        )
-        self.save_button.clicked.connect(on_save_clicked)
-        layout.addWidget(self.save_button)
-
-
 class ConfigurationManager(QWidget):
     """Main Configuration Manager Widget"""
     
@@ -365,13 +325,26 @@ class ConfigurationManager(QWidget):
         self.setup_ui()
         self.load_all_settings()
     
+    def resizeEvent(self, event):
+        """Override resize event to ensure footer height consistency"""
+        super().resizeEvent(event)
+        
+        if hasattr(self, 'footer_widget'):
+            actual_height = self.footer_widget.height()
+            
+            # Ensure footer stays at correct height during resize
+            if actual_height != 80:
+                self.footer_widget.setFixedHeight(80)
+                self.footer_widget.setMinimumHeight(80)
+                self.footer_widget.setMaximumHeight(80)
+    
     def setup_ui(self):
         # Main layout
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
-
-        # Header
+        
+        # Header (fixed 60px)
         header = QWidget()
         header.setFixedHeight(60)
         header.setStyleSheet("""
@@ -388,25 +361,55 @@ class ConfigurationManager(QWidget):
         """)
         header_layout.addWidget(title)
         layout.addWidget(header)
-
-        # Test Panel removed after verification – no additional top widgets
-
+        
+        # ScrollArea (takes remaining space minus footer) - settings content ONLY
         scroll_area = QScrollArea()
         scroll_area.setWidgetResizable(True)
-        scroll_area.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
+        scroll_area.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding)
         scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         scroll_area.setFrameShape(QFrame.Shape.NoFrame)
         scroll_area.setStyleSheet("QScrollArea { border: none; background-color: #F3F6F8; }")
+        
         scroll_widget = QWidget()
-        scroll_widget.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Minimum)
+        scroll_widget.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Minimum)
         scroll_layout = QVBoxLayout(scroll_widget)
         scroll_layout.setContentsMargins(0, 0, 0, 0)
         scroll_layout.setSpacing(25)
         scroll_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        
+        # Store references
+        self.scroll_area = scroll_area
+        self.scroll_widget = scroll_widget
+        self.scroll_layout = scroll_layout
+        
         # Use the 'live' auth_widget for the main content
         scroll_layout.addWidget(self.auth_widget)
+        
         # Add the rest of the settings sections
         email_section = QGroupBox("📧 Email Processing Settings")
+        email_section.setStyleSheet("""
+            QGroupBox {
+                font-weight: bold;
+                border: 2px solid #0077B5;
+                border-radius: 12px;
+                margin-top: 10px;
+                padding-top: 25px;
+                background-color: #f8faff;
+                font-size: 14px;
+                min-height: 180px;
+            }
+            QGroupBox::title {
+                subcontrol-origin: margin;
+                subcontrol-position: top left;
+                left: 30px;
+                top: 8px;
+                padding: 0 15px;
+                color: #0077B5;
+                background-color: #f8faff;
+                font-size: 14px;
+                font-weight: bold;
+            }
+        """)
         email_layout = QFormLayout(email_section)
         email_layout.setContentsMargins(20, 15, 20, 15)
         email_layout.setSpacing(12)
@@ -415,7 +418,31 @@ class ConfigurationManager(QWidget):
         email_layout.addRow("Max Attachments:", QLineEdit())
         email_layout.addRow("Auto-retry Failed:", QCheckBox("Enable"))
         scroll_layout.addWidget(email_section)
+        
         perf_section = QGroupBox("⚡ Performance Settings")
+        perf_section.setStyleSheet("""
+            QGroupBox {
+                font-weight: bold;
+                border: 2px solid #0077B5;
+                border-radius: 12px;
+                margin-top: 10px;
+                padding-top: 25px;
+                background-color: #f8faff;
+                font-size: 14px;
+                min-height: 180px;
+            }
+            QGroupBox::title {
+                subcontrol-origin: margin;
+                subcontrol-position: top left;
+                left: 30px;
+                top: 8px;
+                padding: 0 15px;
+                color: #0077B5;
+                background-color: #f8faff;
+                font-size: 14px;
+                font-weight: bold;
+            }
+        """)
         perf_layout = QFormLayout(perf_section)
         perf_layout.setContentsMargins(20, 15, 20, 15)
         perf_layout.setSpacing(12)
@@ -424,7 +451,31 @@ class ConfigurationManager(QWidget):
         perf_layout.addRow("Cache Size (MB):", QLineEdit())
         perf_layout.addRow("Enable Logging:", QCheckBox("Enable"))
         scroll_layout.addWidget(perf_section)
+        
         ai_section = QGroupBox("🧠 AI Intelligence Settings")
+        ai_section.setStyleSheet("""
+            QGroupBox {
+                font-weight: bold;
+                border: 2px solid #0077B5;
+                border-radius: 12px;
+                margin-top: 10px;
+                padding-top: 25px;
+                background-color: #f8faff;
+                font-size: 14px;
+                min-height: 180px;
+            }
+            QGroupBox::title {
+                subcontrol-origin: margin;
+                subcontrol-position: top left;
+                left: 30px;
+                top: 8px;
+                padding: 0 15px;
+                color: #0077B5;
+                background-color: #f8faff;
+                font-size: 14px;
+                font-weight: bold;
+            }
+        """)
         ai_layout = QFormLayout(ai_section)
         ai_layout.setContentsMargins(20, 15, 20, 15)
         ai_layout.setSpacing(12)
@@ -435,99 +486,61 @@ class ConfigurationManager(QWidget):
         ai_layout.addRow("Learning Mode:", mode_combo)
         ai_layout.addRow("Pattern Recognition:", QCheckBox("Enable"))
         scroll_layout.addWidget(ai_section)
-        scroll_layout.addStretch()
+        
+        # Add bottom padding to scroll content
+        scroll_layout.addSpacing(20)
+        
         scroll_area.setWidget(scroll_widget)
-        layout.addWidget(scroll_area, 1)  # Give scroll area stretch so footer stays visible
-
-        # Footer
-        footer = ConfigFooter(self.save_all_settings)
-        layout.addWidget(footer)
-        # Expose footer widgets for convenience
-        self.status_label = footer.status_label
-        self.save_button = footer.save_button
-
-    def create_header(self) -> QWidget:
-        """Create configuration manager header"""
-        header = QWidget()
-        header.setFixedHeight(80)
-        header.setStyleSheet("""
-            QWidget {
-                background: #0077B5;
-                border-radius: 0px;
-            }
+        layout.addWidget(scroll_area, 1)  # Takes remaining space
+        
+        # FIXED FOOTER (outside scroll area) - always visible
+        footer_widget = QWidget()
+        footer_widget.setFixedHeight(80)
+        footer_widget.setMinimumHeight(80)
+        footer_widget.setMaximumHeight(80)
+        footer_widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        
+        footer_widget.setStyleSheet("""
+            background-color: #F8F9FA;
+            border-top: 1px solid #E1E4E8;
         """)
+        footer_layout = QHBoxLayout(footer_widget)
+        footer_layout.setContentsMargins(20, 15, 20, 15)
         
-        layout = QHBoxLayout(header)
-        layout.setContentsMargins(30, 20, 30, 20)
+        # Store footer reference
+        self.footer_widget = footer_widget
         
-        # Icon
-        icon_label = QLabel("⚙️")
-        icon_label.setStyleSheet("font-size: 32px; color: white;")
-        layout.addWidget(icon_label)
+        # Status label
+        self.status_label = QLabel("Configuration ready")
+        self.status_label.setStyleSheet("color: #666; font-size: 14px;")
+        footer_layout.addWidget(self.status_label)
+        footer_layout.addStretch()
         
-        # Title section
-        title_layout = QVBoxLayout()
-        title_layout.setSpacing(5)
-        
-        title = QLabel("Configuration Manager")
-        title.setStyleSheet("color: white; font-size: 20px; font-weight: bold; margin: 0px;")
-        title_layout.addWidget(title)
-        
-        subtitle = QLabel("Visual configuration management for all system settings")
-        subtitle.setStyleSheet("color: rgba(255, 255, 255, 0.9); font-size: 13px; margin: 0px;")
-        title_layout.addWidget(subtitle)
-        
-        layout.addLayout(title_layout)
-        layout.addStretch()
-        
-        return header
-    
-    def create_footer(self) -> QWidget:
-        """Create configuration manager footer"""
-        footer = QFrame()
-        footer.setFixedHeight(70)
-        footer.setStyleSheet("""
-            QFrame {
-                background-color: white;
-                border-top: 1px solid #0077B5;
-            }
-        """)
-        
-        layout = QHBoxLayout(footer)
-        layout.setContentsMargins(30, 15, 30, 15)
-        
-        # Status info
-        self.status_label = QLabel("Configuration ready for modification")
-        self.status_label.setStyleSheet("color: #0077B5; font-size: 11px;")
-        layout.addWidget(self.status_label)
-        
-        layout.addStretch()
-        
-        # Action buttons
-        self.save_button = QPushButton("💾 Save Configuration")
-        self.save_button.setMinimumHeight(40)
+        # Save button
+        self.save_button = QPushButton("Save Settings")
         self.save_button.setStyleSheet("""
             QPushButton {
                 background-color: #0077B5;
                 color: white;
                 border: none;
+                padding: 12px 24px;
                 border-radius: 6px;
-                font-size: 11px;
                 font-weight: bold;
-                padding: 10px 20px;
+                font-size: 14px;
+                min-width: 140px;
             }
             QPushButton:hover {
                 background-color: #005885;
             }
             QPushButton:pressed {
-                background-color: #004B73;
+                background-color: #004A70;
             }
         """)
         self.save_button.clicked.connect(self.save_all_settings)
+        footer_layout.addWidget(self.save_button)
         
-        layout.addWidget(self.save_button)
-        
-        return footer
+        # Add fixed footer to main layout
+        layout.addWidget(footer_widget, 0)
     
     def save_all_settings(self):
         """Save all configuration settings"""
@@ -554,20 +567,9 @@ class ConfigurationManager(QWidget):
             logger.debug(f"Failed to load configuration: {e}")
             self.status_label.setText("Using default configuration")
 
-    def create_test_panel(self):
-        # (DEPRECATED: now replaced by create_test_scrollarea_panel)
-        pass
-
-    # create_test_scrollarea_panel removed – test labels no longer needed
-
 
 def main():
     """Test the Configuration Manager independently"""
-    from PyQt6.QtWidgets import QApplication
-    import sys
-
-    import logging
-    
     app = QApplication(sys.argv)
     
     config_manager = ConfigurationManager()

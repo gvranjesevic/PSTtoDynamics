@@ -15,6 +15,11 @@ os.environ['QT_LOGGING_RULES'] = 'qt.qpa.stylesheet.parser.warning=false;qt.qpa.
 os.environ['QT_ASSUME_STDERR_HAS_CONSOLE'] = '1'
 os.environ['QT_FORCE_STDERR_LOGGING'] = '0'
 
+# CRITICAL: Configure high-DPI scaling BEFORE any Qt imports
+os.environ['QT_AUTO_SCREEN_SCALE_FACTOR'] = '1'
+os.environ['QT_ENABLE_HIGHDPI_SCALING'] = '1'
+os.environ['QT_SCALE_FACTOR_ROUNDING_POLICY'] = 'RoundPreferFloor'
+
 # Setup logging first
 logging.basicConfig(
     level=logging.INFO,
@@ -26,6 +31,22 @@ logger = logging.getLogger(__name__)
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 # NOTE: Removed Aspose license validation - using free win32com.client instead
+
+def configure_high_dpi():
+    """Configure high-DPI scaling for consistent rendering"""
+    try:
+        from PyQt6.QtWidgets import QApplication
+        from PyQt6.QtCore import Qt
+        
+        # Enable high-DPI scaling
+        QApplication.setHighDpiScaleFactorRoundingPolicy(Qt.HighDpiScaleFactorRoundingPolicy.RoundPreferFloor)
+        
+        logger.info("✅ High-DPI scaling configured")
+        return True
+        
+    except Exception as e:
+        logger.warning(f"⚠️ Could not configure high-DPI scaling: {e}")
+        return False
 
 def check_dependencies():
     """Check if all required dependencies are available"""
@@ -72,6 +93,9 @@ def launch_gui():
         logger.error("❌ Cannot launch - missing required dependencies")
         input("Press Enter to exit...")
         return
+    
+    # Configure high-DPI scaling BEFORE creating QApplication
+    configure_high_dpi()
     
     # Import and launch GUI
     try:

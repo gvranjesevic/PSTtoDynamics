@@ -17,7 +17,8 @@ from PyQt6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QSplitter, QStatusBar, QMenuBar, QToolBar, QLabel, QPushButton,
     QFrame, QScrollArea, QMessageBox, QProgressBar, QSizePolicy, QTextEdit,
-    QDialog, QDialogButtonBox, QLineEdit, QToolButton
+    QDialog, QDialogButtonBox, QLineEdit, QToolButton, QGroupBox, QFormLayout,
+    QCheckBox, QComboBox
 )
 from PyQt6.QtCore import Qt, QTimer, pyqtSignal, QThread, QSize, QRect
 from PyQt6.QtGui import QIcon, QFont, QPixmap, QAction
@@ -444,18 +445,64 @@ class ContentArea(QWidget):
             self.layout.addStretch()
     
     def show_settings_placeholder(self):
-        """Show settings/configuration placeholder"""
+        """Show settings/configuration - FORCED FOOTER VISIBILITY approach"""
         try:
-            from gui.widgets.configuration_manager import ConfigurationManager
+            # Import required widgets and Configuration Manager
+            from gui.widgets.configuration_manager import ConfigurationManager, DynamicsAuthWidget
+            from PyQt6.QtWidgets import QGroupBox, QFormLayout, QCheckBox, QComboBox
             
-            # Create and add configuration manager directly without extra header
-            # (ConfigurationManager has its own header)
+            # STRATEGY: Force the ConfigurationManager to maintain footer visibility
+            # by setting explicit size constraints and overriding resize behavior
+            
             config_manager = ConfigurationManager()
             config_manager.configuration_changed.connect(self.on_configuration_changed)
+            
+            # CRITICAL: Set minimum height to ensure footer is always visible
+            # Header (60px) + Content (minimum 300px) + Footer (80px) = 440px minimum
+            config_manager.setMinimumHeight(440)
+            
+            # Force size policy to ensure proper expansion
+            config_manager.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+            
+            # Override the resize event to force footer visibility
+            original_resize_event = config_manager.resizeEvent
+            def forced_resize_event(event):
+                # Call original resize event first
+                original_resize_event(event)
+                
+                # Force footer to be visible and at correct height
+                if hasattr(config_manager, 'footer_widget'):
+                    footer = config_manager.footer_widget
+                    footer.setVisible(True)
+                    footer.setFixedHeight(80)
+                    footer.setMinimumHeight(80)
+                    footer.setMaximumHeight(80)
+                    footer.raise_()  # Bring footer to front
+                    
+                    # Force layout update
+                    if hasattr(config_manager, 'layout'):
+                        config_manager.layout().update()
+                        config_manager.layout().activate()
+                
+                # Ensure the widget itself maintains minimum height
+                if config_manager.height() < 440:
+                    config_manager.setMinimumHeight(440)
+            
+            # Replace the resize event
+            config_manager.resizeEvent = forced_resize_event
+            
+            # Store reference for cleanup
             self.active_widgets.append(config_manager)
+            
+            # Add directly to ContentArea layout
             self.layout.addWidget(config_manager)
             
-        except ImportError:
+            # Force immediate layout update
+            self.layout.update()
+            self.layout.activate()
+            
+        except ImportError as e:
+            logger.warning(f"Could not load Configuration Manager: {e}")
             # Fallback placeholder
             placeholder = QLabel("⚙️ System Configuration\n\nComing Soon...")
             placeholder.setFont(QFont("Segoe UI", 16))
@@ -463,6 +510,10 @@ class ContentArea(QWidget):
             placeholder.setAlignment(Qt.AlignmentFlag.AlignCenter)
             self.layout.addWidget(placeholder)
             self.layout.addStretch()
+    
+
+    
+
     
     def on_configuration_changed(self, config_data: dict):
         """Handle configuration changes"""
