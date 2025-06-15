@@ -445,75 +445,127 @@ class ContentArea(QWidget):
             self.layout.addStretch()
     
     def show_settings_placeholder(self):
-        """Show settings/configuration - FORCED FOOTER VISIBILITY approach"""
+        """Embed Configuration Manager directly in the content area with a fixed external footer."""
         try:
-            # Import required widgets and Configuration Manager
-            from gui.widgets.configuration_manager import ConfigurationManager, DynamicsAuthWidget
-            from PyQt6.QtWidgets import QGroupBox, QFormLayout, QCheckBox, QComboBox
+            # Import Configuration Manager
+            from gui.widgets.configuration_manager import ConfigurationManager
             
-            # STRATEGY: Force the ConfigurationManager to maintain footer visibility
-            # by setting explicit size constraints and overriding resize behavior
+            # ----- Create container for embedded settings -----
+            container = QWidget()
+            container_layout = QVBoxLayout(container)
+            container_layout.setContentsMargins(0, 0, 0, 0)
+            container_layout.setSpacing(0)
             
+            # ----- Create ConfigurationManager -----
             config_manager = ConfigurationManager()
             config_manager.configuration_changed.connect(self.on_configuration_changed)
             
-            # CRITICAL: Set minimum height to ensure footer is always visible
-            # Header (60px) + Content (minimum 300px) + Footer (80px) = 440px minimum
-            config_manager.setMinimumHeight(440)
+            # Detach the internal footer so we can manage it externally
+            if hasattr(config_manager, "footer_widget"):
+                footer = config_manager.footer_widget
+                # Remove from internal layout & re-parent to container
+                if hasattr(config_manager, "layout") and config_manager.layout() is not None:
+                    config_manager.layout().removeWidget(footer)
+                footer.setParent(container)
+                footer.setFixedHeight(200)
+                footer.setMinimumHeight(200)
+                footer.setMaximumHeight(200)
+                # Ensure the footer's size policy is fixed vertically
+                footer.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+            else:
+                footer = None  # Fallback (should not happen)
             
-            # Force size policy to ensure proper expansion
+            # Ensure the scroll area inside ConfigurationManager expands
             config_manager.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
             
-            # Override the resize event to force footer visibility
-            original_resize_event = config_manager.resizeEvent
-            def forced_resize_event(event):
-                # Call original resize event first
-                original_resize_event(event)
-                
-                # Force footer to be visible and at correct height
-                if hasattr(config_manager, 'footer_widget'):
-                    footer = config_manager.footer_widget
-                    footer.setVisible(True)
-                    footer.setFixedHeight(80)
-                    footer.setMinimumHeight(80)
-                    footer.setMaximumHeight(80)
-                    footer.raise_()  # Bring footer to front
-                    
-                    # Force layout update
-                    if hasattr(config_manager, 'layout'):
-                        config_manager.layout().update()
-                        config_manager.layout().activate()
-                
-                # Ensure the widget itself maintains minimum height
-                if config_manager.height() < 440:
-                    config_manager.setMinimumHeight(440)
+            # ----- Wrap ConfigurationManager in a scroll area -----
+            from PyQt6.QtWidgets import QScrollArea
+            scroll_area = QScrollArea()
+            scroll_area.setWidgetResizable(True)
+            scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+            scroll_area.setFrameShape(QFrame.Shape.NoFrame)
+            scroll_area.setWidget(config_manager)
             
-            # Replace the resize event
-            config_manager.resizeEvent = forced_resize_event
+            # Add scroll area then footer
+            container_layout.addWidget(scroll_area, 1)  # stretch=1
+            if footer:
+                container_layout.addWidget(footer, 0)  # stretch=0 (fixed)
             
-            # Store reference for cleanup
+            # Ensure scroll area stretches properly
+            container_layout.setStretchFactor(scroll_area, 1)
+            
+            # Keep footer on top of Z-order during resize events
+            if footer:
+                def raise_footer():
+                    footer.raise_()
+                container.resizeEvent = lambda event, orig=container.resizeEvent: (orig(event) if orig else None, raise_footer())
+                raise_footer()
+            
+            # ----- Add container to content layout -----
+            self.layout.addWidget(container)
+            self.active_widgets.append(container)
             self.active_widgets.append(config_manager)
-            
-            # Add directly to ContentArea layout
-            self.layout.addWidget(config_manager)
+            if footer:
+                self.active_widgets.append(footer)
             
             # Force immediate layout update
             self.layout.update()
             self.layout.activate()
             
-        except ImportError as e:
-            logger.warning(f"Could not load Configuration Manager: {e}")
-            # Fallback placeholder
-            placeholder = QLabel("⚙️ System Configuration\n\nComing Soon...")
-            placeholder.setFont(QFont("Segoe UI", 16))
-            placeholder.setStyleSheet("color: #7f8c8d;")
+        except Exception as e:
+            from PyQt6.QtWidgets import QLabel
+            import traceback
+            traceback.print_exc()
+            placeholder = QLabel(f"⚙️ Settings could not be loaded.\n\nError: {e}")
             placeholder.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            placeholder.setStyleSheet("color: #e74c3c; font-size: 14px;")
             self.layout.addWidget(placeholder)
             self.layout.addStretch()
     
-
+    def show_settings_info_message(self):
+        """Show an informational message about settings access"""
+        info_widget = QWidget()
+        info_layout = QVBoxLayout(info_widget)
+        info_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        info_layout.setSpacing(20)
+        
+        # Settings icon and title
+        title = QLabel("⚙️ System Settings")
+        title.setFont(QFont("Segoe UI", 24, QFont.Weight.Bold))
+        title.setStyleSheet("color: #0077B5; margin-bottom: 10px;")
+        title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        info_layout.addWidget(title)
+        
+        # Instructions
+        instructions = QLabel(
+            "Settings can be accessed through:\n\n"
+            "• Tools → Settings (menu bar)\n"
+            "• Ctrl+, (keyboard shortcut)\n"
+            "• Click the Settings button in the sidebar"
+        )
+        instructions.setFont(QFont("Segoe UI", 14))
+        instructions.setStyleSheet("color: #2c3e50; line-height: 1.6;")
+        instructions.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        info_layout.addWidget(instructions)
+        
+        # Features list
+        features = QLabel(
+            "Configure:\n"
+            "✓ Dynamics 365 Authentication\n"
+            "✓ Email Processing Settings\n"
+            "✓ Performance Options\n"
+            "✓ AI Intelligence Settings"
+        )
+        features.setFont(QFont("Segoe UI", 12))
+        features.setStyleSheet("color: #666; margin-top: 20px;")
+        features.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        info_layout.addWidget(features)
+        
+        self.layout.addWidget(info_widget)
     
-
+    def force_footer_positioning(self, container, config_manager):
+        """Legacy method - no longer needed with separate window approach"""
+        pass
     
     def on_configuration_changed(self, config_data: dict):
         """Handle configuration changes"""
@@ -897,7 +949,7 @@ class MainWindow(QMainWindow):
             super().showMaximized()  # Fallback
 
     def eliminate_voice_access_gap(self):
-        """Eliminate the Voice Access gap for maximized windows"""
+        """Eliminate the Voice Access gap for maximized windows with widget protection"""
         try:
             if self.isMaximized():
                 screen = self.screen()
@@ -918,8 +970,35 @@ class MainWindow(QMainWindow):
                     self.setGeometry(maximized_rect)
                     logger.info(f"✅ Voice Access gap eliminated - window geometry: {maximized_rect}")
                     
+                    # CRITICAL: Protect embedded ConfigurationManager after geometry change
+                    QTimer.singleShot(50, self.protect_embedded_widgets)
+                    
         except Exception as e:
             logger.error(f"❌ Error eliminating Voice Access gap: {e}")
+    
+    def protect_embedded_widgets(self):
+        """Protect embedded widgets from geometry manipulation effects"""
+        try:
+            # Access active_widgets from content_area, not MainWindow
+            if hasattr(self, 'content_area') and hasattr(self.content_area, 'active_widgets'):
+                # Find and protect any embedded ConfigurationManager widgets
+                for widget in self.content_area.active_widgets:
+                    # Check if widget is a ConfigurationManager or contains one
+                    if hasattr(widget, 'footer_widget'):
+                        # Direct ConfigurationManager
+                        self.force_footer_positioning(self.content_area, widget)
+                    elif hasattr(widget, 'findChild'):
+                        # Search for ConfigurationManager in container
+                        from gui.widgets.configuration_manager import ConfigurationManager
+                        config_manager = widget.findChild(ConfigurationManager)
+                        if config_manager:
+                            self.force_footer_positioning(widget, config_manager)
+                
+                logger.debug("🛡️ Embedded widget protection completed")
+            else:
+                logger.debug("No content area or active widgets found")
+        except Exception as e:
+            logger.warning(f"Embedded widget protection error: {e}")
 
     def handle_maximized_state(self):
         """Handle maximized state to eliminate Voice Access gap"""
@@ -994,6 +1073,7 @@ class MainWindow(QMainWindow):
         tools_menu = menubar.addMenu("&Tools")
         
         settings_action = QAction("&Settings", self)
+        settings_action.setShortcut("Ctrl+,")
         settings_action.triggered.connect(lambda: self.on_navigate("settings"))
         tools_menu.addAction(settings_action)
         

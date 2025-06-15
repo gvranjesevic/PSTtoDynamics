@@ -333,10 +333,10 @@ class ConfigurationManager(QWidget):
             actual_height = self.footer_widget.height()
             
             # Ensure footer stays at correct height during resize
-            if actual_height != 80:
-                self.footer_widget.setFixedHeight(80)
-                self.footer_widget.setMinimumHeight(80)
-                self.footer_widget.setMaximumHeight(80)
+            if actual_height != 200:
+                self.footer_widget.setFixedHeight(200)
+                self.footer_widget.setMinimumHeight(200)
+                self.footer_widget.setMaximumHeight(200)
     
     def setup_ui(self):
         # Main layout
@@ -495,9 +495,9 @@ class ConfigurationManager(QWidget):
         
         # FIXED FOOTER (outside scroll area) - always visible
         footer_widget = QWidget()
-        footer_widget.setFixedHeight(80)
-        footer_widget.setMinimumHeight(80)
-        footer_widget.setMaximumHeight(80)
+        footer_widget.setFixedHeight(200)
+        footer_widget.setMinimumHeight(200)
+        footer_widget.setMaximumHeight(200)
         footer_widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         
         footer_widget.setStyleSheet("""

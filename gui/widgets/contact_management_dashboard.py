@@ -561,8 +561,8 @@ class ContactManagementDashboard(QWidget):
             try:
                 if self and not self.isHidden():
                     show_notification(
-            self, "🚀 Contact Management Dashboard Enhanced with Phase 5.7 Features", 
-            NotificationType.SUCCESS, duration=3000
+                        self, "🚀 Contact Management Dashboard Enhanced with Phase 5.7 Features", 
+                        NotificationType.SUCCESS, duration=3000
                     )
             except RuntimeError:
                 # Widget was deleted - ignore safely
@@ -1271,10 +1271,10 @@ class ContactManagementDashboard(QWidget):
                 def safe_theme_notification():
                     try:
                         if self and not self.isHidden():
-                show_notification(
-                    self, f"Theme changed to {self.theme_selector.currentText()}", 
-                    NotificationType.INFO, duration=2000
-                )
+                            show_notification(
+                                self, f"Theme changed to {self.theme_selector.currentText()}", 
+                                NotificationType.INFO, duration=2000
+                            )
                     except RuntimeError:
                         pass
                 
