@@ -226,7 +226,8 @@ class ContentArea(QWidget):
     def setup_ui(self):
         """Setup the content area interface"""
         self.layout = QVBoxLayout(self)
-        self.layout.setContentsMargins(20, 20, 20, 20)
+        self.layout.setContentsMargins(0, 0, 0, 0)  # Remove excessive margins
+        # Removed any initial spacing to avoid top gap
         
         # Welcome message
         welcome_label = QLabel("Welcome to PST to Dynamics 365")
@@ -243,16 +244,21 @@ class ContentArea(QWidget):
         self.layout.addWidget(subtitle_label)
         self.layout.addStretch()
     
+    def clear_layout(self):
+        """Remove all items (including spacers/stretches) from the layout"""
+        while self.layout.count():
+            item = self.layout.takeAt(0)
+            widget = item.widget()
+            if widget is not None:
+                widget.setParent(None)
+    
     def show_module(self, module_id: str):
         """Display the specified module"""
         # Clear current content
         self.cleanup_active_widgets()
         
-        # Clear layout
-        for i in reversed(range(self.layout.count())):
-            child = self.layout.itemAt(i).widget()
-            if child:
-                child.setParent(None)
+        # Clear layout completely (widgets + spacers)
+        self.clear_layout()
         
         # Show appropriate module
         if module_id == "dashboard":
@@ -278,11 +284,14 @@ class ContentArea(QWidget):
         # Dashboard header
         header = QLabel("📊 System Dashboard")
         header.setFont(QFont("Segoe UI", 20, QFont.Weight.Bold))
-        header.setStyleSheet("color: #2c3e50; margin-bottom: 20px;")
+        header.setStyleSheet("color: #2c3e50; margin-bottom: 20px; margin-left: 20px;")
         self.layout.addWidget(header)
         
-        # Status cards
-        status_layout = QHBoxLayout()
+        # Status cards with proper margins
+        status_widget = QWidget()
+        status_layout = QHBoxLayout(status_widget)
+        status_layout.setContentsMargins(20, 0, 20, 0)
+        status_layout.setSpacing(15)
         
         # System status card
         system_card = self.create_status_card("System Status", "✅ Online", "#27ae60")
@@ -296,7 +305,7 @@ class ContentArea(QWidget):
         sync_card = self.create_status_card("Last Sync", "🔄 Never", "#f39c12")
         status_layout.addWidget(sync_card)
         
-        self.layout.addLayout(status_layout)
+        self.layout.addWidget(status_widget)
         self.layout.addStretch()
     
     def create_status_card(self, title: str, status: str, color: str) -> QFrame:
@@ -332,12 +341,7 @@ class ContentArea(QWidget):
         try:
             from gui.widgets.import_wizard import ImportWizard
             
-            header = QLabel("📧 Import Wizard")
-            header.setFont(QFont("Segoe UI", 20, QFont.Weight.Bold))
-            header.setStyleSheet("color: #2c3e50; margin-bottom: 20px;")
-            self.layout.addWidget(header)
-            
-            # Create and add import wizard
+            # Create and add import wizard directly
             wizard = ImportWizard()
             wizard.wizard_completed.connect(self.on_import_completed)
             wizard.wizard_cancelled.connect(self.on_import_cancelled)
@@ -387,12 +391,7 @@ class ContentArea(QWidget):
         try:
             from gui.widgets.analytics_dashboard import AnalyticsDashboard
             
-            header = QLabel("📈 Analytics Dashboard")
-            header.setFont(QFont("Segoe UI", 20, QFont.Weight.Bold))
-            header.setStyleSheet("color: #2c3e50; margin-bottom: 20px;")
-            self.layout.addWidget(header)
-            
-            # Create and add analytics dashboard
+            # Create and add analytics dashboard directly
             dashboard = AnalyticsDashboard()
             self.active_widgets.append(dashboard)
             self.layout.addWidget(dashboard)
@@ -411,12 +410,7 @@ class ContentArea(QWidget):
         try:
             from gui.widgets.ai_intelligence_dashboard import AIIntelligenceDashboard
             
-            header = QLabel("🧠 AI Intelligence Dashboard")
-            header.setFont(QFont("Segoe UI", 20, QFont.Weight.Bold))
-            header.setStyleSheet("color: #2c3e50; margin-bottom: 20px;")
-            self.layout.addWidget(header)
-            
-            # Create and add AI dashboard
+            # Create and add AI dashboard directly
             dashboard = AIIntelligenceDashboard()
             self.active_widgets.append(dashboard)
             self.layout.addWidget(dashboard)
@@ -435,12 +429,7 @@ class ContentArea(QWidget):
         try:
             from gui.widgets.contact_management_dashboard import ContactManagementDashboard
             
-            header = QLabel("👥 Contact Management")
-            header.setFont(QFont("Segoe UI", 20, QFont.Weight.Bold))
-            header.setStyleSheet("color: #2c3e50; margin-bottom: 20px;")
-            self.layout.addWidget(header)
-            
-            # Create and add contact dashboard
+            # Create and add contact dashboard directly
             dashboard = ContactManagementDashboard()
             self.active_widgets.append(dashboard)
             self.layout.addWidget(dashboard)
@@ -459,12 +448,8 @@ class ContentArea(QWidget):
         try:
             from gui.widgets.configuration_manager import ConfigurationManager
             
-            header = QLabel("⚙️ System Configuration")
-            header.setFont(QFont("Segoe UI", 20, QFont.Weight.Bold))
-            header.setStyleSheet("color: #2c3e50; margin-bottom: 20px;")
-            self.layout.addWidget(header)
-            
-            # Create and add configuration manager
+            # Create and add configuration manager directly without extra header
+            # (ConfigurationManager has its own header)
             config_manager = ConfigurationManager()
             config_manager.configuration_changed.connect(self.on_configuration_changed)
             self.active_widgets.append(config_manager)
@@ -487,12 +472,7 @@ class ContentArea(QWidget):
     
     def show_sync_monitoring_dashboard(self):
         """Show the sync monitoring dashboard"""
-        header = QLabel("🔄 Sync Monitoring Dashboard")
-        header.setFont(QFont("Segoe UI", 20, QFont.Weight.Bold))
-        header.setStyleSheet("color: #2c3e50; margin-bottom: 20px;")
-        self.layout.addWidget(header)
-        
-        # Create sync engine and dashboard
+        # Create sync engine and dashboard directly
         sync_engine = SyncEngine()
         dashboard = SyncMonitoringDashboard(sync_engine)
         self.active_widgets.append(dashboard)
@@ -583,6 +563,7 @@ class MainWindow(QMainWindow):
         
         # Create central widget and main layout
         central_widget = QWidget()
+        central_widget.setContentsMargins(0, 0, 0, 0)
         self.setCentralWidget(central_widget)
         
         # Main horizontal layout (sidebar + content)
@@ -593,6 +574,12 @@ class MainWindow(QMainWindow):
         # Create and setup main components
         self.navigation_sidebar = NavigationSidebar()
         self.content_area = ContentArea()
+        self.content_area.setContentsMargins(0, 0, 0, 0)
+        if hasattr(self.content_area, 'layout'):
+            layout = self.content_area.layout
+            if layout is not None:
+                layout.setContentsMargins(0, 0, 0, 0)
+                layout.setSpacing(0)
         
         # Add components to layout
         main_layout.addWidget(self.navigation_sidebar)

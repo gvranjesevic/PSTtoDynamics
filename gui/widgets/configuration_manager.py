@@ -116,7 +116,6 @@ class DynamicsAuthWidget(QWidget):
         super().__init__()
         self.setup_ui()
         self.load_settings()
-        self.setMinimumHeight(550)  # Ensure minimum height for all content
     
     def setup_ui(self):
         """Setup authentication configuration UI"""
@@ -237,6 +236,9 @@ class DynamicsAuthWidget(QWidget):
         """)
         self.test_button.clicked.connect(self.test_connection)
         layout.addWidget(self.test_button)
+        
+        # Add some bottom spacing
+        layout.addSpacing(20)
     
     def get_input_style(self):
         """Get standardized input field styling with enhanced design"""
@@ -308,6 +310,46 @@ class DynamicsAuthWidget(QWidget):
         }
 
 
+class ConfigFooter(QWidget):
+    """Fixed footer with status label and Save button"""
+
+    def __init__(self, on_save_clicked):
+        super().__init__()
+        self.setFixedHeight(60)
+        self.setStyleSheet(
+            """
+            background-color: white;
+            border-top: 1px solid #E1E4E8;
+            """
+        )
+
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(20, 0, 20, 0)
+
+        self.status_label = QLabel("Configuration ready for modification")
+        self.status_label.setStyleSheet("color: #0077B5; font-size: 11px;")
+        layout.addWidget(self.status_label)
+        layout.addStretch()
+
+        self.save_button = QPushButton("Save Settings")
+        self.save_button.setStyleSheet(
+            """
+            QPushButton {
+                background-color: #0077B5;
+                color: white;
+                border: none;
+                padding: 8px 20px;
+                border-radius: 4px;
+                font-weight: bold;
+            }
+            QPushButton:hover { background-color: #006097; }
+            QPushButton:pressed { background-color: #004B7A; }
+            """
+        )
+        self.save_button.clicked.connect(on_save_clicked)
+        layout.addWidget(self.save_button)
+
+
 class ConfigurationManager(QWidget):
     """Main Configuration Manager Widget"""
     
@@ -318,62 +360,99 @@ class ConfigurationManager(QWidget):
     def __init__(self):
         super().__init__()
         self.test_thread = None
+        # Create the 'live' auth widget for Panel A
+        self.auth_widget = DynamicsAuthWidget()
         self.setup_ui()
         self.load_all_settings()
     
     def setup_ui(self):
-        """Setup the configuration manager interface"""
+        # Main layout
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
-        
+
         # Header
-        header = self.create_header()
+        header = QWidget()
+        header.setFixedHeight(60)
+        header.setStyleSheet("""
+            background-color: #0077B5;
+            border-bottom: 1px solid #006097;
+        """)
+        header_layout = QHBoxLayout(header)
+        header_layout.setContentsMargins(20, 0, 20, 0)
+        title = QLabel("Settings")
+        title.setStyleSheet("""
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+        """)
+        header_layout.addWidget(title)
         layout.addWidget(header)
-        
-        # Main content area - direct integration without tabs
-        main_content = QWidget()
-        main_layout = QVBoxLayout(main_content)
-        main_layout.setContentsMargins(0, 10, 0, 10)
-        main_layout.setSpacing(0)
-        
-        # Use a scroll area to handle different window sizes gracefully
+
+        # Test Panel removed after verification – no additional top widgets
+
         scroll_area = QScrollArea()
         scroll_area.setWidgetResizable(True)
+        scroll_area.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
+        scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         scroll_area.setFrameShape(QFrame.Shape.NoFrame)
-        scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
-        scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        main_layout.addWidget(scroll_area)
+        scroll_area.setStyleSheet("QScrollArea { border: none; background-color: #F3F6F8; }")
+        scroll_widget = QWidget()
+        scroll_widget.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Minimum)
+        scroll_layout = QVBoxLayout(scroll_widget)
+        scroll_layout.setContentsMargins(0, 0, 0, 0)
+        scroll_layout.setSpacing(25)
+        scroll_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        # Use the 'live' auth_widget for the main content
+        scroll_layout.addWidget(self.auth_widget)
+        # Add the rest of the settings sections
+        email_section = QGroupBox("📧 Email Processing Settings")
+        email_layout = QFormLayout(email_section)
+        email_layout.setContentsMargins(20, 15, 20, 15)
+        email_layout.setSpacing(12)
+        email_layout.addRow("Batch Size:", QLineEdit())
+        email_layout.addRow("Timeout (seconds):", QLineEdit())
+        email_layout.addRow("Max Attachments:", QLineEdit())
+        email_layout.addRow("Auto-retry Failed:", QCheckBox("Enable"))
+        scroll_layout.addWidget(email_section)
+        perf_section = QGroupBox("⚡ Performance Settings")
+        perf_layout = QFormLayout(perf_section)
+        perf_layout.setContentsMargins(20, 15, 20, 15)
+        perf_layout.setSpacing(12)
+        perf_layout.addRow("Thread Pool Size:", QLineEdit())
+        perf_layout.addRow("Memory Limit (MB):", QLineEdit())
+        perf_layout.addRow("Cache Size (MB):", QLineEdit())
+        perf_layout.addRow("Enable Logging:", QCheckBox("Enable"))
+        scroll_layout.addWidget(perf_section)
+        ai_section = QGroupBox("🧠 AI Intelligence Settings")
+        ai_layout = QFormLayout(ai_section)
+        ai_layout.setContentsMargins(20, 15, 20, 15)
+        ai_layout.setSpacing(12)
+        ai_layout.addRow("Enable AI Analysis:", QCheckBox("Enable"))
+        ai_layout.addRow("Confidence Threshold:", QLineEdit())
+        mode_combo = QComboBox()
+        mode_combo.addItems(["Active", "Passive", "Disabled"])
+        ai_layout.addRow("Learning Mode:", mode_combo)
+        ai_layout.addRow("Pattern Recognition:", QCheckBox("Enable"))
+        scroll_layout.addWidget(ai_section)
+        scroll_layout.addStretch()
+        scroll_area.setWidget(scroll_widget)
+        layout.addWidget(scroll_area, 1)  # Give scroll area stretch so footer stays visible
 
-        # Create a container widget to hold the auth widget and a stretch
-        container_widget = QWidget()
-        container_layout = QVBoxLayout(container_widget)
-        container_layout.setContentsMargins(0, 0, 0, 0)
-        container_layout.setSpacing(0)
-
-        # Direct authentication widget integration
-        self.auth_widget = DynamicsAuthWidget()
-        container_layout.addWidget(self.auth_widget)
-        
-        # Set minimum size to ensure all content is visible
-        container_widget.setMinimumHeight(600)
-
-        scroll_area.setWidget(container_widget)
-        
-        layout.addWidget(main_content, 1)
-        
         # Footer
-        footer = self.create_footer()
+        footer = ConfigFooter(self.save_all_settings)
         layout.addWidget(footer)
-    
+        # Expose footer widgets for convenience
+        self.status_label = footer.status_label
+        self.save_button = footer.save_button
+
     def create_header(self) -> QWidget:
         """Create configuration manager header"""
         header = QWidget()
         header.setFixedHeight(80)
         header.setStyleSheet("""
             QWidget {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                    stop:0 #8e44ad, stop:1 #9b59b6);
+                background: #0077B5;
                 border-radius: 0px;
             }
         """)
@@ -409,8 +488,8 @@ class ConfigurationManager(QWidget):
         footer.setFixedHeight(70)
         footer.setStyleSheet("""
             QFrame {
-                background-color: #f8f9fa;
-                border-top: 1px solid #dee2e6;
+                background-color: white;
+                border-top: 1px solid #0077B5;
             }
         """)
         
@@ -419,7 +498,7 @@ class ConfigurationManager(QWidget):
         
         # Status info
         self.status_label = QLabel("Configuration ready for modification")
-        self.status_label.setStyleSheet("color: #6c757d; font-size: 11px;")
+        self.status_label.setStyleSheet("color: #0077B5; font-size: 11px;")
         layout.addWidget(self.status_label)
         
         layout.addStretch()
@@ -429,7 +508,7 @@ class ConfigurationManager(QWidget):
         self.save_button.setMinimumHeight(40)
         self.save_button.setStyleSheet("""
             QPushButton {
-                background-color: #28a745;
+                background-color: #0077B5;
                 color: white;
                 border: none;
                 border-radius: 6px;
@@ -438,10 +517,10 @@ class ConfigurationManager(QWidget):
                 padding: 10px 20px;
             }
             QPushButton:hover {
-                background-color: #218838;
+                background-color: #005885;
             }
             QPushButton:pressed {
-                background-color: #1e7e34;
+                background-color: #004B73;
             }
         """)
         self.save_button.clicked.connect(self.save_all_settings)
@@ -454,17 +533,16 @@ class ConfigurationManager(QWidget):
         """Save all configuration settings"""
         try:
             self.auth_widget.save_settings()
-            
             config_data = {
                 'dynamics_auth': self.auth_widget.get_config_data()
             }
             self.configuration_changed.emit(config_data)
-            
             self.status_label.setText("Configuration saved successfully")
             QMessageBox.information(self, "Configuration Saved", 
                                   "✅ All configuration settings have been saved successfully.")
-            
         except Exception as e:
+            self.status_label.setText(f"Failed to save configuration: {str(e)}")
+            logger.debug(f"Failed to save configuration: {e}")
             QMessageBox.critical(self, "Save Error", f"Failed to save configuration: {str(e)}")
     
     def load_all_settings(self):
@@ -472,10 +550,15 @@ class ConfigurationManager(QWidget):
         try:
             self.auth_widget.load_settings()
             self.status_label.setText("Configuration loaded successfully")
-            
         except Exception as e:
-            logger.debug("Failed to load configuration: {e}")
+            logger.debug(f"Failed to load configuration: {e}")
             self.status_label.setText("Using default configuration")
+
+    def create_test_panel(self):
+        # (DEPRECATED: now replaced by create_test_scrollarea_panel)
+        pass
+
+    # create_test_scrollarea_panel removed – test labels no longer needed
 
 
 def main():
