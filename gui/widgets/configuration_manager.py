@@ -326,17 +326,9 @@ class ConfigurationManager(QWidget):
         self.load_all_settings()
     
     def resizeEvent(self, event):
-        """Override resize event to ensure footer height consistency"""
+        """Override resize event - simplified like Import Wizard"""
         super().resizeEvent(event)
-        
-        if hasattr(self, 'footer_widget'):
-            actual_height = self.footer_widget.height()
-            
-            # Ensure footer stays at correct height during resize
-            if actual_height != 200:
-                self.footer_widget.setFixedHeight(200)
-                self.footer_widget.setMinimumHeight(200)
-                self.footer_widget.setMaximumHeight(200)
+        # No aggressive height enforcement - let Qt handle layout naturally
     
     def setup_ui(self):
         # Main layout
@@ -493,22 +485,20 @@ class ConfigurationManager(QWidget):
         scroll_area.setWidget(scroll_widget)
         layout.addWidget(scroll_area, 1)  # Takes remaining space
         
-        # FIXED FOOTER (outside scroll area) - always visible
-        footer_widget = QWidget()
-        footer_widget.setFixedHeight(200)
-        footer_widget.setMinimumHeight(200)
-        footer_widget.setMaximumHeight(200)
-        footer_widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        
-        footer_widget.setStyleSheet("""
-            background-color: #F8F9FA;
-            border-top: 1px solid #E1E4E8;
+        # FOOTER - Apply Import Wizard's successful pattern
+        footer = QFrame()  # Use QFrame like Import Wizard
+        footer.setFixedHeight(80)  # Match Import Wizard's 80px (not 200px)
+        footer.setStyleSheet("""
+            QFrame {
+                background-color: #F8F9FA;
+                border-top: 1px solid #E1E4E8;
+            }
         """)
-        footer_layout = QHBoxLayout(footer_widget)
+        footer_layout = QHBoxLayout(footer)
         footer_layout.setContentsMargins(20, 15, 20, 15)
         
         # Store footer reference
-        self.footer_widget = footer_widget
+        self.footer_widget = footer
         
         # Status label
         self.status_label = QLabel("Configuration ready")
@@ -539,8 +529,8 @@ class ConfigurationManager(QWidget):
         self.save_button.clicked.connect(self.save_all_settings)
         footer_layout.addWidget(self.save_button)
         
-        # Add fixed footer to main layout
-        layout.addWidget(footer_widget, 0)
+        # Add footer to main layout
+        layout.addWidget(footer)
     
     def save_all_settings(self):
         """Save all configuration settings"""

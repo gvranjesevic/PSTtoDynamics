@@ -467,9 +467,9 @@ class ContentArea(QWidget):
                 if hasattr(config_manager, "layout") and config_manager.layout() is not None:
                     config_manager.layout().removeWidget(footer)
                 footer.setParent(container)
-                footer.setFixedHeight(200)
-                footer.setMinimumHeight(200)
-                footer.setMaximumHeight(200)
+                footer.setFixedHeight(80)  # Match Import Wizard's 80px
+                footer.setMinimumHeight(80)
+                footer.setMaximumHeight(80)
                 # Ensure the footer's size policy is fixed vertically
                 footer.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
             else:
