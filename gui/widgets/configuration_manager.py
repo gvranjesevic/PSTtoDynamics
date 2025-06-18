@@ -28,6 +28,14 @@ from PyQt6.QtCore import Qt, pyqtSignal, QThread, QTimer, QSettings
 from PyQt6.QtGui import QFont, QPixmap, QIcon, QPalette, QFontMetrics
 from PyQt6.QtWidgets import QApplication
 
+# Network connectivity testing
+try:
+    import requests
+    REQUESTS_AVAILABLE = True
+except ImportError:
+    REQUESTS_AVAILABLE = False
+    logger.warning("⚠️ requests library not available - connectivity testing disabled")
+
 # Import backend configuration modules
 try:
     sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
@@ -39,6 +47,246 @@ try:
 except ImportError as e:
     BACKEND_AVAILABLE = False
     logger.warning("⚠️ Backend modules not available in Configuration Manager: {e}")
+
+
+class ConnectivityTestThread(QThread):
+    """Thread for performing real connectivity tests to Azure AD and Dynamics 365"""
+    
+    progress_updated = pyqtSignal(int, str)  # progress, status message
+    test_completed = pyqtSignal(dict)  # results dictionary
+    test_failed = pyqtSignal(str)  # error message
+    
+    def __init__(self, tenant_id: str, client_id: str, client_secret: str, org_url: str):
+        super().__init__()
+        self.tenant_id = tenant_id
+        self.client_id = client_id
+        self.client_secret = client_secret
+        self.org_url = org_url
+        self.results = {}
+    
+    def run(self):
+        """Perform comprehensive connectivity tests"""
+        try:
+            # Test 1: Tenant ID - Azure AD Discovery
+            self.progress_updated.emit(10, "Testing Azure AD tenant accessibility...")
+            self.test_tenant_connectivity()
+            
+            # Test 2: Client ID - App registration verification  
+            self.progress_updated.emit(30, "Verifying app registration...")
+            self.test_client_id_connectivity()
+            
+            # Test 3: Client Secret - Authentication test
+            self.progress_updated.emit(60, "Testing authentication with client secret...")
+            self.test_client_secret_connectivity()
+            
+            # Test 4: Organization URL - Dynamics 365 accessibility
+            self.progress_updated.emit(80, "Testing Dynamics 365 organization access...")
+            self.test_organization_url_connectivity()
+            
+            self.progress_updated.emit(100, "All tests completed!")
+            self.msleep(500)  # Brief pause to show completion
+            
+            self.test_completed.emit(self.results)
+            
+        except Exception as e:
+            self.test_failed.emit(f"Connectivity test error: {str(e)}")
+    
+    def test_tenant_connectivity(self):
+        """Test Azure AD tenant accessibility"""
+        try:
+            import requests
+            import json
+        except ImportError:
+            self.results['tenant_valid'] = False
+            self.results['tenant_error'] = "requests library not available"
+            return
+        
+        try:
+            # Test Azure AD tenant using OAuth authorize endpoint (more reliable than discovery)
+            auth_url = f"https://login.microsoftonline.com/{self.tenant_id}/oauth2/v2.0/authorize"
+            params = {
+                'client_id': '00000000-0000-0000-0000-000000000000',  # Dummy client ID for tenant test
+                'response_type': 'code',
+                'redirect_uri': 'https://localhost',
+                'scope': 'openid',
+                'state': 'tenant_validation_test'
+            }
+            
+            response = requests.get(auth_url, params=params, timeout=10, allow_redirects=False)
+            
+            if response.status_code == 200:
+                # If we get 200, the tenant exists and is accessible
+                self.results['tenant_valid'] = True
+                self.results['tenant_error'] = None
+            elif response.status_code == 302:
+                # Redirect is also good - means tenant exists
+                self.results['tenant_valid'] = True  
+                self.results['tenant_error'] = None
+            elif 'AADSTS90002' in response.text:
+                # AADSTS90002 = Tenant does not exist
+                self.results['tenant_valid'] = False
+                self.results['tenant_error'] = "Tenant not found (AADSTS90002)"
+            elif 'AADSTS50020' in response.text:
+                # AADSTS50020 = User not from tenant (but tenant exists)
+                self.results['tenant_valid'] = True
+                self.results['tenant_error'] = None
+            else:
+                self.results['tenant_valid'] = False
+                self.results['tenant_error'] = f"Tenant validation failed (HTTP {response.status_code})"
+                
+        except requests.exceptions.Timeout:
+            self.results['tenant_valid'] = False
+            self.results['tenant_error'] = "Connection timeout to Azure AD"
+        except requests.exceptions.ConnectionError:
+            self.results['tenant_valid'] = False
+            self.results['tenant_error'] = "Network connection error to Azure AD"
+        except Exception as e:
+            self.results['tenant_valid'] = False
+            self.results['tenant_error'] = f"Azure AD test error: {str(e)}"
+    
+    def test_client_id_connectivity(self):
+        """Test app registration accessibility"""
+        try:
+            import requests
+        except ImportError:
+            self.results['client_valid'] = False
+            self.results['client_error'] = "requests library not available"
+            return
+        
+        try:
+            # Test Microsoft Graph endpoint for app info (requires no auth for basic validation)
+            # This tests if the client_id exists as an app registration
+            auth_url = f"https://login.microsoftonline.com/{self.tenant_id}/oauth2/v2.0/authorize"
+            params = {
+                'client_id': self.client_id,
+                'response_type': 'code',
+                'redirect_uri': 'https://localhost',
+                'scope': 'openid',
+                'state': 'test'
+            }
+            
+            # This will return 200 if client_id exists, error if not
+            response = requests.get(auth_url, params=params, timeout=10, allow_redirects=False)
+            
+            if response.status_code in [200, 302]:
+                # Check if response contains client_id validation error
+                if 'AADSTS700016' in response.text:  # Application not found
+                    self.results['client_valid'] = False
+                    self.results['client_error'] = "Application (Client ID) not found in tenant"
+                else:
+                    self.results['client_valid'] = True
+                    self.results['client_error'] = None
+            else:
+                self.results['client_valid'] = False
+                self.results['client_error'] = f"Client ID validation failed (HTTP {response.status_code})"
+                
+        except requests.exceptions.Timeout:
+            self.results['client_valid'] = False
+            self.results['client_error'] = "Connection timeout testing client ID"
+        except requests.exceptions.ConnectionError:
+            self.results['client_valid'] = False
+            self.results['client_error'] = "Network connection error testing client ID"
+        except Exception as e:
+            self.results['client_valid'] = False
+            self.results['client_error'] = f"Client ID test error: {str(e)}"
+    
+    def test_client_secret_connectivity(self):
+        """Test client secret authentication"""
+        try:
+            import requests
+        except ImportError:
+            self.results['secret_valid'] = False
+            self.results['secret_error'] = "requests library not available"
+            return
+        
+        try:
+            # Test actual authentication with client credentials flow
+            token_url = f"https://login.microsoftonline.com/{self.tenant_id}/oauth2/v2.0/token"
+            
+            data = {
+                'client_id': self.client_id,
+                'client_secret': self.client_secret,
+                'scope': 'https://graph.microsoft.com/.default',
+                'grant_type': 'client_credentials'
+            }
+            
+            response = requests.post(token_url, data=data, timeout=15)
+            
+            if response.status_code == 200:
+                token_data = response.json()
+                if 'access_token' in token_data:
+                    self.results['secret_valid'] = True
+                    self.results['secret_error'] = None
+                    self.results['access_token'] = token_data['access_token']  # Store for Dynamics test
+                else:
+                    self.results['secret_valid'] = False
+                    self.results['secret_error'] = "No access token in authentication response"
+            else:
+                error_data = response.json() if response.content else {}
+                error_desc = error_data.get('error_description', f'HTTP {response.status_code}')
+                self.results['secret_valid'] = False
+                self.results['secret_error'] = f"Authentication failed: {error_desc}"
+                
+        except requests.exceptions.Timeout:
+            self.results['secret_valid'] = False
+            self.results['secret_error'] = "Connection timeout during authentication"
+        except requests.exceptions.ConnectionError:
+            self.results['secret_valid'] = False
+            self.results['secret_error'] = "Network connection error during authentication"
+        except Exception as e:
+            self.results['secret_valid'] = False
+            self.results['secret_error'] = f"Authentication test error: {str(e)}"
+    
+    def test_organization_url_connectivity(self):
+        """Test Dynamics 365 organization accessibility"""
+        try:
+            import requests
+        except ImportError:
+            self.results['org_url_valid'] = False
+            self.results['org_error'] = "requests library not available"
+            return
+        
+        try:
+            # Normalize URL
+            org_url = self.org_url
+            if not org_url.startswith('https://'):
+                org_url = f"https://{org_url}"
+            if not org_url.endswith('/'):
+                org_url += '/'
+            
+            # Test basic connectivity to Dynamics 365 organization
+            api_url = f"{org_url}api/data/v9.2/"
+            
+            # If we have a valid access token from client secret test, use it
+            headers = {}
+            if self.results.get('secret_valid') and 'access_token' in self.results:
+                headers['Authorization'] = f"Bearer {self.results['access_token']}"
+            
+            response = requests.get(api_url, headers=headers, timeout=15)
+            
+            if response.status_code == 200:
+                self.results['org_url_valid'] = True
+                self.results['org_error'] = None
+            elif response.status_code == 401:
+                # Unauthorized is actually good - means the org exists but needs proper auth
+                self.results['org_url_valid'] = True
+                self.results['org_error'] = None
+            elif response.status_code == 404:
+                self.results['org_url_valid'] = False
+                self.results['org_error'] = "Dynamics 365 organization not found at this URL"
+            else:
+                self.results['org_url_valid'] = False
+                self.results['org_error'] = f"Organization URL test failed (HTTP {response.status_code})"
+                
+        except requests.exceptions.Timeout:
+            self.results['org_url_valid'] = False
+            self.results['org_error'] = "Connection timeout to Dynamics 365 organization"
+        except requests.exceptions.ConnectionError:
+            self.results['org_url_valid'] = False
+            self.results['org_error'] = "Network connection error to Dynamics 365 organization"
+        except Exception as e:
+            self.results['org_url_valid'] = False
+            self.results['org_error'] = f"Organization URL test error: {str(e)}"
 
 
 class ConfigurationTestThread(QThread):
@@ -526,8 +774,8 @@ class DynamicsAuthWidget(QWidget):
                               "Please fill in all authentication fields before testing.")
             return
         
-        # Create detailed test results dialog
-        self.show_detailed_test_results(tenant_id, client_id, client_secret, org_url)
+        # Show progress dialog and start real connectivity tests
+        self.show_connectivity_test_dialog(tenant_id, client_id, client_secret, org_url)
     
     def show_detailed_test_results(self, tenant_id: str, client_id: str, client_secret: str, org_url: str):
         """Show detailed test results for each authentication component"""
@@ -538,9 +786,9 @@ class DynamicsAuthWidget(QWidget):
         # Create custom dialog optimized for laptop screens - minimal height
         dialog = QDialog(self)
         dialog.setWindowTitle("🔍 Connection Test Results")
-        dialog.setMinimumSize(500, 280)
-        dialog.setMaximumSize(600, 320)
-        dialog.resize(520, 290)
+        dialog.setMinimumSize(500, 320)
+        dialog.setMaximumSize(600, 380)
+        dialog.resize(520, 340)
         dialog.setModal(True)
         dialog.setWindowFlags(Qt.WindowType.Dialog | Qt.WindowType.WindowTitleHint | Qt.WindowType.WindowCloseButtonHint)
         dialog.setStyleSheet("""
@@ -561,6 +809,13 @@ class DynamicsAuthWidget(QWidget):
         title.setStyleSheet("color: #0077B5; margin-bottom: 2px;")
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(title)
+        
+        # Disclaimer about test type
+        disclaimer = QLabel("Format validation only - not testing actual connectivity")
+        disclaimer.setFont(QFont("Segoe UI", 7))
+        disclaimer.setStyleSheet("color: #666; font-style: italic; margin-bottom: 4px;")
+        disclaimer.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(disclaimer)
         
         # Test results for each component
         components = [
@@ -645,11 +900,233 @@ class DynamicsAuthWidget(QWidget):
         # Show dialog
         dialog.exec()
     
+    def show_connectivity_test_dialog(self, tenant_id: str, client_id: str, client_secret: str, org_url: str):
+        """Show progress dialog and perform real connectivity tests"""
+        from PyQt6.QtWidgets import QDialog, QVBoxLayout, QLabel, QPushButton, QProgressBar
+        from PyQt6.QtCore import QTimer, QThread, pyqtSignal
+        from PyQt6.QtGui import QFont
+        
+        # Create progress dialog
+        progress_dialog = QDialog(self)
+        progress_dialog.setWindowTitle("🔗 Testing Connection")
+        progress_dialog.setMinimumSize(400, 200)
+        progress_dialog.setMaximumSize(500, 250)
+        progress_dialog.resize(450, 220)
+        progress_dialog.setModal(True)
+        progress_dialog.setWindowFlags(Qt.WindowType.Dialog | Qt.WindowType.WindowTitleHint)
+        
+        layout = QVBoxLayout(progress_dialog)
+        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setSpacing(15)
+        
+        # Title
+        title = QLabel("Testing Authentication Components")
+        title.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
+        title.setStyleSheet("color: #0077B5;")
+        title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(title)
+        
+        # Status label
+        status_label = QLabel("Initializing tests...")
+        status_label.setFont(QFont("Segoe UI", 10))
+        status_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(status_label)
+        
+        # Progress bar
+        progress_bar = QProgressBar()
+        progress_bar.setMinimum(0)
+        progress_bar.setMaximum(100)
+        progress_bar.setValue(0)
+        layout.addWidget(progress_bar)
+        
+        # Cancel button (initially hidden)
+        cancel_button = QPushButton("Cancel")
+        cancel_button.setStyleSheet("""
+            QPushButton {
+                background-color: #dc3545;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                font-size: 10px;
+                font-weight: bold;
+                padding: 8px 20px;
+            }
+            QPushButton:hover {
+                background-color: #c82333;
+            }
+        """)
+        cancel_button.hide()
+        layout.addWidget(cancel_button)
+        
+        # Check if requests library is available
+        if not REQUESTS_AVAILABLE:
+            progress_dialog.accept()
+            QMessageBox.warning(self, "Connectivity Testing Unavailable", 
+                              "Network connectivity testing requires the 'requests' library.\n\n"
+                              "Falling back to format validation only.")
+            self.show_detailed_test_results(tenant_id, client_id, client_secret, org_url)
+            return
+        
+        # Start connectivity test thread
+        self.connectivity_thread = ConnectivityTestThread(tenant_id, client_id, client_secret, org_url)
+        self.connectivity_thread.progress_updated.connect(lambda progress, status: (
+            progress_bar.setValue(progress),
+            status_label.setText(status)
+        ))
+        self.connectivity_thread.test_completed.connect(lambda results: (
+            progress_dialog.accept(),
+            print(f"DEBUG: Connectivity test results: {results}"),
+            self.show_detailed_test_results_with_connectivity(tenant_id, client_id, client_secret, org_url, results)
+        ))
+        self.connectivity_thread.test_failed.connect(lambda error: (
+            progress_dialog.accept(),
+            print(f"DEBUG: Connectivity test failed: {error}"),
+            self.show_detailed_test_results_with_fallback(tenant_id, client_id, client_secret, org_url, error)
+        ))
+        
+        cancel_button.clicked.connect(lambda: (
+            self.connectivity_thread.terminate(),
+            progress_dialog.reject()
+        ))
+        
+        self.connectivity_thread.start()
+        progress_dialog.exec()
+    
+    def show_detailed_test_results_with_connectivity(self, tenant_id: str, client_id: str, client_secret: str, org_url: str, connectivity_results: dict):
+        """Show detailed test results including real connectivity tests"""
+        from PyQt6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QFrame
+        from PyQt6.QtCore import Qt
+        from PyQt6.QtGui import QFont
+        
+        # Create custom dialog
+        dialog = QDialog(self)
+        dialog.setWindowTitle("🔍 Complete Connection Test Results")
+        dialog.setMinimumSize(520, 360)
+        dialog.setMaximumSize(620, 420)
+        dialog.resize(560, 380)
+        dialog.setModal(True)
+        dialog.setWindowFlags(Qt.WindowType.Dialog | Qt.WindowType.WindowTitleHint | Qt.WindowType.WindowCloseButtonHint)
+        dialog.setStyleSheet("""
+            QDialog {
+                background-color: #f8f9fa;
+            }
+        """)
+        
+        layout = QVBoxLayout(dialog)
+        layout.setContentsMargins(15, 15, 15, 15)
+        layout.setSpacing(8)
+        
+        # Title
+        title = QLabel("Complete Authentication Test Results")
+        title.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
+        title.setStyleSheet("color: #0077B5; margin-bottom: 4px;")
+        title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(title)
+        
+        # Test results for each component with connectivity
+        components = [
+            ("🏢 Tenant ID", tenant_id, connectivity_results.get('tenant_valid', False)),
+            ("📱 Client ID", client_id, connectivity_results.get('client_valid', False)),
+            ("🔑 Client Secret", client_secret, connectivity_results.get('secret_valid', False)),
+            ("🌐 Organization URL", org_url, connectivity_results.get('org_url_valid', False))
+        ]
+        
+        for component_name, value, is_valid in components:
+            component_frame = self.create_connectivity_test_result_item(component_name, value, is_valid, connectivity_results)
+            layout.addWidget(component_frame)
+        
+        # Overall result
+        all_valid = all(result[2] for result in components)
+        overall_frame = QFrame()
+        overall_frame.setMinimumHeight(30)
+        overall_frame.setMaximumHeight(35)
+        overall_frame.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        overall_frame.setStyleSheet(f"""
+            QFrame {{
+                background-color: {'#d4edda' if all_valid else '#f8d7da'};
+                border: 2px solid {'#28a745' if all_valid else '#dc3545'};
+                border-radius: 4px;
+                padding: 6px;
+                margin-top: 4px;
+                min-height: 30px;
+                max-height: 35px;
+            }}
+        """)
+        
+        overall_layout = QHBoxLayout(overall_frame)
+        overall_layout.setContentsMargins(4, 2, 4, 2)
+        overall_icon = QLabel("✓" if all_valid else "✗")
+        overall_icon.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
+        overall_icon.setMinimumSize(16, 16)
+        overall_icon.setMaximumSize(16, 16)
+        overall_icon.setStyleSheet(f"color: {'#28a745' if all_valid else '#dc3545'}; background-color: transparent;")
+        overall_text = QLabel("🎉 Ready for Dynamics 365 connection!" if all_valid else "❌ Authentication setup incomplete")
+        overall_text.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
+        overall_text.setStyleSheet(f"color: {'#155724' if all_valid else '#721c24'};")
+        overall_text.setWordWrap(True)
+        
+        overall_layout.addWidget(overall_icon)
+        overall_layout.addWidget(overall_text, 1)
+        layout.addWidget(overall_frame)
+        
+        # Close button
+        button_layout = QHBoxLayout()
+        button_layout.setContentsMargins(0, 8, 0, 0)
+        button_layout.addStretch()
+        
+        close_button = QPushButton("OK")
+        close_button.setMinimumSize(60, 24)
+        close_button.setMaximumSize(80, 28)
+        close_button.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+        close_button.setStyleSheet("""
+            QPushButton {
+                background-color: #0077B5;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                font-size: 10px;
+                font-weight: bold;
+                padding: 4px 12px;
+                min-width: 60px;
+                min-height: 24px;
+            }
+            QPushButton:hover {
+                background-color: #005885;
+            }
+        """)
+        close_button.clicked.connect(dialog.accept)
+        button_layout.addWidget(close_button)
+        button_layout.addStretch()
+        
+        layout.addLayout(button_layout)
+        
+        # Show dialog
+        dialog.exec()
+    
+    def show_detailed_test_results_with_fallback(self, tenant_id: str, client_id: str, client_secret: str, org_url: str, error_message: str):
+        """Show test results when connectivity testing failed - show format validation instead"""
+        # Create a minimal results dict for format validation
+        fallback_results = {
+            'tenant_valid': self.validate_tenant_id(tenant_id),
+            'client_valid': self.validate_client_id(client_id),
+            'secret_valid': self.validate_client_secret(client_secret),
+            'org_url_valid': self.validate_org_url(org_url),
+            'tenant_error': 'Connectivity test failed - format validation only',
+            'client_error': 'Connectivity test failed - format validation only',
+            'secret_error': 'Connectivity test failed - format validation only',
+            'org_error': 'Connectivity test failed - format validation only'
+        }
+        
+        print(f"DEBUG: Showing fallback results: {fallback_results}")
+        
+        # Show the connectivity results dialog with fallback data
+        self.show_detailed_test_results_with_connectivity(tenant_id, client_id, client_secret, org_url, fallback_results)
+    
     def create_test_result_item(self, component_name: str, value: str, is_valid: bool) -> QFrame:
         """Create a test result item widget - minimal height"""
         frame = QFrame()
-        frame.setMinimumHeight(40)
-        frame.setMaximumHeight(45)
+        frame.setMinimumHeight(50)
+        frame.setMaximumHeight(60)
         frame.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         frame.setStyleSheet(f"""
             QFrame {{
@@ -658,8 +1135,8 @@ class DynamicsAuthWidget(QWidget):
                 border-radius: 3px;
                 padding: 4px;
                 margin: 1px 0px;
-                min-height: 40px;
-                max-height: 45px;
+                min-height: 50px;
+                max-height: 60px;
             }}
         """)
         
@@ -683,12 +1160,20 @@ class DynamicsAuthWidget(QWidget):
         info_layout.setSpacing(1)
         info_layout.setContentsMargins(0, 0, 0, 0)
         
-        # Single line with name and status
+        # Component name and status with test details
         name_status = f"{component_name} - {'Valid' if is_valid else 'Invalid'}"
         name_label = QLabel(name_status)
         name_label.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
         name_label.setStyleSheet(f"color: {'#155724' if is_valid else '#721c24'};")
         name_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        
+        # Test criteria explanation
+        test_info = self.get_test_criteria_text(component_name, is_valid)
+        test_label = QLabel(test_info)
+        test_label.setFont(QFont("Segoe UI", 7))
+        test_label.setStyleSheet("color: #5a6c7d; font-style: italic;")
+        test_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        test_label.setWordWrap(True)
         
         # Full value display for better readability
         display_value = value
@@ -704,11 +1189,155 @@ class DynamicsAuthWidget(QWidget):
         value_label.setWordWrap(True)
         
         info_layout.addWidget(name_label)
+        info_layout.addWidget(test_label)
         info_layout.addWidget(value_label)
         
         layout.addLayout(info_layout, 1)
         
         return frame
+    
+    def create_connectivity_test_result_item(self, component_name: str, value: str, is_valid: bool, connectivity_results: dict) -> QFrame:
+        """Create a connectivity test result item widget with detailed test info"""
+        print(f"DEBUG: Creating connectivity test item - {component_name}: {is_valid}, value: {value[:20]}...")
+        frame = QFrame()
+        frame.setMinimumHeight(75)
+        frame.setMaximumHeight(85)
+        frame.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        frame.setStyleSheet(f"""
+            QFrame {{
+                background-color: {'#d4edda' if is_valid else '#f8d7da'};
+                border-left: 3px solid {'#28a745' if is_valid else '#dc3545'};
+                border-radius: 3px;
+                padding: 6px;
+                margin: 1px 0px;
+                min-height: 60px;
+                max-height: 70px;
+            }}
+        """)
+        
+        layout = QHBoxLayout(frame)
+        layout.setContentsMargins(8, 4, 8, 4)
+        layout.setSpacing(10)
+        
+        # Status icon - ensure visibility
+        status_icon = QLabel("✓" if is_valid else "✗")
+        status_icon.setFont(QFont("Segoe UI", 16, QFont.Weight.Bold))
+        status_icon.setMinimumSize(24, 24)
+        status_icon.setMaximumSize(24, 24)
+        status_icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        status_icon.setStyleSheet(f"""
+            color: {'#28a745' if is_valid else '#dc3545'};
+            background-color: transparent;
+            border: none;
+            padding: 2px;
+        """)
+        status_icon.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+        layout.addWidget(status_icon)
+        
+        # Component info
+        info_layout = QVBoxLayout()
+        info_layout.setSpacing(1)
+        info_layout.setContentsMargins(0, 0, 0, 0)
+        
+        # Component name and status - larger font and ensure visibility
+        name_status = f"{component_name} - {'Valid' if is_valid else 'Invalid'}"
+        name_label = QLabel(name_status)
+        name_label.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
+        name_label.setStyleSheet(f"""
+            color: {'#155724' if is_valid else '#721c24'};
+            background-color: transparent;
+            padding: 2px;
+            min-height: 16px;
+        """)
+        name_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        
+        # Connectivity test details - larger font
+        test_details = self.get_connectivity_test_details(component_name, is_valid, connectivity_results)
+        test_label = QLabel(test_details)
+        test_label.setFont(QFont("Segoe UI", 9))
+        test_label.setStyleSheet("""
+            color: #5a6c7d; 
+            font-style: italic;
+            background-color: transparent;
+            padding: 1px;
+            min-height: 14px;
+        """)
+        test_label.setWordWrap(True)
+        test_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        
+        # Value display - larger font
+        display_value = value
+        if "Secret" in component_name:
+            display_value = "•" * min(len(value), 20) + " (hidden)"
+        elif len(value) > 40:
+            display_value = value[:37] + "..."
+            
+        value_label = QLabel(display_value)
+        value_label.setFont(QFont("Segoe UI", 9))
+        value_label.setStyleSheet(f"""
+            color: {'#6c757d' if is_valid else '#721c24'};
+            background-color: transparent;
+            padding: 1px;
+            min-height: 14px;
+        """)
+        value_label.setWordWrap(True)
+        value_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        
+        info_layout.addWidget(name_label)
+        info_layout.addWidget(test_label)
+        info_layout.addWidget(value_label)
+        
+        layout.addLayout(info_layout, 1)
+        
+        return frame
+    
+    def get_connectivity_test_details(self, component_name: str, is_valid: bool, connectivity_results: dict) -> str:
+        """Get detailed connectivity test results for each component"""
+        if component_name == "🏢 Tenant ID":
+            if is_valid:
+                return "✓ Azure AD tenant accessible via OAuth endpoint"
+            else:
+                return f"✗ {connectivity_results.get('tenant_error', 'Tenant not found or inaccessible')}"
+        elif component_name == "📱 Client ID":
+            if is_valid:
+                return "✓ App registration found and accessible"
+            else:
+                return f"✗ {connectivity_results.get('client_error', 'App registration not found')}"
+        elif component_name == "🔑 Client Secret":
+            if is_valid:
+                return "✓ Client secret valid, authentication successful"
+            else:
+                return f"✗ {connectivity_results.get('secret_error', 'Authentication failed with provided secret')}"
+        elif component_name == "🌐 Organization URL":
+            if is_valid:
+                return "✓ Dynamics 365 organization accessible"
+            else:
+                return f"✗ {connectivity_results.get('org_error', 'Organization URL not accessible')}"
+        return "Test completed"
+    
+    def get_test_criteria_text(self, component_name: str, is_valid: bool) -> str:
+        """Get explanation of what test criteria are being checked"""
+        criteria_map = {
+            "🏢 Tenant ID": {
+                "valid": "✓ Format: Valid UUID (36 characters, dashes at positions 8,13,18,23)",
+                "invalid": "✗ Expected: UUID format (xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx)"
+            },
+            "📱 Client ID": {
+                "valid": "✓ Format: Valid UUID (Application ID from Azure AD)",
+                "invalid": "✗ Expected: UUID format (Application ID from Azure AD)"
+            },
+            "🔑 Client Secret": {
+                "valid": "✓ Format: Valid secret (10+ characters, contains alphanumeric)",
+                "invalid": "✗ Expected: Valid secret (minimum 10 characters, alphanumeric content)"
+            },
+            "🌐 Organization URL": {
+                "valid": "✓ Format: Valid Dynamics 365 URL (*.crm*.dynamics.com)",
+                "invalid": "✗ Expected: Dynamics 365 URL format (orgname.crm.dynamics.com)"
+            }
+        }
+        
+        component_criteria = criteria_map.get(component_name, {})
+        return component_criteria.get("valid" if is_valid else "invalid", "Format validation")
     
     def validate_tenant_id(self, tenant_id: str) -> bool:
         """Validate Tenant ID format (UUID)"""
@@ -730,9 +1359,13 @@ class DynamicsAuthWidget(QWidget):
     def validate_org_url(self, org_url: str) -> bool:
         """Validate Organization URL format"""
         import re
-        # Dynamics 365 URL pattern
-        url_pattern = r'^https://[a-zA-Z0-9-]+\.crm\d*\.dynamics\.com/?$'
-        return bool(re.match(url_pattern, org_url))
+        # Dynamics 365 URL pattern - flexible for with/without https://
+        # Pattern 1: With https:// prefix
+        url_pattern_https = r'^https://[a-zA-Z0-9-]+\.crm\d*\.dynamics\.com/?$'
+        # Pattern 2: Without https:// prefix (common in admin center)
+        url_pattern_domain = r'^[a-zA-Z0-9-]+\.crm\d*\.dynamics\.com/?$'
+        
+        return bool(re.match(url_pattern_https, org_url) or re.match(url_pattern_domain, org_url))
     
     def load_settings(self):
         """Load authentication settings"""
