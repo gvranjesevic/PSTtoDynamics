@@ -22,7 +22,7 @@ from PyQt6.QtWidgets import (
     QLabel, QPushButton, QLineEdit, QComboBox, QCheckBox, 
     QGroupBox, QFrame, QScrollArea, QMessageBox, QSpinBox,
     QTabWidget, QFileDialog, QTextEdit, QProgressBar,
-    QSizePolicy, QSpacerItem, QSlider, QFormLayout
+    QSizePolicy, QSpacerItem, QSlider, QFormLayout, QDialog
 )
 from PyQt6.QtCore import Qt, pyqtSignal, QThread, QTimer, QSettings
 from PyQt6.QtGui import QFont, QPixmap, QIcon, QPalette, QFontMetrics
@@ -129,12 +129,118 @@ class DynamicsAuthWidget(QWidget):
         header_label.setStyleSheet("color: #2c3e50; margin-bottom: 10px;")
         layout.addWidget(header_label)
         
-        # Configuration form with improved design using grid layout
+        # Instructions section for finding authentication data
+        instructions_group = QGroupBox("📋 How to Find Your Authentication Information")
+        instructions_group.setStyleSheet("""
+            QGroupBox {
+                font-weight: bold;
+                border: 2px solid #0077B5;
+                border-radius: 12px;
+                margin-top: 10px;
+                padding-top: 25px;
+                background-color: #f0f8ff;
+                font-size: 14px;
+            }
+            QGroupBox::title {
+                subcontrol-origin: margin;
+                subcontrol-position: top left;
+                left: 30px;
+                top: 8px;
+                padding: 0 15px;
+                color: #0077B5;
+                background-color: #f0f8ff;
+                font-size: 14px;
+                font-weight: bold;
+            }
+        """)
+        
+        instructions_layout = QVBoxLayout(instructions_group)
+        instructions_layout.setContentsMargins(25, 25, 25, 20)
+        instructions_layout.setSpacing(15)
+        
+        # Step-by-step instructions
+        instructions_text = QLabel("""
+        <div style="line-height: 1.6;">
+        <p><strong>🔍 Step 1: Find Your Tenant ID</strong></p>
+        <ul style="margin-left: 20px;">
+        <li>Go to <a href="https://portal.azure.com">portal.azure.com</a> and sign in</li>
+        <li>Search for "Azure Active Directory" in the search bar</li>
+        <li>Click on "Properties" in the left menu</li>
+        <li>Copy the <strong>Tenant ID</strong> (Directory ID)</li>
+        </ul>
+        
+        <p><strong>🔧 Step 2: Create/Find Your App Registration</strong></p>
+        <ul style="margin-left: 20px;">
+        <li>In Azure AD, go to "App registrations" → "New registration"</li>
+        <li>Name: "PST to Dynamics Import Tool"</li>
+        <li>Supported account types: "Accounts in this organizational directory only"</li>
+        <li>After creation, copy the <strong>Application (client) ID</strong></li>
+        </ul>
+        
+        <p><strong>🔑 Step 3: Create Client Secret</strong></p>
+        <ul style="margin-left: 20px;">
+        <li>In your app registration, go to "Certificates & secrets"</li>
+        <li>Click "New client secret" → Add description → Set expiration</li>
+        <li>Copy the <strong>Value</strong> (not the Secret ID) - this is your Client Secret</li>
+        <li><em>⚠️ Save this immediately - you can't view it again!</em></li>
+        </ul>
+        
+        <p><strong>🌐 Step 4: Configure API Permissions</strong></p>
+        <ul style="margin-left: 20px;">
+        <li>Go to "API permissions" → "Add a permission"</li>
+        <li>Select "Dynamics CRM" → "Delegated permissions"</li>
+        <li>Check "user_impersonation" → Click "Add permissions"</li>
+        <li>Click "Grant admin consent" (requires admin rights)</li>
+        </ul>
+        
+        <p><strong>🏢 Step 5: Find Your Organization URL</strong></p>
+        <ul style="margin-left: 20px;">
+        <li>Go to <a href="https://admin.powerplatform.microsoft.com">admin.powerplatform.microsoft.com</a></li>
+        <li>Click on "Environments" to see your Dynamics 365 environments</li>
+        <li>Find your environment and copy the <strong>Environment URL</strong></li>
+        <li>Format: https://[your-org].crm.dynamics.com</li>
+        </ul>
+        
+        <p><strong>💡 Need Help?</strong></p>
+        <ul style="margin-left: 20px;">
+        <li>Ask your IT Administrator or Dynamics 365 Administrator</li>
+        <li>They can provide these values or help you create the app registration</li>
+        <li>Some organizations restrict app registrations to administrators only</li>
+        </ul>
+        </div>
+        """)
+        
+        instructions_text.setWordWrap(True)
+        instructions_text.setTextFormat(Qt.TextFormat.RichText)
+        instructions_text.setOpenExternalLinks(True)
+        instructions_text.setStyleSheet("""
+            QLabel {
+                color: #2c3e50;
+                font-size: 13px;
+                line-height: 1.6;
+                padding: 10px;
+                background-color: transparent;
+            }
+            QLabel a {
+                color: #0077B5;
+                text-decoration: none;
+                font-weight: bold;
+            }
+            QLabel a:hover {
+                color: #005885;
+                text-decoration: underline;
+            }
+        """)
+        
+        instructions_layout.addWidget(instructions_text)
+        layout.addWidget(instructions_group)
+        
+        # Configuration form with LinkedIn Blue theme
         form_group = QGroupBox("Authentication Credentials")
         form_group.setStyleSheet("""
             QGroupBox {
                 font-weight: bold;
-                border: 2px solid #3498db;
+                border: 2px solid #0077B5;
                 border-radius: 12px;
                 margin-top: 10px;
                 padding-top: 25px;
@@ -147,7 +253,7 @@ class DynamicsAuthWidget(QWidget):
                 left: 30px;
                 top: 8px;
                 padding: 0 15px;
-                color: #2980b9;
+                color: #0077B5;
                 background-color: #f8faff;
                 font-size: 14px;
                 font-weight: bold;
@@ -170,55 +276,157 @@ class DynamicsAuthWidget(QWidget):
         min_width = metrics.horizontalAdvance(longest_label_text) + 20  # Add padding
         form_layout.setColumnMinimumWidth(0, min_width)
         
-        # Tenant ID with enhanced styling
+        # Tenant ID with enhanced styling and help button
         tenant_label = QLabel("Tenant ID:")
         tenant_label.setStyleSheet("font-weight: bold; color: #2c3e50; font-size: 14px;")
         tenant_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+        
+        tenant_container = QWidget()
+        tenant_layout = QHBoxLayout(tenant_container)
+        tenant_layout.setContentsMargins(0, 0, 0, 0)
+        tenant_layout.setSpacing(8)
+        
         self.tenant_id_edit = QLineEdit()
         self.tenant_id_edit.setPlaceholderText("xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx")
         self.tenant_id_edit.setStyleSheet(self.get_input_style())
-        form_layout.addWidget(tenant_label, 0, 0)
-        form_layout.addWidget(self.tenant_id_edit, 0, 1)
         
-        # Client ID with enhanced styling
+        tenant_help_btn = QPushButton("?")
+        tenant_help_btn.setFixedSize(30, 30)
+        tenant_help_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #3498db;
+                color: white;
+                border: none;
+                border-radius: 15px;
+                font-size: 12px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #2980b9;
+            }
+        """)
+        tenant_help_btn.setToolTip("Azure Portal → Azure Active Directory → Properties → Tenant ID")
+        tenant_help_btn.clicked.connect(lambda: self.show_help_dialog("Tenant ID", 
+            "📍 <b>Where to find your Tenant ID:</b><br><br>"
+            "1. Go to <a href='https://portal.azure.com'>portal.azure.com</a><br>"
+            "2. Search for 'Azure Active Directory'<br>"
+            "3. Click on 'Properties' in the left menu<br>"
+            "4. Copy the <b>Tenant ID</b> (also called Directory ID)<br><br>"
+            "💡 This uniquely identifies your organization in Azure."))
+        
+        tenant_layout.addWidget(self.tenant_id_edit, 1)
+        tenant_layout.addWidget(tenant_help_btn, 0)
+        
+        form_layout.addWidget(tenant_label, 0, 0)
+        form_layout.addWidget(tenant_container, 0, 1)
+        
+        # Client ID with enhanced styling and help button
         client_label = QLabel("Client ID:")
         client_label.setStyleSheet("font-weight: bold; color: #2c3e50; font-size: 14px;")
         client_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+        
+        client_container = QWidget()
+        client_layout = QHBoxLayout(client_container)
+        client_layout.setContentsMargins(0, 0, 0, 0)
+        client_layout.setSpacing(8)
+        
         self.client_id_edit = QLineEdit()
         self.client_id_edit.setPlaceholderText("xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx")
         self.client_id_edit.setStyleSheet(self.get_input_style())
-        form_layout.addWidget(client_label, 1, 0)
-        form_layout.addWidget(self.client_id_edit, 1, 1)
         
-        # Client Secret with enhanced styling
+        client_help_btn = QPushButton("?")
+        client_help_btn.setFixedSize(30, 30)
+        client_help_btn.setStyleSheet(self.get_help_button_style())
+        client_help_btn.setToolTip("Azure Portal → App registrations → Your app → Overview → Application ID")
+        client_help_btn.clicked.connect(lambda: self.show_help_dialog("Client ID", 
+            "📍 <b>Where to find your Client ID:</b><br><br>"
+            "1. Go to <a href='https://portal.azure.com'>portal.azure.com</a><br>"
+            "2. Navigate to 'Azure Active Directory' → 'App registrations'<br>"
+            "3. Find your app (or create new registration)<br>"
+            "4. Copy the <b>Application (client) ID</b> from Overview page<br><br>"
+            "💡 This identifies your specific application in Azure."))
+        
+        client_layout.addWidget(self.client_id_edit, 1)
+        client_layout.addWidget(client_help_btn, 0)
+        
+        form_layout.addWidget(client_label, 1, 0)
+        form_layout.addWidget(client_container, 1, 1)
+        
+        # Client Secret with enhanced styling and help button
         secret_label = QLabel("Client Secret:")
         secret_label.setStyleSheet("font-weight: bold; color: #2c3e50; font-size: 14px;")
         secret_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+        
+        secret_container = QWidget()
+        secret_layout = QHBoxLayout(secret_container)
+        secret_layout.setContentsMargins(0, 0, 0, 0)
+        secret_layout.setSpacing(8)
+        
         self.client_secret_edit = QLineEdit()
         self.client_secret_edit.setEchoMode(QLineEdit.EchoMode.Password)
         self.client_secret_edit.setPlaceholderText("Enter client secret...")
         self.client_secret_edit.setStyleSheet(self.get_input_style())
-        form_layout.addWidget(secret_label, 2, 0)
-        form_layout.addWidget(self.client_secret_edit, 2, 1)
         
-        # Organization URL with enhanced styling
+        secret_help_btn = QPushButton("?")
+        secret_help_btn.setFixedSize(30, 30)
+        secret_help_btn.setStyleSheet(self.get_help_button_style())
+        secret_help_btn.setToolTip("App registration → Certificates & secrets → Client secrets → Value")
+        secret_help_btn.clicked.connect(lambda: self.show_help_dialog("Client Secret", 
+            "📍 <b>How to create a Client Secret:</b><br><br>"
+            "1. In your app registration, go to 'Certificates & secrets'<br>"
+            "2. Click 'New client secret'<br>"
+            "3. Add description and set expiration<br>"
+            "4. Copy the <b>Value</b> (not the Secret ID)<br><br>"
+            "⚠️ <b>Important:</b> Save this immediately - you can't view it again!<br><br>"
+            "💡 This is like a password for your application."))
+        
+        secret_layout.addWidget(self.client_secret_edit, 1)
+        secret_layout.addWidget(secret_help_btn, 0)
+        
+        form_layout.addWidget(secret_label, 2, 0)
+        form_layout.addWidget(secret_container, 2, 1)
+        
+        # Organization URL with enhanced styling and help button
         url_label = QLabel("Organization URL:")
         url_label.setStyleSheet("font-weight: bold; color: #2c3e50; font-size: 14px;")
         url_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+        
+        url_container = QWidget()
+        url_layout = QHBoxLayout(url_container)
+        url_layout.setContentsMargins(0, 0, 0, 0)
+        url_layout.setSpacing(8)
+        
         self.org_url_edit = QLineEdit()
         self.org_url_edit.setPlaceholderText("https://your-org.crm.dynamics.com")
         self.org_url_edit.setStyleSheet(self.get_input_style())
+        
+        url_help_btn = QPushButton("?")
+        url_help_btn.setFixedSize(30, 30)
+        url_help_btn.setStyleSheet(self.get_help_button_style())
+        url_help_btn.setToolTip("Power Platform Admin Center → Environments → Your environment URL")
+        url_help_btn.clicked.connect(lambda: self.show_help_dialog("Organization URL", 
+            "📍 <b>Where to find your Organization URL:</b><br><br>"
+            "1. Go to <a href='https://admin.powerplatform.microsoft.com'>admin.powerplatform.microsoft.com</a><br>"
+            "2. Click on 'Environments'<br>"
+            "3. Find your Dynamics 365 environment<br>"
+            "4. Copy the <b>Environment URL</b><br><br>"
+            "📝 <b>Format:</b> https://[your-org].crm.dynamics.com<br><br>"
+            "💡 This is the web address of your Dynamics 365 instance."))
+        
+        url_layout.addWidget(self.org_url_edit, 1)
+        url_layout.addWidget(url_help_btn, 0)
+        
         form_layout.addWidget(url_label, 3, 0)
-        form_layout.addWidget(self.org_url_edit, 3, 1)
+        form_layout.addWidget(url_container, 3, 1)
         
         layout.addWidget(form_group)
         
-        # Test connection button with enhanced styling
+        # Test connection button with LinkedIn Blue theme
         self.test_button = QPushButton("🔍 Test Connection")
         self.test_button.setMinimumHeight(45)
         self.test_button.setStyleSheet("""
             QPushButton {
-                background-color: #27ae60;
+                background-color: #0077B5;
                 color: white;
                 border: none;
                 border-radius: 8px;
@@ -228,10 +436,10 @@ class DynamicsAuthWidget(QWidget):
                 margin: 15px 0px 10px 0px;
             }
             QPushButton:hover {
-                background-color: #229954;
+                background-color: #005885;
             }
             QPushButton:pressed {
-                background-color: #1e8449;
+                background-color: #004A70;
             }
         """)
         self.test_button.clicked.connect(self.test_connection)
@@ -241,7 +449,7 @@ class DynamicsAuthWidget(QWidget):
         layout.addSpacing(20)
     
     def get_input_style(self):
-        """Get standardized input field styling with enhanced design"""
+        """Get standardized input field styling with LinkedIn Blue theme"""
         return """
             QLineEdit {
                 padding: 12px 18px;
@@ -253,11 +461,11 @@ class DynamicsAuthWidget(QWidget):
                 font-family: 'Segoe UI', Arial, sans-serif;
             }
             QLineEdit:focus {
-                border-color: #3498db;
+                border-color: #0077B5;
                 border-width: 3px;
             }
             QLineEdit:hover {
-                border-color: #7fb3d3;
+                border-color: #004A70;
             }
             QLineEdit:placeholder {
                 color: #95a5a6;
@@ -265,22 +473,266 @@ class DynamicsAuthWidget(QWidget):
             }
         """
     
+    def get_help_button_style(self):
+        """Get standardized help button styling with LinkedIn Blue theme"""
+        return """
+            QPushButton {
+                background-color: #0077B5;
+                color: white;
+                border: none;
+                border-radius: 15px;
+                font-size: 12px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background-color: #005885;
+            }
+        """
+    
+    def show_help_dialog(self, title: str, content: str):
+        """Show help dialog with detailed instructions"""
+        dialog = QMessageBox(self)
+        dialog.setWindowTitle(f"Help: {title}")
+        dialog.setTextFormat(Qt.TextFormat.RichText)
+        dialog.setText(content)
+        dialog.setIcon(QMessageBox.Icon.Information)
+        dialog.setStandardButtons(QMessageBox.StandardButton.Ok)
+        
+        # Make dialog larger for better readability
+        dialog.setStyleSheet("""
+            QMessageBox {
+                min-width: 500px;
+                min-height: 300px;
+            }
+            QMessageBox QLabel {
+                font-size: 13px;
+                line-height: 1.5;
+            }
+        """)
+        
+        dialog.exec()
+    
     def test_connection(self):
-        """Test authentication connection"""
-        if not all([
-            self.tenant_id_edit.text().strip(),
-            self.client_id_edit.text().strip(),
-            self.client_secret_edit.text().strip(),
-            self.org_url_edit.text().strip()
-        ]):
+        """Test authentication connection with detailed component validation"""
+        # Get all field values
+        tenant_id = self.tenant_id_edit.text().strip()
+        client_id = self.client_id_edit.text().strip()
+        client_secret = self.client_secret_edit.text().strip()
+        org_url = self.org_url_edit.text().strip()
+        
+        # Check if all fields are filled
+        if not all([tenant_id, client_id, client_secret, org_url]):
             QMessageBox.warning(self, "Validation Error", 
                               "Please fill in all authentication fields before testing.")
             return
         
-        QMessageBox.information(self, "Connection Test", 
-                              "✅ Connection test successful!\n\n"
-                              "Authentication credentials are valid and "
-                              "connection to Dynamics 365 is working properly.")
+        # Create detailed test results dialog
+        self.show_detailed_test_results(tenant_id, client_id, client_secret, org_url)
+    
+    def show_detailed_test_results(self, tenant_id: str, client_id: str, client_secret: str, org_url: str):
+        """Show detailed test results for each authentication component"""
+        from PyQt6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QFrame
+        from PyQt6.QtCore import Qt
+        from PyQt6.QtGui import QFont
+        
+        # Create custom dialog optimized for laptop screens - minimal height
+        dialog = QDialog(self)
+        dialog.setWindowTitle("🔍 Connection Test Results")
+        dialog.setMinimumSize(500, 280)
+        dialog.setMaximumSize(600, 320)
+        dialog.resize(520, 290)
+        dialog.setModal(True)
+        dialog.setWindowFlags(Qt.WindowType.Dialog | Qt.WindowType.WindowTitleHint | Qt.WindowType.WindowCloseButtonHint)
+        dialog.setStyleSheet("""
+            QDialog {
+                background-color: #f8f9fa;
+            }
+        """)
+        
+        # Create main layout with minimal spacing
+        layout = QVBoxLayout(dialog)
+        layout.setContentsMargins(12, 12, 12, 12)
+        layout.setSpacing(6)
+        layout.setSizeConstraint(QVBoxLayout.SizeConstraint.SetMinimumSize)
+        
+        # Title - minimal
+        title = QLabel("Authentication Test Results")
+        title.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
+        title.setStyleSheet("color: #0077B5; margin-bottom: 2px;")
+        title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(title)
+        
+        # Test results for each component
+        components = [
+            ("🏢 Tenant ID", tenant_id, self.validate_tenant_id(tenant_id)),
+            ("📱 Client ID", client_id, self.validate_client_id(client_id)),
+            ("🔑 Client Secret", client_secret, self.validate_client_secret(client_secret)),
+            ("🌐 Organization URL", org_url, self.validate_org_url(org_url))
+        ]
+        
+        for component_name, value, is_valid in components:
+            component_frame = self.create_test_result_item(component_name, value, is_valid)
+            layout.addWidget(component_frame)
+        
+        # Overall result - minimal
+        all_valid = all(result[2] for result in components)
+        overall_frame = QFrame()
+        overall_frame.setMinimumHeight(24)
+        overall_frame.setMaximumHeight(28)
+        overall_frame.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        overall_frame.setStyleSheet(f"""
+            QFrame {{
+                background-color: {'#d4edda' if all_valid else '#f8d7da'};
+                border: 2px solid {'#28a745' if all_valid else '#dc3545'};
+                border-radius: 3px;
+                padding: 4px;
+                margin-top: 2px;
+                min-height: 24px;
+                max-height: 28px;
+            }}
+        """)
+        
+        overall_layout = QHBoxLayout(overall_frame)
+        overall_layout.setContentsMargins(2, 1, 2, 1)
+        overall_icon = QLabel("✓" if all_valid else "✗")
+        overall_icon.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
+        overall_icon.setMinimumSize(14, 14)
+        overall_icon.setMaximumSize(14, 14)
+        overall_icon.setStyleSheet(f"color: {'#28a745' if all_valid else '#dc3545'}; background-color: transparent;")
+        overall_text = QLabel("Ready for connection!" if all_valid else "Authentication incomplete")
+        overall_text.setFont(QFont("Segoe UI", 8, QFont.Weight.Bold))
+        overall_text.setStyleSheet(f"color: {'#155724' if all_valid else '#721c24'};")
+        overall_text.setWordWrap(True)
+        
+        overall_layout.addWidget(overall_icon)
+        overall_layout.addWidget(overall_text, 1)
+        layout.addWidget(overall_frame)
+        
+        # Close button - minimal
+        button_layout = QHBoxLayout()
+        button_layout.setContentsMargins(0, 6, 0, 0)
+        button_layout.addStretch()
+        
+        close_button = QPushButton("OK")
+        close_button.setMinimumSize(50, 20)
+        close_button.setMaximumSize(70, 24)
+        close_button.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
+        close_button.setStyleSheet("""
+            QPushButton {
+                background-color: #0077B5;
+                color: white;
+                border: none;
+                border-radius: 3px;
+                font-size: 9px;
+                font-weight: bold;
+                padding: 2px 8px;
+                min-width: 50px;
+                min-height: 20px;
+            }
+            QPushButton:hover {
+                background-color: #005885;
+            }
+            QPushButton:pressed {
+                background-color: #004A70;
+            }
+        """)
+        close_button.clicked.connect(dialog.accept)
+        button_layout.addWidget(close_button)
+        button_layout.addStretch()
+        
+        layout.addLayout(button_layout)
+        
+        # Show dialog
+        dialog.exec()
+    
+    def create_test_result_item(self, component_name: str, value: str, is_valid: bool) -> QFrame:
+        """Create a test result item widget - minimal height"""
+        frame = QFrame()
+        frame.setMinimumHeight(40)
+        frame.setMaximumHeight(45)
+        frame.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        frame.setStyleSheet(f"""
+            QFrame {{
+                background-color: {'#d4edda' if is_valid else '#f8d7da'};
+                border-left: 3px solid {'#28a745' if is_valid else '#dc3545'};
+                border-radius: 3px;
+                padding: 4px;
+                margin: 1px 0px;
+                min-height: 40px;
+                max-height: 45px;
+            }}
+        """)
+        
+        layout = QHBoxLayout(frame)
+        layout.setContentsMargins(6, 2, 6, 2)
+        layout.setSpacing(8)
+        layout.setSizeConstraint(QHBoxLayout.SizeConstraint.SetMinimumSize)
+        
+        # Status icon - text based to avoid clipping
+        status_text = "✓" if is_valid else "✗"
+        status_icon = QLabel(status_text)
+        status_icon.setFont(QFont("Segoe UI", 14, QFont.Weight.Bold))
+        status_icon.setMinimumSize(20, 20)
+        status_icon.setMaximumSize(20, 20)
+        status_icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        status_icon.setStyleSheet(f"color: {'#28a745' if is_valid else '#dc3545'}; background-color: transparent;")
+        layout.addWidget(status_icon)
+        
+        # Component info - minimal spacing
+        info_layout = QVBoxLayout()
+        info_layout.setSpacing(1)
+        info_layout.setContentsMargins(0, 0, 0, 0)
+        
+        # Single line with name and status
+        name_status = f"{component_name} - {'Valid' if is_valid else 'Invalid'}"
+        name_label = QLabel(name_status)
+        name_label.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
+        name_label.setStyleSheet(f"color: {'#155724' if is_valid else '#721c24'};")
+        name_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        
+        # Full value display for better readability
+        display_value = value
+        if "Secret" in component_name:
+            display_value = "•" * min(len(value), 20) + " (hidden)"
+        elif len(value) > 45:
+            display_value = value[:42] + "..."
+            
+        value_label = QLabel(display_value)
+        value_label.setFont(QFont("Segoe UI", 8))
+        value_label.setStyleSheet(f"color: {'#6c757d' if is_valid else '#721c24'};")
+        value_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        value_label.setWordWrap(True)
+        
+        info_layout.addWidget(name_label)
+        info_layout.addWidget(value_label)
+        
+        layout.addLayout(info_layout, 1)
+        
+        return frame
+    
+    def validate_tenant_id(self, tenant_id: str) -> bool:
+        """Validate Tenant ID format (UUID)"""
+        import re
+        uuid_pattern = r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+        return bool(re.match(uuid_pattern, tenant_id.lower()))
+    
+    def validate_client_id(self, client_id: str) -> bool:
+        """Validate Client ID format (UUID)"""
+        import re
+        uuid_pattern = r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$'
+        return bool(re.match(uuid_pattern, client_id.lower()))
+    
+    def validate_client_secret(self, client_secret: str) -> bool:
+        """Validate Client Secret (basic checks)"""
+        # Client secrets are typically 32+ characters and contain various characters
+        return len(client_secret) >= 10 and any(c.isalnum() for c in client_secret)
+    
+    def validate_org_url(self, org_url: str) -> bool:
+        """Validate Organization URL format"""
+        import re
+        # Dynamics 365 URL pattern
+        url_pattern = r'^https://[a-zA-Z0-9-]+\.crm\d*\.dynamics\.com/?$'
+        return bool(re.match(url_pattern, org_url))
     
     def load_settings(self):
         """Load authentication settings"""
