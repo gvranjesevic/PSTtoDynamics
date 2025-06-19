@@ -373,7 +373,7 @@ class AnalyticsDashboard(QWidget):
         tab = QWidget()
         layout = QVBoxLayout(tab)
         layout.setContentsMargins(20, 20, 20, 20)
-        layout.setSpacing(40)
+        layout.setSpacing(20)
         
         # Control buttons
         controls_layout = QHBoxLayout()
