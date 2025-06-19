@@ -549,13 +549,13 @@ class AIIntelligenceDashboard(QWidget):
             }
             QTabBar::tab {
                 background-color: #F9FAFB;
-                color: #666666;
                 padding: 12px 24px;
                 margin-right: 2px;
                 border-top-left-radius: 8px;
                 border-top-right-radius: 8px;
-                font-weight: bold;
                 font-size: 14px;
+                font-weight: bold;
+                color: #666666;
             }
             QTabBar::tab:selected {
                 background-color: #0077B5;
