@@ -1462,7 +1462,7 @@ class ConfigurationManager(QWidget):
         # Use the 'live' auth_widget for the main content
         scroll_layout.addWidget(self.auth_widget)
         
-        # Add the rest of the settings sections
+        # Add the rest of the settings sections with default values
         email_section = QGroupBox("📧 Email Processing Settings")
         email_section.setStyleSheet("""
             QGroupBox {
@@ -1490,10 +1490,18 @@ class ConfigurationManager(QWidget):
         email_layout = QFormLayout(email_section)
         email_layout.setContentsMargins(20, 15, 20, 15)
         email_layout.setSpacing(12)
-        email_layout.addRow("Batch Size:", QLineEdit())
-        email_layout.addRow("Timeout (seconds):", QLineEdit())
-        email_layout.addRow("Max Attachments:", QLineEdit())
-        email_layout.addRow("Auto-retry Failed:", QCheckBox("Enable"))
+        
+        # Create and store email processing settings with defaults
+        self.batch_size_edit = QLineEdit("50")  # Default: 50 emails per batch
+        self.timeout_edit = QLineEdit("30")     # Default: 30 seconds timeout
+        self.max_attachments_edit = QLineEdit("10")  # Default: 10 max attachments
+        self.auto_retry_checkbox = QCheckBox("Enable")
+        self.auto_retry_checkbox.setChecked(True)  # Default: enabled
+        
+        email_layout.addRow("Batch Size:", self.batch_size_edit)
+        email_layout.addRow("Timeout (seconds):", self.timeout_edit)
+        email_layout.addRow("Max Attachments:", self.max_attachments_edit)
+        email_layout.addRow("Auto-retry Failed:", self.auto_retry_checkbox)
         scroll_layout.addWidget(email_section)
         
         perf_section = QGroupBox("⚡ Performance Settings")
@@ -1523,10 +1531,18 @@ class ConfigurationManager(QWidget):
         perf_layout = QFormLayout(perf_section)
         perf_layout.setContentsMargins(20, 15, 20, 15)
         perf_layout.setSpacing(12)
-        perf_layout.addRow("Thread Pool Size:", QLineEdit())
-        perf_layout.addRow("Memory Limit (MB):", QLineEdit())
-        perf_layout.addRow("Cache Size (MB):", QLineEdit())
-        perf_layout.addRow("Enable Logging:", QCheckBox("Enable"))
+        
+        # Create and store performance settings with defaults
+        self.thread_pool_edit = QLineEdit("4")    # Default: 4 threads
+        self.memory_limit_edit = QLineEdit("512") # Default: 512 MB memory limit
+        self.cache_size_edit = QLineEdit("128")   # Default: 128 MB cache
+        self.enable_logging_checkbox = QCheckBox("Enable")
+        self.enable_logging_checkbox.setChecked(True)  # Default: enabled
+        
+        perf_layout.addRow("Thread Pool Size:", self.thread_pool_edit)
+        perf_layout.addRow("Memory Limit (MB):", self.memory_limit_edit)
+        perf_layout.addRow("Cache Size (MB):", self.cache_size_edit)
+        perf_layout.addRow("Enable Logging:", self.enable_logging_checkbox)
         scroll_layout.addWidget(perf_section)
         
         ai_section = QGroupBox("🧠 AI Intelligence Settings")
@@ -1556,12 +1572,21 @@ class ConfigurationManager(QWidget):
         ai_layout = QFormLayout(ai_section)
         ai_layout.setContentsMargins(20, 15, 20, 15)
         ai_layout.setSpacing(12)
-        ai_layout.addRow("Enable AI Analysis:", QCheckBox("Enable"))
-        ai_layout.addRow("Confidence Threshold:", QLineEdit())
-        mode_combo = QComboBox()
-        mode_combo.addItems(["Active", "Passive", "Disabled"])
-        ai_layout.addRow("Learning Mode:", mode_combo)
-        ai_layout.addRow("Pattern Recognition:", QCheckBox("Enable"))
+        
+        # Create and store AI intelligence settings with defaults
+        self.ai_analysis_checkbox = QCheckBox("Enable")
+        self.ai_analysis_checkbox.setChecked(True)  # Default: enabled
+        self.confidence_threshold_edit = QLineEdit("0.85")  # Default: 85% confidence
+        self.learning_mode_combo = QComboBox()
+        self.learning_mode_combo.addItems(["Active", "Passive", "Disabled"])
+        self.learning_mode_combo.setCurrentText("Active")  # Default: Active
+        self.pattern_recognition_checkbox = QCheckBox("Enable")
+        self.pattern_recognition_checkbox.setChecked(True)  # Default: enabled
+        
+        ai_layout.addRow("Enable AI Analysis:", self.ai_analysis_checkbox)
+        ai_layout.addRow("Confidence Threshold:", self.confidence_threshold_edit)
+        ai_layout.addRow("Learning Mode:", self.learning_mode_combo)
+        ai_layout.addRow("Pattern Recognition:", self.pattern_recognition_checkbox)
         scroll_layout.addWidget(ai_section)
         
         # Add bottom padding to scroll content
@@ -1620,10 +1645,53 @@ class ConfigurationManager(QWidget):
     def save_all_settings(self):
         """Save all configuration settings"""
         try:
+            # Save authentication settings
             self.auth_widget.save_settings()
+            
+            # Save additional settings to QSettings
+            settings = QSettings("PSTtoDynamics", "Configuration")
+            
+            # Email Processing Settings
+            settings.setValue("email/batch_size", self.batch_size_edit.text())
+            settings.setValue("email/timeout", self.timeout_edit.text())
+            settings.setValue("email/max_attachments", self.max_attachments_edit.text())
+            settings.setValue("email/auto_retry", self.auto_retry_checkbox.isChecked())
+            
+            # Performance Settings
+            settings.setValue("performance/thread_pool", self.thread_pool_edit.text())
+            settings.setValue("performance/memory_limit", self.memory_limit_edit.text())
+            settings.setValue("performance/cache_size", self.cache_size_edit.text())
+            settings.setValue("performance/enable_logging", self.enable_logging_checkbox.isChecked())
+            
+            # AI Intelligence Settings
+            settings.setValue("ai/analysis_enabled", self.ai_analysis_checkbox.isChecked())
+            settings.setValue("ai/confidence_threshold", self.confidence_threshold_edit.text())
+            settings.setValue("ai/learning_mode", self.learning_mode_combo.currentText())
+            settings.setValue("ai/pattern_recognition", self.pattern_recognition_checkbox.isChecked())
+            
+            # Prepare configuration data
             config_data = {
-                'dynamics_auth': self.auth_widget.get_config_data()
+                'dynamics_auth': self.auth_widget.get_config_data(),
+                'email_processing': {
+                    'batch_size': int(self.batch_size_edit.text() or 50),
+                    'timeout': int(self.timeout_edit.text() or 30),
+                    'max_attachments': int(self.max_attachments_edit.text() or 10),
+                    'auto_retry': self.auto_retry_checkbox.isChecked()
+                },
+                'performance': {
+                    'thread_pool': int(self.thread_pool_edit.text() or 4),
+                    'memory_limit': int(self.memory_limit_edit.text() or 512),
+                    'cache_size': int(self.cache_size_edit.text() or 128),
+                    'enable_logging': self.enable_logging_checkbox.isChecked()
+                },
+                'ai_intelligence': {
+                    'analysis_enabled': self.ai_analysis_checkbox.isChecked(),
+                    'confidence_threshold': float(self.confidence_threshold_edit.text() or 0.85),
+                    'learning_mode': self.learning_mode_combo.currentText(),
+                    'pattern_recognition': self.pattern_recognition_checkbox.isChecked()
+                }
             }
+            
             self.configuration_changed.emit(config_data)
             self.status_label.setText("Configuration saved successfully")
             QMessageBox.information(self, "Configuration Saved", 
@@ -1636,7 +1704,30 @@ class ConfigurationManager(QWidget):
     def load_all_settings(self):
         """Load all configuration settings"""
         try:
+            # Load authentication settings
             self.auth_widget.load_settings()
+            
+            # Load additional settings from QSettings
+            settings = QSettings("PSTtoDynamics", "Configuration")
+            
+            # Email Processing Settings
+            self.batch_size_edit.setText(settings.value("email/batch_size", "50"))
+            self.timeout_edit.setText(settings.value("email/timeout", "30"))
+            self.max_attachments_edit.setText(settings.value("email/max_attachments", "10"))
+            self.auto_retry_checkbox.setChecked(settings.value("email/auto_retry", True, type=bool))
+            
+            # Performance Settings
+            self.thread_pool_edit.setText(settings.value("performance/thread_pool", "4"))
+            self.memory_limit_edit.setText(settings.value("performance/memory_limit", "512"))
+            self.cache_size_edit.setText(settings.value("performance/cache_size", "128"))
+            self.enable_logging_checkbox.setChecked(settings.value("performance/enable_logging", True, type=bool))
+            
+            # AI Intelligence Settings
+            self.ai_analysis_checkbox.setChecked(settings.value("ai/analysis_enabled", True, type=bool))
+            self.confidence_threshold_edit.setText(settings.value("ai/confidence_threshold", "0.85"))
+            self.learning_mode_combo.setCurrentText(settings.value("ai/learning_mode", "Active"))
+            self.pattern_recognition_checkbox.setChecked(settings.value("ai/pattern_recognition", True, type=bool))
+            
             self.status_label.setText("Configuration loaded successfully")
         except Exception as e:
             logger.debug(f"Failed to load configuration: {e}")
