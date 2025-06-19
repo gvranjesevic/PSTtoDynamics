@@ -453,7 +453,7 @@ class Step2ImportSettings(WizardStep):
         # Main layout for scroll widget
         main_layout = QVBoxLayout(scroll_widget)
         main_layout.setContentsMargins(20, 20, 20, 20)
-        main_layout.setSpacing(25)
+        main_layout.setSpacing(20)
         
         # AI Intelligence settings
         ai_section = self.create_ai_settings_section()
@@ -556,7 +556,7 @@ class Step2ImportSettings(WizardStep):
         
         processing_layout = QVBoxLayout(processing_group)
         processing_layout.setContentsMargins(30, 35, 30, 30)
-        processing_layout.setSpacing(25)
+        processing_layout.setSpacing(20)
         
         # Batch size setting
         batch_container = QWidget()
