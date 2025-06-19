@@ -1465,7 +1465,7 @@ class ConfigurationManager(QWidget):
         scroll_widget.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Minimum)
         scroll_layout = QVBoxLayout(scroll_widget)
         scroll_layout.setContentsMargins(20, 20, 20, 0)
-        scroll_layout.setSpacing(40)
+        scroll_layout.setSpacing(20)
         scroll_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         
         # Store references
@@ -1604,7 +1604,7 @@ class ConfigurationManager(QWidget):
         scroll_layout.addWidget(ai_section)
         
         # Add bottom padding to scroll content
-        scroll_layout.addSpacing(40)
+        scroll_layout.addSpacing(20)
         
         scroll_area.setWidget(scroll_widget)
         layout.addWidget(scroll_area, 1)  # Takes remaining space
