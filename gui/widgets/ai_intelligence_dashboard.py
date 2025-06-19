@@ -502,7 +502,7 @@ class AIIntelligenceDashboard(QWidget):
         # Create a content container with internal padding
         self.content_widget = QWidget()
         self.content_layout = QVBoxLayout(self.content_widget)
-        self.content_layout.setContentsMargins(20, 0, 20, 20)
+        self.content_layout.setContentsMargins(20, 20, 20, 20)
         self.content_layout.setSpacing(40)
         
         # Add header (no margins) to the outer layout

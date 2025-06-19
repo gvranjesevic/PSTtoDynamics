@@ -296,15 +296,22 @@ class AnalyticsDashboard(QWidget):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
         
+        # Content container with padding beneath header
+        self.content_widget = QWidget()
+        self.content_layout = QVBoxLayout(self.content_widget)
+        self.content_layout.setContentsMargins(20, 20, 20, 20)
+        self.content_layout.setSpacing(0)
+        
         # Header
         header = self.create_header()
         layout.addWidget(header)
         
-        # Main content with tabs
+        # Build content inside container
+        # Create tab widget
         self.tab_widget = QTabWidget()
         self.tab_widget.setStyleSheet("""
             QTabWidget::pane {
-                border: 1px solid #D0D7DE;
+                border: none;
                 background-color: #F3F6F8;
             }
             QTabBar::tab {
@@ -335,7 +342,10 @@ class AnalyticsDashboard(QWidget):
         performance_tab = self.create_performance_tab()
         self.tab_widget.addTab(performance_tab, "⚡ Performance")
         
-        layout.addWidget(self.tab_widget)
+        self.content_layout.addWidget(self.tab_widget)
+        
+        # Add content container to outer layout
+        layout.addWidget(self.content_widget)
     
     def create_header(self) -> QWidget:
         """Create dashboard header (standardized to match Settings panel)"""

@@ -946,25 +946,27 @@ class ContactManagementDashboard(QWidget):
                 font-family: "{fonts['primary']}";
             }}
             QTabWidget::pane {{
-                border: 2px solid {colors['border']};
-                border-radius: 8px;
-                background: {colors['background']};
+                border: none;
+                background-color: #F3F6F8;
             }}
             QTabBar::tab {{
-                background: {colors['surface']};
-                color: {colors['text_secondary']};
-                padding: {spacing['md']}px {spacing['lg']}px;
+                background-color: #F9FAFB;
+                color: #666666;
+                padding: 16px 28px;
                 margin-right: 2px;
                 border-top-left-radius: 8px;
                 border-top-right-radius: 8px;
-                font-family: "{fonts['primary']}";
                 font-weight: bold;
+                font-size: 14px;
+                min-width: 120px;
             }}
             QTabBar::tab:selected {{
-                background-color: {colors['background']};
-                color: {colors['text_primary']};
-                border: 2px solid {colors['border']};
-                border-bottom: none;
+                background-color: #0077B5;
+                color: white;
+            }}
+            QTabBar::tab:hover {{
+                background-color: #E8EBED;
+                color: #0077B5;
             }}
         """)
         
@@ -994,7 +996,7 @@ class ContactManagementDashboard(QWidget):
         # Content container with internal padding
         self.content_widget = QWidget()
         self.content_layout = QVBoxLayout(self.content_widget)
-        self.content_layout.setContentsMargins(20, 0, 20, 20)
+        self.content_layout.setContentsMargins(20, 20, 20, 20)
         self.content_layout.setSpacing(20)
 
         # Header (standardized to match Settings panel)
@@ -1182,8 +1184,7 @@ class ContactManagementDashboard(QWidget):
         self.tab_widget.setStyleSheet("""
             QTabWidget::pane {
                 border: none;
-                background-color: #FFFFFF;
-                padding: 10px;
+                background-color: #F3F6F8;
             }
             QTabBar::tab {
                 background-color: #F9FAFB;
@@ -1194,19 +1195,15 @@ class ContactManagementDashboard(QWidget):
                 border-top-right-radius: 8px;
                 font-weight: bold;
                 font-size: 14px;
-                border: 2px solid #D0D7DE;
-                border-bottom: none;
                 min-width: 120px;
             }
             QTabBar::tab:selected {
                 background-color: #0077B5;
                 color: white;
-                border-color: #0077B5;
             }
             QTabBar::tab:hover {
-                background-color: #E8F4FD;
+                background-color: #E8EBED;
                 color: #0077B5;
-                border-color: #0077B5;
             }
         """)
         
