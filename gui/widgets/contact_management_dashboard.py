@@ -244,8 +244,8 @@ class ContactEditDialog(QDialog):
             }}
             QGroupBox::title {{
                 subcontrol-origin: margin;
-                left: 10px;
-                padding: 0 8px 0 8px;
+                left: 15px;
+                padding: 0 10px 0 10px;
                 color: {colors['text_primary']};
             }}
         """)
@@ -262,7 +262,7 @@ class ContactEditDialog(QDialog):
             QLabel {
                 color: white;
                 background-color: #0077B5;
-                padding: 16px 24px;
+                padding: 12px 24px;
                 border-radius: 8px;
                 margin-bottom: 8px;
                 font-weight: bold;
@@ -296,8 +296,8 @@ class ContactEditDialog(QDialog):
             }
             QGroupBox::title {
                 subcontrol-origin: margin;
-                left: 10px;
-                padding: 0 8px 0 8px;
+                left: 15px;
+                padding: 0 10px 0 10px;
                 color: #0077B5;
                 font-weight: bold;
             }
@@ -392,8 +392,8 @@ class ContactEditDialog(QDialog):
             }
             QGroupBox::title {
                 subcontrol-origin: margin;
-                left: 10px;
-                padding: 0 8px 0 8px;
+                left: 15px;
+                padding: 0 10px 0 10px;
                 color: #0077B5;
                 font-weight: bold;
             }
@@ -488,8 +488,8 @@ class ContactEditDialog(QDialog):
             }
             QGroupBox::title {
                 subcontrol-origin: margin;
-                left: 10px;
-                padding: 0 8px 0 8px;
+                left: 15px;
+                padding: 0 10px 0 10px;
                 color: #0077B5;
                 font-weight: bold;
             }
@@ -713,8 +713,8 @@ class ContactRelationshipView(QWidget):
             }
             QGroupBox::title {
                 subcontrol-origin: margin;
-                left: 10px;
-                padding: 0 8px 0 8px;
+                left: 15px;
+                padding: 0 10px 0 10px;
                 color: #0077B5;
                 font-weight: bold;
             }
@@ -762,8 +762,8 @@ class ContactRelationshipView(QWidget):
             }
             QGroupBox::title {
                 subcontrol-origin: margin;
-                left: 10px;
-                padding: 0 8px 0 8px;
+                left: 15px;
+                padding: 0 10px 0 10px;
                 color: #0077B5;
                 font-weight: bold;
             }
@@ -980,7 +980,7 @@ class ContactManagementDashboard(QWidget):
                 QLabel {{
                     color: white;
                     background: {gradient};
-                    padding: 16px 24px;
+                    padding: 12px 24px;
                     border-radius: 12px;
                     margin-bottom: 8px;
                 }}
@@ -1597,8 +1597,8 @@ class ContactManagementDashboard(QWidget):
             }
             QGroupBox::title {
                 subcontrol-origin: margin;
-                left: 10px;
-                padding: 0 8px 0 8px;
+                left: 15px;
+                padding: 0 10px 0 10px;
                 color: #0077B5;
                 font-weight: bold;
             }

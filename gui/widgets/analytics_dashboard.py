@@ -116,7 +116,7 @@ class AnalyticsDataLoader(QThread):
 class MetricCard(QFrame):
     """Individual metric display card"""
     
-    def __init__(self, title: str, value: str, subtitle: str = "", color: str = "#3498db"):
+    def __init__(self, title: str, value: str, subtitle: str = "", color: str = "#0077B5"):
         super().__init__()
         self.setup_ui(title, value, subtitle, color)
     
@@ -163,7 +163,7 @@ class MetricCard(QFrame):
     def darken_color(self, color: str) -> str:
         """Darken a hex color for hover effects"""
         color_map = {
-            "#3498db": "#2980b9",
+            "#0077B5": "#005885",
             "#e74c3c": "#c0392b", 
             "#2ecc71": "#27ae60",
             "#f39c12": "#e67e22"
@@ -247,8 +247,8 @@ class PerformanceChart(QWidget):
         self.plot_widget.clear()
         
         # Plot line
-        pen = pg.mkPen(color='#3498db', width=3)
-        self.plot_widget.plot(x_data, y_data, pen=pen, symbol='o', symbolBrush='#3498db', symbolSize=8)
+        pen = pg.mkPen(color='#0077B5', width=3)
+        self.plot_widget.plot(x_data, y_data, pen=pen, symbol='o', symbolBrush='#0077B5', symbolSize=8)
         
         # Set axis ranges
         self.plot_widget.setXRange(0, sessions-1)
@@ -271,8 +271,8 @@ class PerformanceChart(QWidget):
         y_data = [item.get('emails_per_minute', 0) for item in data]
         
         # Plot line
-        pen = pg.mkPen(color='#3498db', width=3)
-        self.plot_widget.plot(x_data, y_data, pen=pen, symbol='o', symbolBrush='#3498db', symbolSize=8)
+        pen = pg.mkPen(color='#0077B5', width=3)
+        self.plot_widget.plot(x_data, y_data, pen=pen, symbol='o', symbolBrush='#0077B5', symbolSize=8)
 
 
 class AnalyticsDashboard(QWidget):
@@ -300,7 +300,7 @@ class AnalyticsDashboard(QWidget):
         self.content_widget = QWidget()
         self.content_layout = QVBoxLayout(self.content_widget)
         self.content_layout.setContentsMargins(20, 20, 20, 20)
-        self.content_layout.setSpacing(0)
+        self.content_layout.setSpacing(20)
         
         # Header
         header = self.create_header()

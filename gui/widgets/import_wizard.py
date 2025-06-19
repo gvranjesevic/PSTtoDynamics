@@ -210,7 +210,7 @@ class Step1FileSelection(WizardStep):
         file_group.setStyleSheet("""
             QGroupBox {
                 font-weight: bold;
-                border: 2px solid #3498db;
+                border: 2px solid #0077B5;
                 border-radius: 10px;
                 margin-top: 0px; /* Controlled by layout spacing */
                 padding-top: 15px;
@@ -245,7 +245,7 @@ class Step1FileSelection(WizardStep):
                 color: #495057;
             }
             QLineEdit:focus {
-                border-color: #3498db;
+                border-color: #0077B5;
                 background-color: white;
             }
         """)
@@ -258,7 +258,7 @@ class Step1FileSelection(WizardStep):
         self.browse_button.setStyleSheet("""
             QPushButton {
                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #3498db, stop:1 #2980b9);
+                    stop:0 #0077B5, stop:1 #005885);
                 color: white;
                 border: none;
                 border-radius: 8px;
@@ -268,11 +268,11 @@ class Step1FileSelection(WizardStep):
             }
             QPushButton:hover {
                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #5dade2, stop:1 #3498db);
+                    stop:0 #E8F4FD, stop:1 #0077B5);
             }
             QPushButton:pressed {
                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #2980b9, stop:1 #1f618d);
+                    stop:0 #005885, stop:1 #004A70);
             }
         """)
         self.browse_button.clicked.connect(self.browse_file)
@@ -489,11 +489,9 @@ class Step2ImportSettings(WizardStep):
                 background-color: #faf9ff;
             }
             QGroupBox::title {
-                subcontrol-origin: margin; /* Position relative to the margin box */
-                subcontrol-position: top left;
-                left: 25px;
-                top: 8px; /* Nudge title down into the border */
-                padding: 0 10px;
+                subcontrol-origin: margin;
+                left: 15px;
+                padding: 0 10px 0 10px;
                 color: #6c3483;
                 background-color: #faf9ff;
                 font-size: 14px;
@@ -543,11 +541,9 @@ class Step2ImportSettings(WizardStep):
                 background-color: #fef9e7;
             }
             QGroupBox::title {
-                subcontrol-origin: margin; /* Position relative to the margin box */
-                subcontrol-position: top left;
-                left: 25px;
-                top: 8px; /* Nudge title down into the border */
-                padding: 0 10px;
+                subcontrol-origin: margin;
+                left: 15px;
+                padding: 0 10px 0 10px;
                 color: #d68910;
                 background-color: #fef9e7;
                 font-size: 14px;
@@ -668,11 +664,9 @@ class Step2ImportSettings(WizardStep):
                 background-color: #e8f8f5;
             }
             QGroupBox::title {
-                subcontrol-origin: margin; /* Position relative to the margin box */
-                subcontrol-position: top left;
-                left: 25px;
-                top: 8px; /* Nudge title down into the border */
-                padding: 0 10px;
+                subcontrol-origin: margin;
+                left: 15px;
+                padding: 0 10px 0 10px;
                 color: #196f3d;
                 background-color: #e8f8f5;
                 font-size: 14px;
@@ -717,28 +711,28 @@ class Step2ImportSettings(WizardStep):
         layout.setSpacing(5)
         
         checkbox = QCheckBox(title)
-        checkbox.setStyleSheet("""
-            QCheckBox {
+        checkbox.setStyleSheet(f"""
+            QCheckBox {{
                 font-size: 13px;
                 color: #2c3e50;
                 font-weight: 600;
                 spacing: 12px;
-            }
-            QCheckBox::indicator {
+            }}
+            QCheckBox::indicator {{
                 width: 20px;
                 height: 20px;
                 border-radius: 4px;
                 border: 2px solid #bdc3c7;
                 background-color: white;
-            }
-            QCheckBox::indicator:checked {
-                background-color: #3498db;
-                border-color: #3498db;
+            }}
+            QCheckBox::indicator:checked {{
+                background-color: #0077B5;
+                border-color: #0077B5;
                 image: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIiIGhlaWdodD0iOSIgdmlld0JveD0iMCAwIDEyIDkiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxwYXRoIGQ9Ik0xIDQuNUw0LjUgOEwxMSAxIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgo8L3N2Zz4K);
-            }
-            QCheckBox::indicator:hover {
-                border-color: #3498db;
-            }
+            }}
+            QCheckBox::indicator:hover {{
+                border-color: #0077B5;
+            }}
         """)
         
         desc_label = QLabel(description)
@@ -808,7 +802,7 @@ class Step3ImportProgress(WizardStep):
                 font-size: 12px;
             }
             QProgressBar::chunk {
-                background-color: #3498db;
+                background-color: #0077B5;
                 border-radius: 6px;
             }
         """)
@@ -1102,15 +1096,34 @@ class ImportWizard(QWidget):
         widget.setMinimumHeight(75)
         
         if active:
-            widget.setStyleSheet("""
-                QFrame {
-                    background-color: #0077B5;
-                    border-radius: 8px;
-                    border: 2px solid #005885;
-                }
-                QLabel {
-                    color: white;
-                }
+            widget.setStyleSheet(f"""
+                QWidget {{
+                    background-color: white;
+                    border: 2px solid #0077B5;
+                    border-radius: 10px;
+                    padding: 15px;
+                }}
+                QLabel {{
+                    color: #2c3e50;
+                    font-size: 13px;
+                }}
+                QLineEdit, QComboBox {{
+                    border: 2px solid #bdc3c7;
+                    border-color: #0077B5;
+                    border-radius: 6px;
+                    padding: 8px;
+                    font-size: 13px;
+                }}
+                QLineEdit:focus, QComboBox:focus {{
+                    border-color: #0077B5;
+                    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                        stop:0 #0077B5, stop:1 #005885);
+                }}
+                QLineEdit:hover, QComboBox:hover {{
+                    border-color: #0077B5;
+                    background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
+                        stop:0 #E8F4FD, stop:1 #0077B5);
+                }}
             """)
         else:
             widget.setStyleSheet("""

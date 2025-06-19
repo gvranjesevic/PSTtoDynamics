@@ -199,15 +199,15 @@ class NavigationSidebar(QFrame):
                     padding: 8px 12px;
                     border: none;
                     border-radius: 6px;
-                    background-color: #3498db;
+                    background-color: #0077B5;
                     color: white;
                     font-weight: bold;
                 }
                 QPushButton:hover {
-                    background-color: #2980b9;
+                    background-color: #005885;
                 }
                 QPushButton:pressed {
-                    background-color: #21618c;
+                    background-color: #004A70;
                 }
             """)
     

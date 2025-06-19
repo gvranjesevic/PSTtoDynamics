@@ -385,16 +385,14 @@ class DynamicsAuthWidget(QWidget):
                 border: 2px solid #0077B5;
                 border-radius: 8px;
                 margin-top: 0px;
-                padding-top: 20px;
+                padding-top: 15px;
                 background-color: #F9FAFB;
                 font-size: 14px;
             }
             QGroupBox::title {
                 subcontrol-origin: margin;
-                subcontrol-position: top left;
-                left: 20px;
-                top: 8px;
-                padding: 0 10px;
+                left: 15px;
+                padding: 0 10px 0 10px;
                 color: #0077B5;
                 background-color: #F9FAFB;
                 font-size: 14px;
@@ -491,20 +489,16 @@ class DynamicsAuthWidget(QWidget):
                 border: 2px solid #0077B5;
                 border-radius: 8px;
                 margin-top: 0px;
-                padding-top: 20px;
+                padding-top: 15px;
                 background-color: #FFFFFF;
                 font-size: 14px;
             }
             QGroupBox::title {
                 subcontrol-origin: margin;
-                subcontrol-position: top left;
-                left: 20px;
-                top: 8px;
-                padding: 0 10px;
+                left: 15px;
+                padding: 0 10px 0 10px;
                 color: #0077B5;
                 background-color: #FFFFFF;
-                font-size: 14px;
-                font-weight: bold;
             }
         """)
         
@@ -542,7 +536,7 @@ class DynamicsAuthWidget(QWidget):
         tenant_help_btn.setFixedSize(30, 30)
         tenant_help_btn.setStyleSheet("""
             QPushButton {
-                background-color: #3498db;
+                background-color: #0077B5;
                 color: white;
                 border: none;
                 border-radius: 15px;
@@ -550,7 +544,7 @@ class DynamicsAuthWidget(QWidget):
                 font-weight: bold;
             }
             QPushButton:hover {
-                background-color: #2980b9;
+                background-color: #005885;
             }
         """)
         tenant_help_btn.setToolTip("Azure Portal → Azure Active Directory → Properties → Tenant ID")
@@ -1484,17 +1478,15 @@ class ConfigurationManager(QWidget):
                 border: 2px solid #0077B5;
                 border-radius: 8px;
                 margin-top: 0px;
-                padding-top: 20px;
+                padding-top: 15px;
                 background-color: #FFFFFF;
                 font-size: 14px;
                 min-height: 160px;
             }
             QGroupBox::title {
                 subcontrol-origin: margin;
-                subcontrol-position: top left;
-                left: 20px;
-                top: 8px;
-                padding: 0 10px;
+                left: 15px;
+                padding: 0 10px 0 10px;
                 color: #0077B5;
                 background-color: #FFFFFF;
                 font-size: 14px;
@@ -1525,17 +1517,15 @@ class ConfigurationManager(QWidget):
                 border: 2px solid #0077B5;
                 border-radius: 8px;
                 margin-top: 0px;
-                padding-top: 20px;
+                padding-top: 15px;
                 background-color: #FFFFFF;
                 font-size: 14px;
                 min-height: 160px;
             }
             QGroupBox::title {
                 subcontrol-origin: margin;
-                subcontrol-position: top left;
-                left: 20px;
-                top: 8px;
-                padding: 0 10px;
+                left: 15px;
+                padding: 0 10px 0 10px;
                 color: #0077B5;
                 background-color: #FFFFFF;
                 font-size: 14px;
@@ -1566,17 +1556,15 @@ class ConfigurationManager(QWidget):
                 border: 2px solid #0077B5;
                 border-radius: 8px;
                 margin-top: 0px;
-                padding-top: 20px;
+                padding-top: 15px;
                 background-color: #FFFFFF;
                 font-size: 14px;
                 min-height: 160px;
             }
             QGroupBox::title {
                 subcontrol-origin: margin;
-                subcontrol-position: top left;
-                left: 20px;
-                top: 8px;
-                padding: 0 10px;
+                left: 15px;
+                padding: 0 10px 0 10px;
                 color: #0077B5;
                 background-color: #FFFFFF;
                 font-size: 14px;
