@@ -369,7 +369,7 @@ class DynamicsAuthWidget(QWidget):
         """Setup authentication configuration UI"""
         layout = QVBoxLayout(self)
         layout.setSpacing(20)
-        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setContentsMargins(0, 20, 0, 20)
         
         # Header with improved spacing
         header_label = QLabel("🔐 Dynamics 365 Authentication")
@@ -383,20 +383,20 @@ class DynamicsAuthWidget(QWidget):
             QGroupBox {
                 font-weight: bold;
                 border: 2px solid #0077B5;
-                border-radius: 12px;
-                margin-top: 10px;
-                padding-top: 25px;
-                background-color: #f0f8ff;
+                border-radius: 8px;
+                margin-top: 0px;
+                padding-top: 20px;
+                background-color: #F9FAFB;
                 font-size: 14px;
             }
             QGroupBox::title {
                 subcontrol-origin: margin;
                 subcontrol-position: top left;
-                left: 30px;
+                left: 20px;
                 top: 8px;
-                padding: 0 15px;
+                padding: 0 10px;
                 color: #0077B5;
-                background-color: #f0f8ff;
+                background-color: #F9FAFB;
                 font-size: 14px;
                 font-weight: bold;
             }
@@ -463,7 +463,7 @@ class DynamicsAuthWidget(QWidget):
         instructions_text.setOpenExternalLinks(True)
         instructions_text.setStyleSheet("""
             QLabel {
-                color: #2c3e50;
+                color: #666666;
                 font-size: 13px;
                 line-height: 1.6;
                 padding: 10px;
@@ -489,20 +489,20 @@ class DynamicsAuthWidget(QWidget):
             QGroupBox {
                 font-weight: bold;
                 border: 2px solid #0077B5;
-                border-radius: 12px;
-                margin-top: 10px;
-                padding-top: 25px;
-                background-color: #f8faff;
+                border-radius: 8px;
+                margin-top: 0px;
+                padding-top: 20px;
+                background-color: #FFFFFF;
                 font-size: 14px;
             }
             QGroupBox::title {
                 subcontrol-origin: margin;
                 subcontrol-position: top left;
-                left: 30px;
+                left: 20px;
                 top: 8px;
-                padding: 0 15px;
+                padding: 0 10px;
                 color: #0077B5;
-                background-color: #f8faff;
+                background-color: #FFFFFF;
                 font-size: 14px;
                 font-weight: bold;
             }
@@ -1422,6 +1422,14 @@ class ConfigurationManager(QWidget):
         layout.setSpacing(0)
         
         # Header (fixed 60px)
+        header = self.create_header()
+        layout.addWidget(header)
+        
+        # Set up content
+        self.setup_content()
+    
+    def create_header(self) -> QWidget:
+        """Create dashboard header (standardized to match Settings panel)"""
         header = QWidget()
         header.setFixedHeight(60)
         header.setStyleSheet("""
@@ -1437,7 +1445,13 @@ class ConfigurationManager(QWidget):
             font-weight: bold;
         """)
         header_layout.addWidget(title)
-        layout.addWidget(header)
+        header_layout.addStretch()
+        
+        return header
+    
+    def setup_content(self):
+        """Set up the main content area"""
+        layout = self.layout()
         
         # ScrollArea (takes remaining space minus footer) - settings content ONLY
         scroll_area = QScrollArea()
@@ -1450,8 +1464,8 @@ class ConfigurationManager(QWidget):
         scroll_widget = QWidget()
         scroll_widget.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Minimum)
         scroll_layout = QVBoxLayout(scroll_widget)
-        scroll_layout.setContentsMargins(0, 0, 0, 0)
-        scroll_layout.setSpacing(25)
+        scroll_layout.setContentsMargins(20, 20, 20, 0)
+        scroll_layout.setSpacing(40)
         scroll_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         
         # Store references
@@ -1462,27 +1476,27 @@ class ConfigurationManager(QWidget):
         # Use the 'live' auth_widget for the main content
         scroll_layout.addWidget(self.auth_widget)
         
-        # Add the rest of the settings sections with default values
+        # Add the rest of the settings sections with consistent LinkedIn Blue theme
         email_section = QGroupBox("📧 Email Processing Settings")
         email_section.setStyleSheet("""
             QGroupBox {
                 font-weight: bold;
                 border: 2px solid #0077B5;
-                border-radius: 12px;
-                margin-top: 10px;
-                padding-top: 25px;
-                background-color: #f8faff;
+                border-radius: 8px;
+                margin-top: 0px;
+                padding-top: 20px;
+                background-color: #FFFFFF;
                 font-size: 14px;
-                min-height: 180px;
+                min-height: 160px;
             }
             QGroupBox::title {
                 subcontrol-origin: margin;
                 subcontrol-position: top left;
-                left: 30px;
+                left: 20px;
                 top: 8px;
-                padding: 0 15px;
+                padding: 0 10px;
                 color: #0077B5;
-                background-color: #f8faff;
+                background-color: #FFFFFF;
                 font-size: 14px;
                 font-weight: bold;
             }
@@ -1509,21 +1523,21 @@ class ConfigurationManager(QWidget):
             QGroupBox {
                 font-weight: bold;
                 border: 2px solid #0077B5;
-                border-radius: 12px;
-                margin-top: 10px;
-                padding-top: 25px;
-                background-color: #f8faff;
+                border-radius: 8px;
+                margin-top: 0px;
+                padding-top: 20px;
+                background-color: #FFFFFF;
                 font-size: 14px;
-                min-height: 180px;
+                min-height: 160px;
             }
             QGroupBox::title {
                 subcontrol-origin: margin;
                 subcontrol-position: top left;
-                left: 30px;
+                left: 20px;
                 top: 8px;
-                padding: 0 15px;
+                padding: 0 10px;
                 color: #0077B5;
-                background-color: #f8faff;
+                background-color: #FFFFFF;
                 font-size: 14px;
                 font-weight: bold;
             }
@@ -1550,21 +1564,21 @@ class ConfigurationManager(QWidget):
             QGroupBox {
                 font-weight: bold;
                 border: 2px solid #0077B5;
-                border-radius: 12px;
-                margin-top: 10px;
-                padding-top: 25px;
-                background-color: #f8faff;
+                border-radius: 8px;
+                margin-top: 0px;
+                padding-top: 20px;
+                background-color: #FFFFFF;
                 font-size: 14px;
-                min-height: 180px;
+                min-height: 160px;
             }
             QGroupBox::title {
                 subcontrol-origin: margin;
                 subcontrol-position: top left;
-                left: 30px;
+                left: 20px;
                 top: 8px;
-                padding: 0 15px;
+                padding: 0 10px;
                 color: #0077B5;
-                background-color: #f8faff;
+                background-color: #FFFFFF;
                 font-size: 14px;
                 font-weight: bold;
             }
@@ -1590,7 +1604,7 @@ class ConfigurationManager(QWidget):
         scroll_layout.addWidget(ai_section)
         
         # Add bottom padding to scroll content
-        scroll_layout.addSpacing(20)
+        scroll_layout.addSpacing(40)
         
         scroll_area.setWidget(scroll_widget)
         layout.addWidget(scroll_area, 1)  # Takes remaining space
@@ -1601,7 +1615,7 @@ class ConfigurationManager(QWidget):
         footer.setStyleSheet("""
             QFrame {
                 background-color: #F8F9FA;
-                border-top: 1px solid #E1E4E8;
+            border-top: 1px solid #E1E4E8;
             }
         """)
         footer_layout = QHBoxLayout(footer)

@@ -7,8 +7,13 @@ and viewing detailed sync metrics and logs.
 """
 
 import sys
+import logging
 from datetime import datetime
 from typing import Dict, List, Any, Optional
+
+# Setup logging
+logger = logging.getLogger(__name__)
+
 from PyQt6.QtWidgets import (
     QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QLabel, QPushButton, QTableWidget, QTableWidgetItem,
@@ -35,33 +40,69 @@ class SyncMetricsWidget(QWidget):
         
         # Sync Count
         sync_frame = QFrame()
-        sync_frame.setFrameStyle(QFrame.Shape.StyledPanel)
+        sync_frame.setStyleSheet("""
+            QFrame {
+                background-color: #F9FAFB;
+                border: 1px solid #E1E4E8;
+                border-radius: 6px;
+                padding: 12px;
+                margin: 2px;
+            }
+        """)
         sync_layout = QVBoxLayout()
+        sync_layout.setContentsMargins(12, 10, 12, 10)
+        sync_layout.setSpacing(4)
+        sync_title = QLabel("Total Syncs")
+        sync_title.setStyleSheet("color: #666666; font-size: 11px; font-weight: bold;")
         self.sync_count_label = QLabel("0")
-        self.sync_count_label.setFont(QFont("Arial", 24, QFont.Weight.Bold))
-        sync_layout.addWidget(QLabel("Total Syncs"))
+        self.sync_count_label.setStyleSheet("color: #0077B5; font-size: 20px; font-weight: bold;")
+        sync_layout.addWidget(sync_title)
         sync_layout.addWidget(self.sync_count_label)
         sync_frame.setLayout(sync_layout)
         metrics_grid.addWidget(sync_frame)
         
         # Conflict Count
         conflict_frame = QFrame()
-        conflict_frame.setFrameStyle(QFrame.Shape.StyledPanel)
+        conflict_frame.setStyleSheet("""
+            QFrame {
+                background-color: #F9FAFB;
+                border: 1px solid #E1E4E8;
+                border-radius: 6px;
+                padding: 12px;
+                margin: 2px;
+            }
+        """)
         conflict_layout = QVBoxLayout()
+        conflict_layout.setContentsMargins(12, 10, 12, 10)
+        conflict_layout.setSpacing(4)
+        conflict_title = QLabel("Conflicts")
+        conflict_title.setStyleSheet("color: #666666; font-size: 11px; font-weight: bold;")
         self.conflict_count_label = QLabel("0")
-        self.conflict_count_label.setFont(QFont("Arial", 24, QFont.Weight.Bold))
-        conflict_layout.addWidget(QLabel("Conflicts"))
+        self.conflict_count_label.setStyleSheet("color: #0077B5; font-size: 20px; font-weight: bold;")
+        conflict_layout.addWidget(conflict_title)
         conflict_layout.addWidget(self.conflict_count_label)
         conflict_frame.setLayout(conflict_layout)
         metrics_grid.addWidget(conflict_frame)
         
         # Error Count
         error_frame = QFrame()
-        error_frame.setFrameStyle(QFrame.Shape.StyledPanel)
+        error_frame.setStyleSheet("""
+            QFrame {
+                background-color: #F9FAFB;
+                border: 1px solid #E1E4E8;
+                border-radius: 6px;
+                padding: 12px;
+                margin: 2px;
+            }
+        """)
         error_layout = QVBoxLayout()
+        error_layout.setContentsMargins(12, 10, 12, 10)
+        error_layout.setSpacing(4)
+        error_title = QLabel("Errors")
+        error_title.setStyleSheet("color: #666666; font-size: 11px; font-weight: bold;")
         self.error_count_label = QLabel("0")
-        self.error_count_label.setFont(QFont("Arial", 24, QFont.Weight.Bold))
-        error_layout.addWidget(QLabel("Errors"))
+        self.error_count_label.setStyleSheet("color: #0077B5; font-size: 20px; font-weight: bold;")
+        error_layout.addWidget(error_title)
         error_layout.addWidget(self.error_count_label)
         error_frame.setLayout(error_layout)
         metrics_grid.addWidget(error_frame)
@@ -94,6 +135,31 @@ class ConflictResolutionWidget(QWidget):
             "Field", "Source Value", "Target Value", "Resolution"
         ])
         self.conflict_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self.conflict_table.setStyleSheet("""
+            QTableWidget {
+                background-color: #FFFFFF;
+                border: 1px solid #D0D7DE;
+                border-radius: 6px;
+                gridline-color: #E1E4E8;
+                selection-background-color: #E8F4FD;
+            }
+            QTableWidget::item {
+                padding: 8px;
+                border-bottom: 1px solid #E1E4E8;
+            }
+            QTableWidget::item:selected {
+                background-color: #E8F4FD;
+                color: #0077B5;
+            }
+            QHeaderView::section {
+                background-color: #0077B5;
+                color: white;
+                font-weight: bold;
+                padding: 12px;
+                border: none;
+                border-right: 1px solid #005885;
+            }
+        """)
         layout.addWidget(self.conflict_table)
         
         # Resolution Controls
@@ -110,6 +176,23 @@ class ConflictResolutionWidget(QWidget):
         
         resolve_button = QPushButton("Resolve Selected")
         resolve_button.clicked.connect(self.resolve_selected)
+        resolve_button.setStyleSheet("""
+            QPushButton {
+                background-color: #0077B5;
+                color: white;
+                border: none;
+                border-radius: 8px;
+                padding: 10px 20px;
+                font-weight: bold;
+                font-size: 14px;
+            }
+            QPushButton:hover {
+                background-color: #005885;
+            }
+            QPushButton:pressed {
+                background-color: #004A70;
+            }
+        """)
         controls_layout.addWidget(resolve_button)
         
         layout.addLayout(controls_layout)
@@ -164,10 +247,44 @@ class SyncLogWidget(QWidget):
         
         clear_button = QPushButton("Clear Logs")
         clear_button.clicked.connect(self.log_display.clear)
+        clear_button.setStyleSheet("""
+            QPushButton {
+                background-color: #6c757d;
+                color: white;
+                border: none;
+                border-radius: 8px;
+                padding: 10px 20px;
+                font-weight: bold;
+                font-size: 14px;
+            }
+            QPushButton:hover {
+                background-color: #5a6268;
+            }
+            QPushButton:pressed {
+                background-color: #545b62;
+            }
+        """)
         controls_layout.addWidget(clear_button)
         
         export_button = QPushButton("Export Logs")
         export_button.clicked.connect(self.export_logs)
+        export_button.setStyleSheet("""
+            QPushButton {
+                background-color: #0077B5;
+                color: white;
+                border: none;
+                border-radius: 8px;
+                padding: 10px 20px;
+                font-weight: bold;
+                font-size: 14px;
+            }
+            QPushButton:hover {
+                background-color: #005885;
+            }
+            QPushButton:pressed {
+                background-color: #004A70;
+            }
+        """)
         controls_layout.addWidget(export_button)
         
         layout.addLayout(controls_layout)
@@ -214,34 +331,96 @@ class SyncLogWidget(QWidget):
             except Exception as e:
                 QMessageBox.critical(self, "Export Error", f"Failed to export logs:\n{str(e)}")
 
-class SyncMonitoringDashboard(QMainWindow):
-    """Main sync monitoring dashboard window"""
+class SyncMonitoringDashboard(QWidget):
+    """Main sync monitoring dashboard widget"""
     
-    def __init__(self, sync_engine: SyncEngine):
+    def __init__(self, sync_engine=None):
         super().__init__()
         self.sync_engine = sync_engine
         self.setup_ui()
         
-        # Start update timer
-        self.update_timer = QTimer()
-        self.update_timer.timeout.connect(self.update_dashboard)
-        self.update_timer.start(1000)  # Update every second
+        # Start update timer only if sync_engine is available
+        if self.sync_engine:
+            self.update_timer = QTimer()
+            self.update_timer.timeout.connect(self.update_dashboard)
+            self.update_timer.start(1000)  # Update every second
     
     def setup_ui(self):
-        self.setWindowTitle("Sync Monitoring Dashboard")
         self.setMinimumSize(1200, 800)
         
-        # Create central widget and main layout
-        central_widget = QWidget()
-        self.setCentralWidget(central_widget)
-        main_layout = QVBoxLayout(central_widget)
+        # Create main layout
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.setSpacing(0)
+        
+        # Header (standardized to match Settings panel)
+        header = self.create_header()
+        main_layout.addWidget(header)
+        
+        # Set up content
+        self.setup_content()
+    
+    def create_header(self) -> QWidget:
+        """Create dashboard header (standardized to match Settings panel)"""
+        header = QWidget()
+        header.setFixedHeight(60)
+        header.setStyleSheet("""
+            background-color: #0077B5;
+            border-bottom: 1px solid #006097;
+        """)
+        header_layout = QHBoxLayout(header)
+        header_layout.setContentsMargins(20, 0, 20, 0)
+        title = QLabel("Sync Monitor")
+        title.setStyleSheet("""
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+        """)
+        header_layout.addWidget(title)
+        header_layout.addStretch()
+        
+        return header
+    
+    def setup_content(self):
+        """Set up the content area"""
+        main_layout = self.layout()
+        
+        # Content area
+        content_widget = QWidget()
+        content_layout = QVBoxLayout(content_widget)
+        content_layout.setContentsMargins(20, 20, 20, 20)
+        content_layout.setSpacing(20)
         
         # Add metrics widget
         self.metrics_widget = SyncMetricsWidget()
-        main_layout.addWidget(self.metrics_widget)
+        content_layout.addWidget(self.metrics_widget)
         
         # Create tab widget for conflicts and logs
         tab_widget = QTabWidget()
+        tab_widget.setStyleSheet("""
+            QTabWidget::pane {
+                border: none;
+                background-color: #F3F6F8;
+            }
+            QTabBar::tab {
+                background-color: #F9FAFB;
+                color: #666666;
+                padding: 12px 24px;
+                margin-right: 2px;
+                border-top-left-radius: 8px;
+                border-top-right-radius: 8px;
+                font-weight: bold;
+                font-size: 14px;
+            }
+            QTabBar::tab:selected {
+                background-color: #0077B5;
+                color: white;
+            }
+            QTabBar::tab:hover {
+                background-color: #E8EBED;
+                color: #0077B5;
+            }
+        """)
         
         # Add conflict resolution tab
         self.conflict_widget = ConflictResolutionWidget()
@@ -252,18 +431,26 @@ class SyncMonitoringDashboard(QMainWindow):
         self.log_widget = SyncLogWidget()
         tab_widget.addTab(self.log_widget, "Sync Logs")
         
-        main_layout.addWidget(tab_widget)
+        content_layout.addWidget(tab_widget)
+        main_layout.addWidget(content_widget)
     
     def update_dashboard(self):
         """Update dashboard with latest sync data"""
+        if not self.sync_engine or not hasattr(self, 'metrics_widget'):
+            return
+            
         # Update metrics
-        metrics = self.sync_engine.monitor.get_metrics()
-        self.metrics_widget.update_metrics(metrics)
-        
-        # Update logs
-        logs = self.sync_engine.monitor.get_recent_logs()
-        for log in logs:
-            self.log_widget.add_log(log)
+        try:
+            metrics = self.sync_engine.monitor.get_metrics()
+            self.metrics_widget.update_metrics(metrics)
+            
+            # Update logs
+            logs = self.sync_engine.monitor.get_recent_logs()
+            for log in logs:
+                self.log_widget.add_log(log)
+        except AttributeError:
+            # Sync engine or monitor not available
+            pass
     
     def handle_conflict_resolution(self, resolution: Dict[str, Any]):
         """Handle conflict resolution from the UI"""

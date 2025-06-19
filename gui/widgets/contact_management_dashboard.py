@@ -1,23 +1,18 @@
 """
-Phase 5.6+ Contact Management Interface - Enhanced with Phase 5.7 Features
-========================================================================
+Contact Management Interface
+============================
 
 This module provides a complete GUI interface for managing Dynamics 365 contacts including:
 
-Phase 5.6 Features:
+Features:
 - Contact browser with search and filtering
 - Contact creation and editing forms
 - Relationship mapping and email history
 - Bulk operations and data export
 - Import history tracking
 - Advanced contact analytics
-
-Phase 5.7 Enhancements:
-- Advanced theme system with Light/Dark/Corporate/High Contrast themes
 - Enhanced UX with keyboard navigation and rich tooltips
 - Performance optimization with virtual scrolling and caching
-- Real-time performance monitoring
-- Responsive layout management
 - Background task management
 - Notification system
 """
@@ -39,7 +34,7 @@ from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QTabWidget,
 from PyQt6.QtCore import QTimer, Qt, QThread, pyqtSignal, QDate, QSortFilterProxyModel
 from PyQt6.QtGui import QFont, QPalette, QColor, QPixmap, QPainter, QBrush, QIcon, QStandardItemModel, QStandardItem
 
-# Phase 5.7 Enhanced Components
+# Enhanced Components
 try:
     sys.path.append('gui/themes')
     sys.path.append('gui/core')
@@ -74,9 +69,9 @@ logger = logging.getLogger(__name__)
 
 # Log import status after logger is defined
 if PHASE_5_7_AVAILABLE:
-    logger.info("✅ Phase 5.7 enhanced components loaded successfully")
+    logger.info("✅ Enhanced components loaded successfully")
 else:
-    logger.warning("⚠️ Phase 5.7 components not available")
+    logger.warning("⚠️ Enhanced components not available")
 
 if CONTACT_MODULES_AVAILABLE:
     logger.info("✅ Contact management modules loaded successfully")
@@ -84,7 +79,7 @@ else:
     logger.warning("⚠️ Contact management modules not available")
 
 class ContactDataLoader(QThread):
-    """Background thread for loading contact data with Phase 5.7 performance optimization"""
+    """Background thread for loading contact data with performance optimization"""
     contacts_loaded = pyqtSignal(list)
     error_occurred = pyqtSignal(str)
     progress_updated = pyqtSignal(int, str)
@@ -94,7 +89,7 @@ class ContactDataLoader(QThread):
         self.running = True
         self.contact_creator = None
         
-        # Phase 5.7: Initialize cache manager
+        # Initialize cache manager
         if PHASE_5_7_AVAILABLE:
             self.cache_manager = get_cache_manager()
         
@@ -195,7 +190,7 @@ class ContactEditDialog(QDialog):
         self.contact_data = contact_data or {}
         self.is_new_contact = contact_data is None
         
-        self.setWindowTitle("📝 New Contact" if self.is_new_contact else "✏️ Edit Contact")
+        self.setWindowTitle("New Contact" if self.is_new_contact else "Edit Contact")
         self.setModal(True)
         self.setFixedSize(500, 600)
         
@@ -258,76 +253,301 @@ class ContactEditDialog(QDialog):
     def setup_ui(self):
         """Set up the contact edit dialog UI"""
         layout = QVBoxLayout(self)
+        layout.setSpacing(20)
         
         # Header
-        header = QLabel("📝 Contact Information")
+        header = QLabel("Contact Information")
         header.setFont(QFont("Segoe UI", 16, QFont.Weight.Bold))
-        header.setStyleSheet("color: #1e293b; margin: 10px;")
+        header.setStyleSheet("""
+            QLabel {
+                color: white;
+                background-color: #0077B5;
+                padding: 16px 24px;
+                border-radius: 8px;
+                margin-bottom: 8px;
+                font-weight: bold;
+            }
+        """)
         layout.addWidget(header)
         
         # Scroll area for form
         scroll = QScrollArea()
+        scroll.setStyleSheet("""
+            QScrollArea {
+                border: none;
+                background: #FFFFFF;
+            }
+        """)
         scroll_widget = QWidget()
-        form_layout = QFormLayout(scroll_widget)
+        form_layout = QVBoxLayout(scroll_widget)
+        form_layout.setSpacing(20)
         
         # Basic Information
         basic_group = QGroupBox("👤 Basic Information")
+        basic_group.setStyleSheet("""
+            QGroupBox {
+                border: 2px solid #0077B5;
+                border-radius: 8px;
+                margin-top: 10px;
+                padding-top: 10px;
+                background: #FFFFFF;
+                font-weight: bold;
+                color: #0077B5;
+            }
+            QGroupBox::title {
+                subcontrol-origin: margin;
+                left: 10px;
+                padding: 0 8px 0 8px;
+                color: #0077B5;
+                font-weight: bold;
+            }
+        """)
         basic_layout = QFormLayout(basic_group)
         
         self.first_name_edit = QLineEdit()
         self.first_name_edit.setPlaceholderText("Enter first name...")
+        self.first_name_edit.setStyleSheet("""
+            QLineEdit {
+                border: 2px solid #D0D7DE;
+                border-radius: 8px;
+                padding: 8px 12px;
+                background: #FFFFFF;
+                color: #666666;
+                font-size: 14px;
+            }
+            QLineEdit:focus {
+                border-color: #0077B5;
+                outline: none;
+            }
+        """)
         basic_layout.addRow("First Name:", self.first_name_edit)
         
         self.last_name_edit = QLineEdit()
         self.last_name_edit.setPlaceholderText("Enter last name...")
+        self.last_name_edit.setStyleSheet("""
+            QLineEdit {
+                border: 2px solid #D0D7DE;
+                border-radius: 8px;
+                padding: 8px 12px;
+                background: #FFFFFF;
+                color: #666666;
+                font-size: 14px;
+            }
+            QLineEdit:focus {
+                border-color: #0077B5;
+                outline: none;
+            }
+        """)
         basic_layout.addRow("Last Name:", self.last_name_edit)
         
         self.full_name_edit = QLineEdit()
         self.full_name_edit.setPlaceholderText("Auto-generated or custom...")
+        self.full_name_edit.setStyleSheet("""
+            QLineEdit {
+                border: 2px solid #D0D7DE;
+                border-radius: 8px;
+                padding: 8px 12px;
+                background: #FFFFFF;
+                color: #666666;
+                font-size: 14px;
+            }
+            QLineEdit:focus {
+                border-color: #0077B5;
+                outline: none;
+            }
+        """)
         basic_layout.addRow("Full Name:", self.full_name_edit)
         
         self.job_title_edit = QLineEdit()
         self.job_title_edit.setPlaceholderText("Enter job title...")
+        self.job_title_edit.setStyleSheet("""
+            QLineEdit {
+                border: 2px solid #D0D7DE;
+                border-radius: 8px;
+                padding: 8px 12px;
+                background: #FFFFFF;
+                color: #666666;
+                font-size: 14px;
+            }
+            QLineEdit:focus {
+                border-color: #0077B5;
+                outline: none;
+            }
+        """)
         basic_layout.addRow("Job Title:", self.job_title_edit)
         
         form_layout.addWidget(basic_group)
         
         # Contact Information
         contact_group = QGroupBox("📧 Contact Information")
+        contact_group.setStyleSheet("""
+            QGroupBox {
+                border: 2px solid #0077B5;
+                border-radius: 8px;
+                margin-top: 10px;
+                padding-top: 10px;
+                background: #FFFFFF;
+                font-weight: bold;
+                color: #0077B5;
+            }
+            QGroupBox::title {
+                subcontrol-origin: margin;
+                left: 10px;
+                padding: 0 8px 0 8px;
+                color: #0077B5;
+                font-weight: bold;
+            }
+        """)
         contact_layout = QFormLayout(contact_group)
         
         self.email1_edit = QLineEdit()
         self.email1_edit.setPlaceholderText("Primary email address...")
+        self.email1_edit.setStyleSheet("""
+            QLineEdit {
+                border: 2px solid #D0D7DE;
+                border-radius: 8px;
+                padding: 8px 12px;
+                background: #FFFFFF;
+                color: #666666;
+                font-size: 14px;
+            }
+            QLineEdit:focus {
+                border-color: #0077B5;
+                outline: none;
+            }
+        """)
         contact_layout.addRow("Primary Email:", self.email1_edit)
         
         self.email2_edit = QLineEdit()
         self.email2_edit.setPlaceholderText("Secondary email address...")
+        self.email2_edit.setStyleSheet("""
+            QLineEdit {
+                border: 2px solid #D0D7DE;
+                border-radius: 8px;
+                padding: 8px 12px;
+                background: #FFFFFF;
+                color: #666666;
+                font-size: 14px;
+            }
+            QLineEdit:focus {
+                border-color: #0077B5;
+                outline: none;
+            }
+        """)
         contact_layout.addRow("Secondary Email:", self.email2_edit)
         
         self.phone_edit = QLineEdit()
         self.phone_edit.setPlaceholderText("Business phone number...")
+        self.phone_edit.setStyleSheet("""
+            QLineEdit {
+                border: 2px solid #D0D7DE;
+                border-radius: 8px;
+                padding: 8px 12px;
+                background: #FFFFFF;
+                color: #666666;
+                font-size: 14px;
+            }
+            QLineEdit:focus {
+                border-color: #0077B5;
+                outline: none;
+            }
+        """)
         contact_layout.addRow("Business Phone:", self.phone_edit)
         
         self.mobile_edit = QLineEdit()
         self.mobile_edit.setPlaceholderText("Mobile phone number...")
+        self.mobile_edit.setStyleSheet("""
+            QLineEdit {
+                border: 2px solid #D0D7DE;
+                border-radius: 8px;
+                padding: 8px 12px;
+                background: #FFFFFF;
+                color: #666666;
+                font-size: 14px;
+            }
+            QLineEdit:focus {
+                border-color: #0077B5;
+                outline: none;
+            }
+        """)
         contact_layout.addRow("Mobile Phone:", self.mobile_edit)
         
         form_layout.addWidget(contact_group)
         
         # Address Information
         address_group = QGroupBox("🏢 Address Information")
+        address_group.setStyleSheet("""
+            QGroupBox {
+                border: 2px solid #0077B5;
+                border-radius: 8px;
+                margin-top: 10px;
+                padding-top: 10px;
+                background: #FFFFFF;
+                font-weight: bold;
+                color: #0077B5;
+            }
+            QGroupBox::title {
+                subcontrol-origin: margin;
+                left: 10px;
+                padding: 0 8px 0 8px;
+                color: #0077B5;
+                font-weight: bold;
+            }
+        """)
         address_layout = QFormLayout(address_group)
         
         self.city_edit = QLineEdit()
         self.city_edit.setPlaceholderText("City...")
+        self.city_edit.setStyleSheet("""
+            QLineEdit {
+                border: 2px solid #D0D7DE;
+                border-radius: 8px;
+                padding: 8px 12px;
+                background: #FFFFFF;
+                color: #666666;
+                font-size: 14px;
+            }
+            QLineEdit:focus {
+                border-color: #0077B5;
+                outline: none;
+            }
+        """)
         address_layout.addRow("City:", self.city_edit)
         
         self.state_edit = QLineEdit()
         self.state_edit.setPlaceholderText("State/Province...")
+        self.state_edit.setStyleSheet("""
+            QLineEdit {
+                border: 2px solid #D0D7DE;
+                border-radius: 8px;
+                padding: 8px 12px;
+                background: #FFFFFF;
+                color: #666666;
+                font-size: 14px;
+            }
+            QLineEdit:focus {
+                border-color: #0077B5;
+                outline: none;
+            }
+        """)
         address_layout.addRow("State/Province:", self.state_edit)
         
         self.country_edit = QLineEdit()
         self.country_edit.setPlaceholderText("Country...")
+        self.country_edit.setStyleSheet("""
+            QLineEdit {
+                border: 2px solid #D0D7DE;
+                border-radius: 8px;
+                padding: 8px 12px;
+                background: #FFFFFF;
+                color: #666666;
+                font-size: 14px;
+            }
+            QLineEdit:focus {
+                border-color: #0077B5;
+                outline: none;
+            }
+        """)
         address_layout.addRow("Country:", self.country_edit)
         
         form_layout.addWidget(address_group)
@@ -339,10 +559,44 @@ class ContactEditDialog(QDialog):
         button_layout = QHBoxLayout()
         
         self.save_button = QPushButton("💾 Save Contact")
+        self.save_button.setStyleSheet("""
+            QPushButton {
+                background-color: #0077B5;
+                color: white;
+                border: 2px solid #0077B5;
+                border-radius: 8px;
+                padding: 10px 20px;
+                font-weight: bold;
+                font-size: 14px;
+            }
+            QPushButton:hover {
+                background-color: #005885;
+            }
+            QPushButton:pressed {
+                background-color: #004A70;
+            }
+        """)
         self.save_button.clicked.connect(self.accept_contact)
         button_layout.addWidget(self.save_button)
         
         self.cancel_button = QPushButton("❌ Cancel")
+        self.cancel_button.setStyleSheet("""
+            QPushButton {
+                background-color: #6C757D;
+                color: white;
+                border: 2px solid #6C757D;
+                border-radius: 8px;
+                padding: 10px 20px;
+                font-weight: bold;
+                font-size: 14px;
+            }
+            QPushButton:hover {
+                background-color: #5A6268;
+            }
+            QPushButton:pressed {
+                background-color: #495057;
+            }
+        """)
         self.cancel_button.clicked.connect(self.reject)
         button_layout.addWidget(self.cancel_button)
         
@@ -439,7 +693,7 @@ class ContactRelationshipView(QWidget):
         # Header
         header = QLabel("🔗 Contact Relationships & Email History")
         header.setFont(QFont("Segoe UI", 14, QFont.Weight.Bold))
-        header.setStyleSheet("color: #1e293b; margin: 10px;")
+        header.setStyleSheet("color: #0077B5; margin: 10px; font-weight: bold;")
         layout.addWidget(header)
         
         # Splitter for relationship tree and email history
@@ -447,22 +701,108 @@ class ContactRelationshipView(QWidget):
         
         # Relationship tree
         relationship_group = QGroupBox("🌐 Contact Network")
+        relationship_group.setStyleSheet("""
+            QGroupBox {
+                border: 2px solid #0077B5;
+                border-radius: 8px;
+                margin-top: 10px;
+                padding-top: 10px;
+                background: #FFFFFF;
+                font-weight: bold;
+                color: #0077B5;
+            }
+            QGroupBox::title {
+                subcontrol-origin: margin;
+                left: 10px;
+                padding: 0 8px 0 8px;
+                color: #0077B5;
+                font-weight: bold;
+            }
+        """)
         relationship_layout = QVBoxLayout(relationship_group)
         
         self.relationship_tree = QTreeWidget()
         self.relationship_tree.setHeaderLabels(["Contact", "Relationship", "Emails", "Last Contact"])
+        self.relationship_tree.setStyleSheet("""
+            QTreeWidget {
+                border: 1px solid #D0D7DE;
+                border-radius: 8px;
+                background: #FFFFFF;
+                alternate-background-color: #F9FAFB;
+                color: #666666;
+            }
+            QTreeWidget::item {
+                padding: 8px;
+                border-bottom: 1px solid #F0F0F0;
+            }
+            QTreeWidget::item:selected {
+                background-color: #0077B5;
+                color: white;
+            }
+            QTreeWidget::item:hover {
+                background-color: #E8F4FD;
+                color: #0077B5;
+            }
+        """)
         relationship_layout.addWidget(self.relationship_tree)
         
         splitter.addWidget(relationship_group)
         
         # Email history
         email_group = QGroupBox("📧 Email History")
+        email_group.setStyleSheet("""
+            QGroupBox {
+                border: 2px solid #0077B5;
+                border-radius: 8px;
+                margin-top: 10px;
+                padding-top: 10px;
+                background: #FFFFFF;
+                font-weight: bold;
+                color: #0077B5;
+            }
+            QGroupBox::title {
+                subcontrol-origin: margin;
+                left: 10px;
+                padding: 0 8px 0 8px;
+                color: #0077B5;
+                font-weight: bold;
+            }
+        """)
         email_layout = QVBoxLayout(email_group)
         
         self.email_table = QTableWidget()
         self.email_table.setColumnCount(4)
         self.email_table.setHorizontalHeaderLabels(["Date", "Subject", "Direction", "Status"])
         self.email_table.horizontalHeader().setStretchLastSection(True)
+        self.email_table.setStyleSheet("""
+            QTableWidget {
+                border: 1px solid #D0D7DE;
+                border-radius: 8px;
+                background: #FFFFFF;
+                alternate-background-color: #F9FAFB;
+                color: #666666;
+                gridline-color: #F0F0F0;
+            }
+            QTableWidget::item {
+                padding: 8px;
+                border-bottom: 1px solid #F0F0F0;
+            }
+            QTableWidget::item:selected {
+                background-color: #0077B5;
+                color: white;
+            }
+            QTableWidget::item:hover {
+                background-color: #E8F4FD;
+                color: #0077B5;
+            }
+            QHeaderView::section {
+                background-color: #0077B5;
+                color: white;
+                padding: 8px;
+                border: none;
+                font-weight: bold;
+            }
+        """)
         email_layout.addWidget(self.email_table)
         
         splitter.addWidget(email_group)
@@ -514,27 +854,23 @@ class ContactManagementDashboard(QWidget):
         self.data_loader = None
         self.table_items_pool = []  # Pool for recycling table items
         
-        # Phase 5.7: Initialize enhanced components
+        # Initialize enhanced components
         if PHASE_5_7_AVAILABLE:
             self._initialize_phase_5_7_components()
         
         self.setup_ui()
         self.setup_data_loading()
         
-        # Phase 5.7: Apply theme and enhanced UX
+        # Apply enhanced UX
         if PHASE_5_7_AVAILABLE:
-            self._apply_phase_5_7_enhancements()
+            self._apply_enhancements()
         
-        logger.info("Contact Management Dashboard initialized with Phase 5.7 enhancements")
+        logger.info("Contact Management Dashboard initialized")
     
     def _initialize_phase_5_7_components(self):
-        """Initialize Phase 5.7 enhanced components"""
+        """Initialize enhanced components"""
         # Theme manager
         self.theme_manager = get_theme_manager()
-        
-        # Performance monitor
-        self.performance_monitor = get_performance_monitor()
-        self.performance_monitor.start_monitoring()
         
         # Notification center
         self.notification_center = get_notification_center(self)
@@ -542,10 +878,10 @@ class ContactManagementDashboard(QWidget):
         # Cache manager
         self.cache_manager = get_cache_manager()
         
-        logger.info("✅ Phase 5.7 components initialized for Contact Dashboard")
+        logger.info("✅ Enhanced components initialized for Contact Dashboard")
     
-    def _apply_phase_5_7_enhancements(self):
-        """Apply Phase 5.7 theme and UX enhancements"""
+    def _apply_enhancements(self):
+        """Apply theme and UX enhancements"""
         # Register with theme manager
         if self.theme_manager:
             self.theme_manager.register_widget(self)
@@ -561,8 +897,8 @@ class ContactManagementDashboard(QWidget):
             try:
                 if self and not self.isHidden():
                     show_notification(
-                        self, "🚀 Contact Management Dashboard Enhanced with Phase 5.7 Features", 
-                        NotificationType.SUCCESS, duration=3000
+                        self, "🚀 Contact Management Dashboard Ready", 
+                        NotificationType.SUCCESS, duration=2000
                     )
             except RuntimeError:
                 # Widget was deleted - ignore safely
@@ -593,8 +929,8 @@ class ContactManagementDashboard(QWidget):
             add_tooltip(self.export_contacts_btn, "Export selected contacts to various formats")
         if hasattr(self, 'refresh_btn'):
             add_tooltip(self.refresh_btn, "Refresh contact list from Dynamics 365 (uses intelligent caching)")
-        if hasattr(self, 'search_input'):
-            add_tooltip(self.search_input, "Search contacts by name, email, or job title (real-time filtering)")
+        if hasattr(self, 'search_edit'):
+            add_tooltip(self.search_edit, "Search contacts by name, email, or job title (real-time filtering)")
     
     def apply_theme(self, theme_definition):
         """Apply theme to dashboard (Phase 5.7)"""
@@ -625,7 +961,7 @@ class ContactManagementDashboard(QWidget):
                 font-weight: bold;
             }}
             QTabBar::tab:selected {{
-                background: {colors['background']};
+                background-color: {colors['background']};
                 color: {colors['text_primary']};
                 border: 2px solid {colors['border']};
                 border-bottom: none;
@@ -650,150 +986,218 @@ class ContactManagementDashboard(QWidget):
             """)
     
     def setup_ui(self):
-        """Set up the main dashboard UI with Phase 5.7 enhancements"""
+        """Set up the main dashboard UI"""
         layout = QVBoxLayout(self)
         layout.setContentsMargins(20, 20, 20, 20)
-        layout.setSpacing(16)
+        layout.setSpacing(20)
         
-        # Header with Phase 5.7 theme support
-        header_layout = QHBoxLayout()
+        # Header (standardized to match Settings panel)
+        header = self.create_header()
+        layout.addWidget(header)
         
-        self.title_label = QLabel("👥 Contact Management Dashboard - Phase 5.7 Enhanced")
-        self.title_label.setFont(QFont("Segoe UI", 22, QFont.Weight.Bold))
-        self.title_label.setStyleSheet("""
-            QLabel {
-                color: white;
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                    stop:0 #667eea, stop:1 #764ba2);
-                padding: 16px 24px;
-                border-radius: 12px;
-                margin-bottom: 8px;
-            }
+        # Set up content
+        self.setup_content()
+    
+    def create_header(self) -> QWidget:
+        """Create dashboard header (standardized to match Settings panel)"""
+        header = QWidget()
+        header.setFixedHeight(60)
+        header.setStyleSheet("""
+            background-color: #0077B5;
+            border-bottom: 1px solid #006097;
         """)
-        header_layout.addWidget(self.title_label)
-        
-        # Phase 5.7: Theme Selector
-        if PHASE_5_7_AVAILABLE:
-            theme_layout = QHBoxLayout()
-            theme_label = QLabel("🎨 Theme:")
-            theme_label.setStyleSheet("color: #64748b; font-weight: bold; margin: 0 8px;")
-            theme_layout.addWidget(theme_label)
-            
-            self.theme_selector = QComboBox()
-            themes = get_theme_manager().get_available_themes() if get_theme_manager() else {}
-            for theme_type, theme_info in themes.items():
-                self.theme_selector.addItem(theme_info['name'], theme_type)
-            
-            self.theme_selector.currentIndexChanged.connect(self._on_theme_changed)
-            theme_layout.addWidget(self.theme_selector)
-            
-            header_layout.addLayout(theme_layout)
-        
-        # Contact count label (Phase 5.7 fix)
-        self.contact_count_label = QLabel("0 contacts")
-        self.contact_count_label.setStyleSheet("color: #64748b; font-weight: bold; margin: 0 8px;")
-        layout.addWidget(self.contact_count_label)
-        
+        header_layout = QHBoxLayout(header)
+        header_layout.setContentsMargins(20, 0, 20, 0)
+        title = QLabel("Contacts")
+        title.setStyleSheet("""
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+        """)
+        header_layout.addWidget(title)
         header_layout.addStretch()
         
-        # Use a QWidget as a container for the header layout
-        header_widget = QWidget()
-        header_widget.setLayout(header_layout)
-        layout.addWidget(header_widget)
+        return header
+    
+    def setup_content(self):
+        """Set up the main content area"""
+        layout = self.layout()
         
-        # Control buttons with Phase 5.7 styling
+        # Control buttons
         controls_layout = QHBoxLayout()
         
         self.new_contact_btn = QPushButton("👤 New Contact")
+        self.new_contact_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #0077B5;
+                color: white;
+                border: 2px solid #0077B5;
+                border-radius: 8px;
+                padding: 10px 20px;
+                font-weight: bold;
+                font-size: 14px;
+            }
+            QPushButton:hover {
+                background-color: #005885;
+            }
+            QPushButton:pressed {
+                background-color: #004A70;
+            }
+        """)
         self.new_contact_btn.clicked.connect(self.create_new_contact)
         controls_layout.addWidget(self.new_contact_btn)
         
         self.import_contacts_btn = QPushButton("📥 Import Contacts")
+        self.import_contacts_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #0077B5;
+                color: white;
+                border: 2px solid #0077B5;
+                border-radius: 8px;
+                padding: 10px 20px;
+                font-weight: bold;
+                font-size: 14px;
+            }
+            QPushButton:hover {
+                background-color: #005885;
+            }
+            QPushButton:pressed {
+                background-color: #004A70;
+            }
+        """)
         self.import_contacts_btn.clicked.connect(self.import_contacts)
         controls_layout.addWidget(self.import_contacts_btn)
         
         self.export_contacts_btn = QPushButton("📤 Export Contacts")
+        self.export_contacts_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #0077B5;
+                color: white;
+                border: 2px solid #0077B5;
+                border-radius: 8px;
+                padding: 10px 20px;
+                font-weight: bold;
+                font-size: 14px;
+            }
+            QPushButton:hover {
+                background-color: #005885;
+            }
+            QPushButton:pressed {
+                background-color: #004A70;
+            }
+        """)
         self.export_contacts_btn.clicked.connect(self.export_contacts)
         controls_layout.addWidget(self.export_contacts_btn)
         
         self.refresh_btn = QPushButton("🔄 Refresh")
+        self.refresh_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #0077B5;
+                color: white;
+                border: 2px solid #0077B5;
+                border-radius: 8px;
+                padding: 10px 20px;
+                font-weight: bold;
+                font-size: 14px;
+            }
+            QPushButton:hover {
+                background-color: #005885;
+            }
+            QPushButton:pressed {
+                background-color: #004A70;
+            }
+        """)
         self.refresh_btn.clicked.connect(self.refresh_contacts)
         controls_layout.addWidget(self.refresh_btn)
         
-        # Phase 5.7: Store control buttons for keyboard navigation
+        # Store control buttons for keyboard navigation
         self.control_buttons = [
             self.new_contact_btn, self.import_contacts_btn, 
             self.export_contacts_btn, self.refresh_btn
         ]
         
-        # Phase 5.7: Apply theme styling to buttons
-        if PHASE_5_7_AVAILABLE:
-            for btn in self.control_buttons:
-                apply_theme_to_widget(btn, 'QPushButton')
-        
         controls_layout.addStretch()
-        layout.addLayout(controls_layout)
         
-        # Phase 5.7: Performance Monitor Panel
-        if PHASE_5_7_AVAILABLE:
-            performance_layout = QHBoxLayout()
-            performance_layout.addStretch()
-            
-            self.performance_widget = PerformanceWidget(self.performance_monitor)
-            self.performance_widget.setFixedWidth(280)
-            performance_layout.addWidget(self.performance_widget)
-            
-            layout.addLayout(performance_layout)
+        # Status label inline with controls
+        self.status_label = QLabel("Ready")
+        self.status_label.setStyleSheet("""
+            QLabel {
+                color: #666666; 
+                font-size: 16px;
+                font-weight: bold;
+                font-style: italic;
+                padding: 8px 12px;
+            }
+        """)
+        controls_layout.addWidget(self.status_label)
+        
+        # Contact count in header area
+        self.contact_count_label = QLabel("0 contacts")
+        self.contact_count_label.setStyleSheet("""
+            QLabel {
+                color: #0077B5; 
+                font-weight: bold; 
+                font-size: 16px;
+                padding: 8px 16px;
+                background: #F9FAFB;
+                border: 2px solid #0077B5;
+                border-radius: 8px;
+            }
+        """)
+        controls_layout.addWidget(self.contact_count_label)
+        
+        layout.addLayout(controls_layout)
         
         # Progress bar
         self.progress_bar = QProgressBar()
         self.progress_bar.setVisible(False)
         self.progress_bar.setStyleSheet("""
             QProgressBar {
-                border: 2px solid #e2e8f0;
+                border: 2px solid #0077B5;
                 border-radius: 8px;
-                background: #f8fafc;
+                background: #F9FAFB;
                 text-align: center;
                 font-weight: bold;
+                color: #0077B5;
             }
             QProgressBar::chunk {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                    stop:0 #667eea, stop:1 #764ba2);
+                background-color: #0077B5;
                 border-radius: 6px;
             }
         """)
         layout.addWidget(self.progress_bar)
         
-        # Status label
-        self.status_label = QLabel("Ready")
-        self.status_label.setStyleSheet("color: #64748b; font-style: italic; margin: 5px;")
-        layout.addWidget(self.status_label)
-        
-        # Main content tabs
+        # Main content tabs with increased height
         self.tab_widget = QTabWidget()
+        self.tab_widget.setMinimumHeight(600)  # Ensure tabs have enough vertical space
         self.tab_widget.setStyleSheet("""
             QTabWidget::pane {
-                border: 2px solid #e2e8f0;
-                border-radius: 8px;
-                background: white;
+                border: none;
+                background-color: #FFFFFF;
+                padding: 10px;
             }
             QTabBar::tab {
-                background: #f1f5f9;
-                color: #64748b;
-                padding: 12px 20px;
+                background-color: #F9FAFB;
+                color: #666666;
+                padding: 16px 28px;
                 margin-right: 2px;
                 border-top-left-radius: 8px;
                 border-top-right-radius: 8px;
                 font-weight: bold;
+                font-size: 14px;
+                border: 2px solid #D0D7DE;
+                border-bottom: none;
+                min-width: 120px;
             }
             QTabBar::tab:selected {
-                background: white;
-                color: #1e293b;
-                border: 2px solid #e2e8f0;
-                border-bottom: none;
+                background-color: #0077B5;
+                color: white;
+                border-color: #0077B5;
             }
             QTabBar::tab:hover {
-                background: #e2e8f0;
+                background-color: #E8F4FD;
+                color: #0077B5;
+                border-color: #0077B5;
             }
         """)
         
@@ -903,6 +1307,73 @@ class ContactManagementDashboard(QWidget):
         """Create the contact list tab"""
         tab = QWidget()
         layout = QVBoxLayout(tab)
+        layout.setSpacing(20)
+        
+        # Search and filter controls
+        controls_layout = QHBoxLayout()
+        
+        search_label = QLabel("🔍 Search:")
+        search_label.setStyleSheet("color: #666666; font-weight: bold;")
+        controls_layout.addWidget(search_label)
+        
+        self.search_edit = QLineEdit()
+        self.search_edit.setPlaceholderText("Search contacts by name, email, or job title...")
+        self.search_edit.setStyleSheet("""
+            QLineEdit {
+                border: 2px solid #D0D7DE;
+                border-radius: 8px;
+                padding: 8px 12px;
+                background: #FFFFFF;
+                color: #666666;
+                font-size: 14px;
+            }
+            QLineEdit:focus {
+                border-color: #0077B5;
+                outline: none;
+            }
+        """)
+        self.search_edit.textChanged.connect(self.filter_contacts)
+        controls_layout.addWidget(self.search_edit)
+        
+        status_label = QLabel("📊 Status:")
+        status_label.setStyleSheet("color: #666666; font-weight: bold;")
+        controls_layout.addWidget(status_label)
+        
+        self.status_filter = QComboBox()
+        self.status_filter.addItems(["All Contacts", "Active", "Inactive"])
+        self.status_filter.setStyleSheet("""
+            QComboBox {
+                border: 2px solid #D0D7DE;
+                border-radius: 8px;
+                padding: 8px 12px;
+                background: #FFFFFF;
+                color: #666666;
+                font-size: 14px;
+                min-width: 120px;
+            }
+            QComboBox:focus {
+                border-color: #0077B5;
+            }
+            QComboBox::drop-down {
+                border: none;
+                background: #0077B5;
+                border-radius: 4px;
+            }
+            QComboBox::down-arrow {
+                image: none;
+                border: 2px solid white;
+                width: 6px;
+                height: 6px;
+                border-bottom: none;
+                border-right: none;
+                transform: rotate(-45deg);
+            }
+        """)
+        self.status_filter.currentTextChanged.connect(self.filter_contacts)
+        controls_layout.addWidget(self.status_filter)
+        
+        controls_layout.addStretch()
+        layout.addLayout(controls_layout)
         
         # Contact table
         self.contact_table = QTableWidget()
@@ -915,6 +1386,43 @@ class ContactManagementDashboard(QWidget):
         self.contact_table.setAlternatingRowColors(True)
         self.contact_table.setSortingEnabled(True)
         self.contact_table.horizontalHeader().setStretchLastSection(True)
+        
+        # Style the table with LinkedIn Blue theme
+        self.contact_table.setStyleSheet("""
+            QTableWidget {
+                border: 1px solid #D0D7DE;
+                border-radius: 8px;
+                background: #FFFFFF;
+                alternate-background-color: #F9FAFB;
+                color: #666666;
+                gridline-color: #F0F0F0;
+                selection-background-color: #0077B5;
+                selection-color: white;
+            }
+            QTableWidget::item {
+                padding: 8px;
+                border-bottom: 1px solid #F0F0F0;
+            }
+            QTableWidget::item:selected {
+                background-color: #0077B5;
+                color: white;
+            }
+            QTableWidget::item:hover {
+                background-color: #E8F4FD;
+                color: #0077B5;
+            }
+            QHeaderView::section {
+                background-color: #0077B5;
+                color: white;
+                padding: 12px 8px;
+                border: none;
+                font-weight: bold;
+                font-size: 14px;
+            }
+            QHeaderView::section:hover {
+                background-color: #005885;
+            }
+        """)
         
         # Set column widths
         header = self.contact_table.horizontalHeader()
@@ -936,16 +1444,67 @@ class ContactManagementDashboard(QWidget):
         action_layout = QHBoxLayout()
         
         self.edit_btn = QPushButton("✏️ Edit")
+        self.edit_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #0077B5;
+                color: white;
+                border: 2px solid #0077B5;
+                border-radius: 8px;
+                padding: 10px 20px;
+                font-weight: bold;
+                font-size: 14px;
+            }
+            QPushButton:hover {
+                background-color: #005885;
+            }
+            QPushButton:pressed {
+                background-color: #004A70;
+            }
+        """)
         self.edit_btn.clicked.connect(self.edit_selected_contact)
         action_layout.addWidget(self.edit_btn)
         
         self.delete_btn = QPushButton("🗑️ Delete")
+        self.delete_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #DC3545;
+                color: white;
+                border: 2px solid #DC3545;
+                border-radius: 8px;
+                padding: 10px 20px;
+                font-weight: bold;
+                font-size: 14px;
+            }
+            QPushButton:hover {
+                background-color: #C82333;
+            }
+            QPushButton:pressed {
+                background-color: #A71E2A;
+            }
+        """)
         self.delete_btn.clicked.connect(self.delete_selected_contact)
         action_layout.addWidget(self.delete_btn)
         
         action_layout.addStretch()
         
         self.bulk_email_btn = QPushButton("📧 Bulk Email")
+        self.bulk_email_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #0077B5;
+                color: white;
+                border: 2px solid #0077B5;
+                border-radius: 8px;
+                padding: 10px 20px;
+                font-weight: bold;
+                font-size: 14px;
+            }
+            QPushButton:hover {
+                background-color: #005885;
+            }
+            QPushButton:pressed {
+                background-color: #004A70;
+            }
+        """)
         self.bulk_email_btn.clicked.connect(self.send_bulk_email)
         action_layout.addWidget(self.bulk_email_btn)
         
@@ -957,15 +1516,17 @@ class ContactManagementDashboard(QWidget):
         """Create the analytics tab"""
         tab = QWidget()
         layout = QVBoxLayout(tab)
+        layout.setSpacing(40)  # Consistent spacing
         
         # Analytics header
         header = QLabel("📊 Contact Analytics")
         header.setFont(QFont("Segoe UI", 16, QFont.Weight.Bold))
-        header.setStyleSheet("color: #1e293b; margin: 10px;")
+        header.setStyleSheet("color: #0077B5; margin: 10px; font-weight: bold;")
         layout.addWidget(header)
         
         # Statistics grid
         stats_layout = QGridLayout()
+        stats_layout.setSpacing(20)
         
         # Create stat cards
         stat_cards = [
@@ -982,10 +1543,14 @@ class ContactManagementDashboard(QWidget):
             card = QFrame()
             card.setStyleSheet("""
                 QFrame {
-                    background: white;
-                    border: 2px solid #e2e8f0;
+                    background: #FFFFFF;
+                    border: 2px solid #0077B5;
                     border-radius: 12px;
                     padding: 16px;
+                }
+                QFrame:hover {
+                    border-color: #005885;
+                    background: #F9FAFB;
                 }
             """)
             
@@ -998,11 +1563,11 @@ class ContactManagementDashboard(QWidget):
             value_label = QLabel(value)
             value_label.setFont(QFont("Segoe UI", 20, QFont.Weight.Bold))
             value_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            value_label.setStyleSheet("color: #1e293b;")
+            value_label.setStyleSheet("color: #0077B5; font-weight: bold;")
             
             title_label = QLabel(title)
             title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            title_label.setStyleSheet("color: #64748b; font-weight: bold;")
+            title_label.setStyleSheet("color: #666666; font-weight: bold; font-size: 11px;")
             
             card_layout.addWidget(icon_label)
             card_layout.addWidget(value_label)
@@ -1015,12 +1580,60 @@ class ContactManagementDashboard(QWidget):
         
         # Recent activity
         activity_group = QGroupBox("📅 Recent Activity")
+        activity_group.setStyleSheet("""
+            QGroupBox {
+                border: 2px solid #0077B5;
+                border-radius: 8px;
+                margin-top: 10px;
+                padding-top: 10px;
+                background: #FFFFFF;
+                font-weight: bold;
+                color: #0077B5;
+                font-size: 14px;
+            }
+            QGroupBox::title {
+                subcontrol-origin: margin;
+                left: 10px;
+                padding: 0 8px 0 8px;
+                color: #0077B5;
+                font-weight: bold;
+            }
+        """)
         activity_layout = QVBoxLayout(activity_group)
         
         self.activity_list = QTableWidget()
         self.activity_list.setColumnCount(3)
         self.activity_list.setHorizontalHeaderLabels(["Date", "Action", "Contact"])
         self.activity_list.horizontalHeader().setStretchLastSection(True)
+        self.activity_list.setStyleSheet("""
+            QTableWidget {
+                border: 1px solid #D0D7DE;
+                border-radius: 8px;
+                background: #FFFFFF;
+                alternate-background-color: #F9FAFB;
+                color: #666666;
+                gridline-color: #F0F0F0;
+            }
+            QTableWidget::item {
+                padding: 8px;
+                border-bottom: 1px solid #F0F0F0;
+            }
+            QTableWidget::item:selected {
+                background-color: #0077B5;
+                color: white;
+            }
+            QTableWidget::item:hover {
+                background-color: #E8F4FD;
+                color: #0077B5;
+            }
+            QHeaderView::section {
+                background-color: #0077B5;
+                color: white;
+                padding: 8px;
+                border: none;
+                font-weight: bold;
+            }
+        """)
         activity_layout.addWidget(self.activity_list)
         
         layout.addWidget(activity_group)

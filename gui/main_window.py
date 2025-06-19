@@ -282,12 +282,36 @@ class ContentArea(QWidget):
     
     def show_dashboard(self):
         """Show the main dashboard"""
-        # Dashboard header
-        header = QLabel("📊 System Dashboard")
-        header.setFont(QFont("Segoe UI", 20, QFont.Weight.Bold))
-        header.setStyleSheet("color: #2c3e50; margin-bottom: 20px; margin-left: 20px;")
+        # Dashboard header (standardized to match Settings panel)
+        header = self.create_dashboard_header()
         self.layout.addWidget(header)
         
+        # Set up dashboard content
+        self.setup_dashboard_content()
+    
+    def create_dashboard_header(self) -> QWidget:
+        """Create dashboard header (standardized to match Settings panel)"""
+        header = QWidget()
+        header.setFixedHeight(60)
+        header.setStyleSheet("""
+            background-color: #0077B5;
+            border-bottom: 1px solid #006097;
+        """)
+        header_layout = QHBoxLayout(header)
+        header_layout.setContentsMargins(20, 0, 20, 0)
+        title = QLabel("Dashboard")
+        title.setStyleSheet("""
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+        """)
+        header_layout.addWidget(title)
+        header_layout.addStretch()
+        
+        return header
+    
+    def setup_dashboard_content(self):
+        """Set up dashboard content"""
         # Status cards with proper margins
         status_widget = QWidget()
         status_layout = QHBoxLayout(status_widget)
@@ -295,15 +319,15 @@ class ContentArea(QWidget):
         status_layout.setSpacing(15)
         
         # System status card
-        system_card = self.create_status_card("System Status", "✅ Online", "#27ae60")
+        system_card = self.create_status_card("System Status", "✅ Online", "#0077B5")
         status_layout.addWidget(system_card)
         
         # Database status card
-        db_card = self.create_status_card("Database", "✅ Connected", "#27ae60")
+        db_card = self.create_status_card("Database", "✅ Connected", "#0077B5")
         status_layout.addWidget(db_card)
         
         # Last sync card
-        sync_card = self.create_status_card("Last Sync", "🔄 Never", "#f39c12")
+        sync_card = self.create_status_card("Last Sync", "🔄 Never", "#0077B5")
         status_layout.addWidget(sync_card)
         
         self.layout.addWidget(status_widget)
@@ -314,9 +338,9 @@ class ContentArea(QWidget):
         card = QFrame()
         card.setStyleSheet(f"""
             QFrame {{
-                background: white;
-                border: 2px solid #ecf0f1;
-                border-radius: 10px;
+                background-color: #FFFFFF;
+                border: 2px solid #0077B5 !important;
+                border-radius: 8px;
                 padding: 15px;
                 margin: 5px;
             }}
@@ -326,7 +350,7 @@ class ContentArea(QWidget):
         
         title_label = QLabel(title)
         title_label.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
-        title_label.setStyleSheet("color: #2c3e50;")
+        title_label.setStyleSheet("color: #0077B5;")
         
         status_label = QLabel(status)
         status_label.setFont(QFont("Segoe UI", 14))
@@ -575,11 +599,20 @@ class ContentArea(QWidget):
     
     def show_sync_monitoring_dashboard(self):
         """Show the sync monitoring dashboard"""
-        # Create sync engine and dashboard directly
-        sync_engine = SyncEngine()
-        dashboard = SyncMonitoringDashboard(sync_engine)
-        self.active_widgets.append(dashboard)
-        self.layout.addWidget(dashboard)
+        try:
+            # Create dashboard without sync engine for now (will be connected later)
+            dashboard = SyncMonitoringDashboard()
+            self.active_widgets.append(dashboard)
+            self.layout.addWidget(dashboard)
+            
+        except ImportError:
+            # Fallback placeholder
+            placeholder = QLabel("🔄 Sync Monitor Dashboard\n\nComing Soon...")
+            placeholder.setFont(QFont("Segoe UI", 16))
+            placeholder.setStyleSheet("color: #7f8c8d;")
+            placeholder.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            self.layout.addWidget(placeholder)
+            self.layout.addStretch()
 
 
 class SystemStatusMonitor(QThread):

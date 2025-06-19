@@ -175,16 +175,14 @@ class AIMetricCard(QFrame):
         self.setFixedSize(280, 140)
         self.setStyleSheet("""
             AIMetricCard {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                    stop:0 #ffffff, stop:1 #f8fafc);
-                border: 2px solid #e2e8f0;
-                border-radius: 16px;
+                background-color: #FFFFFF;
+                border: 2px solid #0077B5;
+                border-radius: 8px;
                 margin: 8px;
             }
             AIMetricCard:hover {
-                border: 2px solid #3b82f6;
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                    stop:0 #f8fafc, stop:1 #e6f3ff);
+                border-color: #005885;
+                background-color: #F9FAFB;
             }
         """)
         
@@ -499,86 +497,64 @@ class AIIntelligenceDashboard(QWidget):
         """Set up the main dashboard UI"""
         layout = QVBoxLayout(self)
         layout.setContentsMargins(20, 20, 20, 20)
-        layout.setSpacing(16)
+        layout.setSpacing(40)
         
-        # Header
-        header_layout = QHBoxLayout()
+        # Header (standardized to match Settings panel)
+        header = self.create_header()
+        layout.addWidget(header)
         
-        title = QLabel("🤖 AI Intelligence Dashboard")
-        title.setFont(QFont("Segoe UI", 24, QFont.Weight.Bold))
+        # Set up content
+        self.setup_content()
+    
+    def create_header(self) -> QWidget:
+        """Create dashboard header (standardized to match Settings panel)"""
+        header = QWidget()
+        header.setFixedHeight(60)
+        header.setStyleSheet("""
+            background-color: #0077B5;
+            border-bottom: 1px solid #006097;
+        """)
+        header_layout = QHBoxLayout(header)
+        header_layout.setContentsMargins(20, 0, 20, 0)
+        title = QLabel("AI Intelligence")
         title.setStyleSheet("""
-            QLabel {
-                color: white;
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                    stop:0 #667eea, stop:1 #764ba2);
-                padding: 16px 24px;
-                border-radius: 12px;
-                margin-bottom: 8px;
-            }
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
         """)
         header_layout.addWidget(title)
+        header_layout.addStretch()
         
-        # Control buttons
-        self.train_models_btn = QPushButton("🧠 Train Models")
-        self.train_models_btn.clicked.connect(self.show_training_dialog)
-        self.train_models_btn.setStyleSheet("""
-            QPushButton {
-                background: #10b981;
-                color: white;
-                border: none;
-                padding: 10px 20px;
-                border-radius: 8px;
-                font-weight: bold;
-                font-size: 12px;
-            }
-            QPushButton:hover {
-                background: #059669;
-            }
-        """)
-        header_layout.addWidget(self.train_models_btn)
-        
-        self.export_insights_btn = QPushButton("📊 Export Insights")
-        self.export_insights_btn.clicked.connect(self.export_ai_insights)
-        self.export_insights_btn.setStyleSheet("""
-            QPushButton {
-                background: #3b82f6;
-                color: white;
-                border: none;
-                padding: 10px 20px;
-                border-radius: 8px;
-                font-weight: bold;
-                font-size: 12px;
-            }
-            QPushButton:hover {
-                background: #2563eb;
-            }
-        """)
-        header_layout.addWidget(self.export_insights_btn)
-        
-        layout.addLayout(header_layout)
+        return header
+    
+    def setup_content(self):
+        """Set up the main content area"""
+        layout = self.layout()
         
         # Create tabs
         self.tab_widget = QTabWidget()
         self.tab_widget.setStyleSheet("""
             QTabWidget::pane {
-                border: 2px solid #e2e8f0;
-                border-radius: 8px;
-                background: white;
+                border: none;
+                background-color: #F3F6F8;
             }
             QTabBar::tab {
-                background: #f1f5f9;
-                color: #64748b;
+                background-color: #F9FAFB;
+                color: #666666;
                 padding: 12px 24px;
                 margin-right: 2px;
                 border-top-left-radius: 8px;
                 border-top-right-radius: 8px;
                 font-weight: bold;
+                font-size: 14px;
             }
             QTabBar::tab:selected {
-                background: white;
-                color: #1e293b;
-                border: 2px solid #e2e8f0;
-                border-bottom: none;
+                background-color: #0077B5;
+                color: white;
+            }
+            QTabBar::tab:hover {
+                background-color: #E8EBED;
+                color: #0077B5;
             }
         """)
         
@@ -604,10 +580,62 @@ class AIIntelligenceDashboard(QWidget):
         """Create the AI overview tab"""
         tab = QWidget()
         layout = QVBoxLayout(tab)
-        layout.setSpacing(16)
+        layout.setSpacing(20)
+        layout.setContentsMargins(20, 20, 20, 20)
+        
+        # Control buttons
+        controls_layout = QHBoxLayout()
+        
+        # Train Models button
+        self.train_models_btn = QPushButton("🧠 Train Models")
+        self.train_models_btn.clicked.connect(self.show_training_dialog)
+        self.train_models_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #0077B5;
+                color: white;
+                border: 2px solid #0077B5;
+                border-radius: 8px;
+                padding: 10px 20px;
+                font-weight: bold;
+                font-size: 14px;
+            }
+            QPushButton:hover {
+                background-color: #005885;
+            }
+            QPushButton:pressed {
+                background-color: #004A70;
+            }
+        """)
+        controls_layout.addWidget(self.train_models_btn)
+        
+        # Export Insights button  
+        self.export_insights_btn = QPushButton("📊 Export Insights")
+        self.export_insights_btn.clicked.connect(self.export_ai_insights)
+        self.export_insights_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #0077B5;
+                color: white;
+                border: 2px solid #0077B5;
+                border-radius: 8px;
+                padding: 10px 20px;
+                font-weight: bold;
+                font-size: 14px;
+            }
+            QPushButton:hover {
+                background-color: #005885;
+            }
+            QPushButton:pressed {
+                background-color: #004A70;
+            }
+        """)
+        controls_layout.addWidget(self.export_insights_btn)
+        
+        controls_layout.addStretch()
+        layout.addLayout(controls_layout)
         
         # Metric cards
         metrics_layout = QGridLayout()
+        metrics_layout.setSpacing(20)
         
         self.ml_accuracy_card = AIMetricCard("ML Model Accuracy", "🧠")
         metrics_layout.addWidget(self.ml_accuracy_card, 0, 0)
@@ -639,9 +667,29 @@ class AIIntelligenceDashboard(QWidget):
         """Create the ML intelligence management tab"""
         tab = QWidget()
         layout = QVBoxLayout(tab)
+        layout.setSpacing(20)
+        layout.setContentsMargins(20, 20, 20, 20)
         
         # ML Status section
         status_group = QGroupBox("🧠 ML Pattern Recognition Status")
+        status_group.setStyleSheet("""
+            QGroupBox {
+                font-weight: bold;
+                border: 2px solid #0077B5 !important;
+                border-radius: 8px;
+                margin-top: 0px;
+                padding-top: 15px;
+                font-size: 14px;
+                background-color: #FFFFFF;
+            }
+            QGroupBox::title {
+                subcontrol-origin: margin;
+                left: 15px;
+                padding: 0 10px 0 10px;
+                color: #0077B5;
+                background-color: #FFFFFF;
+            }
+        """)
         status_layout = QGridLayout(status_group)
         
         self.ml_status_label = QLabel("Status: Initializing...")
@@ -660,6 +708,24 @@ class AIIntelligenceDashboard(QWidget):
         
         # Recent patterns table
         patterns_group = QGroupBox("🔍 Recent Pattern Analysis")
+        patterns_group.setStyleSheet("""
+            QGroupBox {
+                font-weight: bold;
+                border: 2px solid #0077B5 !important;
+                border-radius: 8px;
+                margin-top: 0px;
+                padding-top: 15px;
+                font-size: 14px;
+                background-color: #FFFFFF;
+            }
+            QGroupBox::title {
+                subcontrol-origin: margin;
+                left: 15px;
+                padding: 0 10px 0 10px;
+                color: #0077B5;
+                background-color: #FFFFFF;
+            }
+        """)
         patterns_layout = QVBoxLayout(patterns_group)
         
         self.patterns_table = QTableWidget()
@@ -676,9 +742,29 @@ class AIIntelligenceDashboard(QWidget):
         """Create the smart optimization control tab"""
         tab = QWidget()
         layout = QVBoxLayout(tab)
+        layout.setSpacing(20)
+        layout.setContentsMargins(20, 20, 20, 20)
         
         # Optimization controls
         controls_group = QGroupBox("⚡ Optimization Controls")
+        controls_group.setStyleSheet("""
+            QGroupBox {
+                font-weight: bold;
+                border: 2px solid #0077B5 !important;
+                border-radius: 8px;
+                margin-top: 0px;
+                padding-top: 15px;
+                font-size: 14px;
+                background-color: #FFFFFF;
+            }
+            QGroupBox::title {
+                subcontrol-origin: margin;
+                left: 15px;
+                padding: 0 10px 0 10px;
+                color: #0077B5;
+                background-color: #FFFFFF;
+            }
+        """)
         controls_layout = QGridLayout(controls_group)
         
         # Batch size control
@@ -711,6 +797,24 @@ class AIIntelligenceDashboard(QWidget):
         
         # Performance metrics
         perf_group = QGroupBox("📊 Performance Metrics")
+        perf_group.setStyleSheet("""
+            QGroupBox {
+                font-weight: bold;
+                border: 2px solid #0077B5 !important;
+                border-radius: 8px;
+                margin-top: 0px;
+                padding-top: 15px;
+                font-size: 14px;
+                background-color: #FFFFFF;
+            }
+            QGroupBox::title {
+                subcontrol-origin: margin;
+                left: 15px;
+                padding: 0 10px 0 10px;
+                color: #0077B5;
+                background-color: #FFFFFF;
+            }
+        """)
         perf_layout = QGridLayout(perf_group)
         
         self.throughput_label = QLabel("0 emails/min")
@@ -733,9 +837,29 @@ class AIIntelligenceDashboard(QWidget):
         """Create the predictive analytics tab"""
         tab = QWidget()
         layout = QVBoxLayout(tab)
+        layout.setSpacing(20)
+        layout.setContentsMargins(20, 20, 20, 20)
         
         # Prediction controls
         pred_controls_group = QGroupBox("🔮 Prediction Controls")
+        pred_controls_group.setStyleSheet("""
+            QGroupBox {
+                font-weight: bold;
+                border: 2px solid #0077B5 !important;
+                border-radius: 8px;
+                margin-top: 0px;
+                padding-top: 15px;
+                font-size: 14px;
+                background-color: #FFFFFF;
+            }
+            QGroupBox::title {
+                subcontrol-origin: margin;
+                left: 15px;
+                padding: 0 10px 0 10px;
+                color: #0077B5;
+                background-color: #FFFFFF;
+            }
+        """)
         pred_controls_layout = QGridLayout(pred_controls_group)
         
         pred_controls_layout.addWidget(QLabel("Forecast Days:"), 0, 0)
@@ -745,6 +869,23 @@ class AIIntelligenceDashboard(QWidget):
         pred_controls_layout.addWidget(self.forecast_days_spin, 0, 1)
         
         self.run_predictions_btn = QPushButton("🚀 Run Predictions")
+        self.run_predictions_btn.setStyleSheet("""
+            QPushButton {
+                background-color: #0077B5;
+                color: white;
+                border: none;
+                padding: 10px 20px;
+                border-radius: 8px;
+                font-weight: bold;
+                font-size: 14px;
+            }
+            QPushButton:hover {
+                background-color: #005885;
+            }
+            QPushButton:pressed {
+                background-color: #004A70;
+            }
+        """)
         self.run_predictions_btn.clicked.connect(self.run_predictions)
         pred_controls_layout.addWidget(self.run_predictions_btn, 0, 2)
         
@@ -752,6 +893,24 @@ class AIIntelligenceDashboard(QWidget):
         
         # Predictions table
         predictions_group = QGroupBox("📈 Prediction Results")
+        predictions_group.setStyleSheet("""
+            QGroupBox {
+                font-weight: bold;
+                border: 2px solid #0077B5 !important;
+                border-radius: 8px;
+                margin-top: 0px;
+                padding-top: 15px;
+                font-size: 14px;
+                background-color: #FFFFFF;
+            }
+            QGroupBox::title {
+                subcontrol-origin: margin;
+                left: 15px;
+                padding: 0 10px 0 10px;
+                color: #0077B5;
+                background-color: #FFFFFF;
+            }
+        """)
         predictions_layout = QVBoxLayout(predictions_group)
         
         self.predictions_table = QTableWidget()

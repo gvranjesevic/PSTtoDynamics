@@ -1030,39 +1030,23 @@ class ImportWizard(QWidget):
         self.update_navigation_ui()
     
     def create_header(self) -> QWidget:
-        """Create wizard header"""
+        """Create wizard header (standardized to match Settings panel)"""
         header = QWidget()
-        header.setFixedHeight(80)
+        header.setFixedHeight(60)
         header.setStyleSheet("""
-            QWidget {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                    stop:0 #3498db, stop:1 #2980b9);
-                border-radius: 0px;
-            }
+            background-color: #0077B5;
+            border-bottom: 1px solid #006097;
         """)
-        
-        layout = QHBoxLayout(header)
-        layout.setContentsMargins(30, 20, 30, 20)
-        
-        # Icon
-        icon_label = QLabel("📧")
-        icon_label.setStyleSheet("font-size: 32px; color: white;")
-        layout.addWidget(icon_label)
-        
-        # Title section
-        title_layout = QVBoxLayout()
-        title_layout.setSpacing(5)
-        
-        title = QLabel("Email Import Wizard")
-        title.setStyleSheet("color: white; font-size: 20px; font-weight: bold; margin: 0px;")
-        title_layout.addWidget(title)
-        
-        subtitle = QLabel("Step-by-step email import with AI intelligence")
-        subtitle.setStyleSheet("color: rgba(255, 255, 255, 0.9); font-size: 13px; margin: 0px;")
-        title_layout.addWidget(subtitle)
-        
-        layout.addLayout(title_layout)
-        layout.addStretch()
+        header_layout = QHBoxLayout(header)
+        header_layout.setContentsMargins(20, 0, 20, 0)
+        title = QLabel("Import Wizard")
+        title.setStyleSheet("""
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+        """)
+        header_layout.addWidget(title)
+        header_layout.addStretch()
         
         return header
     
@@ -1120,9 +1104,9 @@ class ImportWizard(QWidget):
         if active:
             widget.setStyleSheet("""
                 QFrame {
-                    background-color: #3498db;
+                    background-color: #0077B5;
                     border-radius: 8px;
-                    border: 2px solid #2980b9;
+                    border: 2px solid #005885;
                 }
                 QLabel {
                     color: white;
@@ -1131,12 +1115,12 @@ class ImportWizard(QWidget):
         else:
             widget.setStyleSheet("""
                 QFrame {
-                    background-color: #ecf0f1;
+                    background-color: #F9FAFB;
                     border-radius: 8px;
-                    border: 2px solid #bdc3c7;
+                    border: 2px solid #D0D7DE;
                 }
                 QLabel {
-                    color: #7f8c8d;
+                    color: #666666;
                 }
             """)
         
@@ -1201,8 +1185,8 @@ class ImportWizard(QWidget):
                 background-color: #6c757d;
                 color: white;
                 border: none;
-                border-radius: 6px;
-                font-size: 11px;
+                border-radius: 8px;
+                font-size: 14px;
                 font-weight: bold;
                 padding: 10px 20px;
             }
@@ -1224,8 +1208,8 @@ class ImportWizard(QWidget):
                 background-color: #6c757d;
                 color: white;
                 border: none;
-                border-radius: 6px;
-                font-size: 11px;
+                border-radius: 8px;
+                font-size: 14px;
                 font-weight: bold;
                 padding: 10px 20px;
             }
@@ -1242,16 +1226,19 @@ class ImportWizard(QWidget):
         self.next_button.setMinimumHeight(40)
         self.next_button.setStyleSheet("""
             QPushButton {
-                background-color: #3498db;
+                background-color: #0077B5;
                 color: white;
                 border: none;
-                border-radius: 6px;
-                font-size: 11px;
+                border-radius: 8px;
+                font-size: 14px;
                 font-weight: bold;
                 padding: 10px 20px;
             }
             QPushButton:hover {
-                background-color: #2980b9;
+                background-color: #005885;
+            }
+            QPushButton:pressed {
+                background-color: #004A70;
             }
         """)
         self.next_button.clicked.connect(self.next_step)
@@ -1268,9 +1255,9 @@ class ImportWizard(QWidget):
             if i == self.current_step:
                 nav_button.setStyleSheet("""
                     QFrame {
-                        background-color: #3498db;
+                        background-color: #0077B5;
                         border-radius: 8px;
-                        border: 2px solid #2980b9;
+                        border: 2px solid #005885;
                     }
                     QLabel {
                         color: white;
@@ -1279,9 +1266,10 @@ class ImportWizard(QWidget):
             elif i < self.current_step:
                 nav_button.setStyleSheet("""
                     QFrame {
-                        background-color: #27ae60;
+                        background-color: #0077B5;
                         border-radius: 8px;
-                        border: 2px solid #229954;
+                        border: 2px solid #005885;
+                        opacity: 0.7;
                     }
                     QLabel {
                         color: white;
@@ -1290,12 +1278,12 @@ class ImportWizard(QWidget):
             else:
                 nav_button.setStyleSheet("""
                     QFrame {
-                        background-color: #ecf0f1;
+                        background-color: #F9FAFB;
                         border-radius: 8px;
-                        border: 2px solid #bdc3c7;
+                        border: 2px solid #D0D7DE;
                     }
                     QLabel {
-                        color: #7f8c8d;
+                        color: #666666;
                     }
                 """)
         

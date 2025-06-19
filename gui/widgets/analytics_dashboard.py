@@ -125,14 +125,14 @@ class MetricCard(QFrame):
         self.setFixedSize(220, 120)
         self.setStyleSheet(f"""
             QFrame {{
-                background-color: white;
-                border: 2px solid {color};
-                border-radius: 12px;
+                background-color: #FFFFFF;
+                border: 2px solid #0077B5;
+                border-radius: 8px;
                 padding: 10px;
             }}
             QFrame:hover {{
-                border-color: {self.darken_color(color)};
-                background-color: #f8f9fa;
+                border-color: #005885;
+                background-color: #F9FAFB;
             }}
         """)
         
@@ -142,18 +142,18 @@ class MetricCard(QFrame):
         
         # Title
         title_label = QLabel(title)
-        title_label.setStyleSheet(f"color: {color}; font-size: 12px; font-weight: bold;")
+        title_label.setStyleSheet("color: #0077B5; font-size: 12px; font-weight: bold;")
         layout.addWidget(title_label)
         
         # Value
         self.value_label = QLabel(value)
-        self.value_label.setStyleSheet("color: #2c3e50; font-size: 24px; font-weight: bold;")
+        self.value_label.setStyleSheet("color: #000000; font-size: 24px; font-weight: bold;")
         layout.addWidget(self.value_label)
         
         # Subtitle
         if subtitle:
             self.subtitle_label = QLabel(subtitle)
-            self.subtitle_label.setStyleSheet("color: #7f8c8d; font-size: 10px;")
+            self.subtitle_label.setStyleSheet("color: #666666; font-size: 10px;")
             layout.addWidget(self.subtitle_label)
         else:
             self.subtitle_label = None
@@ -304,24 +304,26 @@ class AnalyticsDashboard(QWidget):
         self.tab_widget = QTabWidget()
         self.tab_widget.setStyleSheet("""
             QTabWidget::pane {
-                border: 1px solid #bdc3c7;
-                background-color: white;
+                border: 1px solid #D0D7DE;
+                background-color: #F3F6F8;
             }
             QTabBar::tab {
-                background-color: #ecf0f1;
-                padding: 10px 20px;
+                background-color: #F9FAFB;
+                padding: 12px 24px;
                 margin-right: 2px;
-                border-top-left-radius: 6px;
-                border-top-right-radius: 6px;
-                font-size: 12px;
+                border-top-left-radius: 8px;
+                border-top-right-radius: 8px;
+                font-size: 14px;
                 font-weight: bold;
+                color: #666666;
             }
             QTabBar::tab:selected {
-                background-color: #3498db;
+                background-color: #0077B5;
                 color: white;
             }
             QTabBar::tab:hover {
-                background-color: #d5dbdb;
+                background-color: #E8EBED;
+                color: #0077B5;
             }
         """)
         
@@ -336,56 +338,53 @@ class AnalyticsDashboard(QWidget):
         layout.addWidget(self.tab_widget)
     
     def create_header(self) -> QWidget:
-        """Create dashboard header"""
+        """Create dashboard header (standardized to match Settings panel)"""
         header = QWidget()
-        header.setFixedHeight(80)
+        header.setFixedHeight(60)
         header.setStyleSheet("""
-            QWidget {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                    stop:0 #e74c3c, stop:1 #c0392b);
-                border-radius: 0px;
-            }
+            background-color: #0077B5;
+            border-bottom: 1px solid #006097;
         """)
+        header_layout = QHBoxLayout(header)
+        header_layout.setContentsMargins(20, 0, 20, 0)
+        title = QLabel("Analytics")
+        title.setStyleSheet("""
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+        """)
+        header_layout.addWidget(title)
+        header_layout.addStretch()
         
-        layout = QHBoxLayout(header)
-        layout.setContentsMargins(30, 20, 30, 20)
+        return header
+    
+    def create_dashboard_tab(self) -> QWidget:
+        """Create main dashboard tab"""
+        tab = QWidget()
+        layout = QVBoxLayout(tab)
+        layout.setContentsMargins(20, 20, 20, 20)
+        layout.setSpacing(40)
         
-        # Icon
-        icon_label = QLabel("📈")
-        icon_label.setStyleSheet("font-size: 32px; color: white;")
-        layout.addWidget(icon_label)
-        
-        # Title section
-        title_layout = QVBoxLayout()
-        title_layout.setSpacing(5)
-        
-        title = QLabel("Analytics Dashboard")
-        title.setStyleSheet("color: white; font-size: 20px; font-weight: bold; margin: 0px;")
-        title_layout.addWidget(title)
-        
-        subtitle = QLabel("Real-time insights and performance metrics")
-        subtitle.setStyleSheet("color: rgba(255, 255, 255, 0.9); font-size: 13px; margin: 0px;")
-        title_layout.addWidget(subtitle)
-        
-        layout.addLayout(title_layout)
-        layout.addStretch()
-        
-        # Controls
+        # Control buttons
         controls_layout = QHBoxLayout()
         
         # Refresh button
         self.refresh_button = QPushButton("🔄 Refresh")
         self.refresh_button.setStyleSheet("""
             QPushButton {
-                background-color: rgba(255, 255, 255, 0.2);
+                background-color: #0077B5;
                 color: white;
-                border: 2px solid rgba(255, 255, 255, 0.3);
-                border-radius: 6px;
-                padding: 8px 16px;
+                border: 2px solid #0077B5;
+                border-radius: 8px;
+                padding: 10px 20px;
                 font-weight: bold;
+                font-size: 14px;
             }
             QPushButton:hover {
-                background-color: rgba(255, 255, 255, 0.3);
+                background-color: #005885;
+            }
+            QPushButton:pressed {
+                background-color: #004A70;
             }
         """)
         self.refresh_button.clicked.connect(self.load_dashboard_data)
@@ -395,58 +394,57 @@ class AnalyticsDashboard(QWidget):
         export_button = QPushButton("📤 Export")
         export_button.setStyleSheet("""
             QPushButton {
-                background-color: rgba(255, 255, 255, 0.2);
+                background-color: #0077B5;
                 color: white;
-                border: 2px solid rgba(255, 255, 255, 0.3);
-                border-radius: 6px;
-                padding: 8px 16px;
+                border: 2px solid #0077B5;
+                border-radius: 8px;
+                padding: 10px 20px;
                 font-weight: bold;
+                font-size: 14px;
             }
             QPushButton:hover {
-                background-color: rgba(255, 255, 255, 0.3);
+                background-color: #005885;
+            }
+            QPushButton:pressed {
+                background-color: #004A70;
             }
         """)
         export_button.clicked.connect(self.export_analytics)
         controls_layout.addWidget(export_button)
         
+        controls_layout.addStretch()
         layout.addLayout(controls_layout)
-        
-        return header
-    
-    def create_dashboard_tab(self) -> QWidget:
-        """Create main dashboard tab"""
-        tab = QWidget()
-        layout = QVBoxLayout(tab)
-        layout.setContentsMargins(20, 20, 20, 20)
-        layout.setSpacing(20)
         
         # Metrics cards section
         metrics_group = QGroupBox("📊 Key Metrics")
         metrics_group.setStyleSheet("""
             QGroupBox {
                 font-weight: bold;
-                border: 2px solid #3498db;
+                border: 2px solid #0077B5 !important;
                 border-radius: 8px;
-                margin-top: 10px;
+                margin-top: 0px;
                 padding-top: 15px;
                 font-size: 14px;
+                background-color: #FFFFFF;
             }
             QGroupBox::title {
                 subcontrol-origin: margin;
-                left: 10px;
-                padding: 0 5px 0 5px;
-                color: #3498db;
+                left: 15px;
+                padding: 0 10px 0 10px;
+                color: #0077B5;
+                background-color: #FFFFFF;
             }
         """)
         
         metrics_layout = QHBoxLayout(metrics_group)
-        metrics_layout.setSpacing(15)
+        metrics_layout.setSpacing(20)
+        metrics_layout.setContentsMargins(20, 20, 20, 20)
         
         # Create metric cards
-        self.email_card = MetricCard("Total Emails", "0", "processed", "#3498db")
-        self.success_card = MetricCard("Success Rate", "0%", "last session", "#2ecc71")
-        self.speed_card = MetricCard("Processing Speed", "0/min", "emails per minute", "#f39c12")
-        self.contacts_card = MetricCard("Contacts Created", "0", "total", "#9b59b6")
+        self.email_card = MetricCard("Total Emails", "0", "processed", "#0077B5")
+        self.success_card = MetricCard("Success Rate", "0%", "last session", "#0077B5")
+        self.speed_card = MetricCard("Processing Speed", "0/min", "emails per minute", "#0077B5")
+        self.contacts_card = MetricCard("Contacts Created", "0", "total", "#0077B5")
         
         metrics_layout.addWidget(self.email_card)
         metrics_layout.addWidget(self.success_card)
@@ -468,17 +466,19 @@ class AnalyticsDashboard(QWidget):
         status_group.setStyleSheet("""
             QGroupBox {
                 font-weight: bold;
-                border: 2px solid #e74c3c;
+                border: 2px solid #0077B5 !important;
                 border-radius: 8px;
-                margin-top: 10px;
+                margin-top: 0px;
                 padding-top: 15px;
                 font-size: 14px;
+                background-color: #FFFFFF;
             }
             QGroupBox::title {
                 subcontrol-origin: margin;
-                left: 10px;
-                padding: 0 5px 0 5px;
-                color: #e74c3c;
+                left: 15px;
+                padding: 0 10px 0 10px;
+                color: #0077B5;
+                background-color: #FFFFFF;
             }
         """)
         
