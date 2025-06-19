@@ -988,15 +988,24 @@ class ContactManagementDashboard(QWidget):
     def setup_ui(self):
         """Set up the main dashboard UI"""
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(20, 20, 20, 20)
-        layout.setSpacing(20)
-        
+        layout.setContentsMargins(0, 0, 0, 0)  # No outer margins for uniform header
+        layout.setSpacing(0)
+
+        # Content container with internal padding
+        self.content_widget = QWidget()
+        self.content_layout = QVBoxLayout(self.content_widget)
+        self.content_layout.setContentsMargins(20, 0, 20, 20)
+        self.content_layout.setSpacing(20)
+
         # Header (standardized to match Settings panel)
         header = self.create_header()
         layout.addWidget(header)
-        
+
         # Set up content
         self.setup_content()
+
+        # Add content container to outer layout
+        layout.addWidget(self.content_widget)
     
     def create_header(self) -> QWidget:
         """Create dashboard header (standardized to match Settings panel)"""
@@ -1020,8 +1029,8 @@ class ContactManagementDashboard(QWidget):
         return header
     
     def setup_content(self):
-        """Set up the main content area"""
-        layout = self.layout()
+        """Set up the main content area within the padded container"""
+        layout = self.content_layout
         
         # Control buttons
         controls_layout = QHBoxLayout()
