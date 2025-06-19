@@ -952,13 +952,12 @@ class ContactManagementDashboard(QWidget):
             QTabBar::tab {{
                 background-color: #F9FAFB;
                 color: #666666;
-                padding: 16px 28px;
+                padding: 12px 24px;
                 margin-right: 2px;
                 border-top-left-radius: 8px;
                 border-top-right-radius: 8px;
                 font-weight: bold;
                 font-size: 14px;
-                min-width: 120px;
             }}
             QTabBar::tab:selected {{
                 background-color: #0077B5;
@@ -1189,22 +1188,21 @@ class ContactManagementDashboard(QWidget):
             QTabBar::tab {
                 background-color: #F9FAFB;
                 color: #666666;
-                padding: 16px 28px;
+                padding: 12px 24px;
                 margin-right: 2px;
                 border-top-left-radius: 8px;
                 border-top-right-radius: 8px;
                 font-weight: bold;
                 font-size: 14px;
-                min-width: 120px;
             }
-            QTabBar::tab:selected {
+            QTabBar::tab:selected {{
                 background-color: #0077B5;
                 color: white;
-            }
-            QTabBar::tab:hover {
+            }}
+            QTabBar::tab:hover {{
                 background-color: #E8EBED;
                 color: #0077B5;
-            }
+            }}
         """)
         
         # Create tabs
@@ -1522,7 +1520,7 @@ class ContactManagementDashboard(QWidget):
         """Create the analytics tab"""
         tab = QWidget()
         layout = QVBoxLayout(tab)
-        layout.setSpacing(40)  # Consistent spacing
+        layout.setSpacing(20)
         
         # Analytics header
         header = QLabel("📊 Contact Analytics")
