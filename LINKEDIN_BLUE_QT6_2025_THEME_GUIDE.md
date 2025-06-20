@@ -117,7 +117,7 @@ These are restricted to Import Wizard banners and should not be reused elsewhere
 | Metric Value Large | Segoe UI | Bold | **24 px** | 32 px | "98 %" card |
 | Metric Value Medium | Segoe UI | Bold | **20 px** | 26 px | "123" sync count |
 
-All numeric metric values must **align on their last digit** (set `{ alignment: Qt.AlignRight|Qt.AlignVCenter; }`).
+All numeric metric values in dashboards are **center-aligned** within their cards (`Qt.AlignCenter`).
 
 ### Font Family Hierarchy
 
@@ -137,7 +137,7 @@ Icon text (SVG): `Arial, sans-serif` (application icon text)
 
 | Component | Alignment | Implementation |
 |-----------|-----------|----------------|
-| Panel headers | Center | `setAlignment(Qt.AlignmentFlag.AlignCenter)` |
+| Panel headers | Left |   Header `QLabel` placed at left of `QHBoxLayout`; no explicit alignment needed |
 | Metric values | Center | `setAlignment(Qt.AlignmentFlag.AlignCenter)` |
 | Form labels | Right+VCenter | `setAlignment(Qt.AlignmentFlag.AlignRight \| Qt.AlignmentFlag.AlignVCenter)` |
 | Navigation buttons | Left | `text-align: left` in CSS |
@@ -771,13 +771,13 @@ ThemeManager.apply_global_palette(app)  # sets QPalette plus QStyleSheet
 
 | Element | Radius | Usage |
 |---------|--------|-------|
-| **Standard cards** | 8 px | GroupBox, buttons, inputs |
+| **Standard cards** | 8 px | GroupBox, buttons |
 | **Large sections** | 10 px | Import Wizard info cards |
 | **Small controls** | 4 px | Progress bars, small inputs |
-| **Rounded buttons** | 6 px | Action buttons, controls |
+| **Rounded buttons** | 8 px | Action buttons, controls |
 | **Circular elements** | 17 px | Step numbers, badges |
 | **Sidebar elements** | 12 px | Navigation highlights |
-| **Form inputs** | 15 px | Special form fields |
+| **Form inputs** | 4 px | QLineEdit, QTextEdit, QComboBox |
 | **Minimal elements** | 3 px | Status frames, small controls |
 
 ### Shadow Effects
@@ -911,7 +911,7 @@ ThemeManager.apply_global_palette(app)  # sets QPalette plus QStyleSheet
 
 | Element | Font Family | Size | Weight | Context |
 |---------|-------------|------|--------|---------|
-| **Panel headers** | Segoe UI | 16 px | Bold | All dashboard headers |
+| **Panel headers** | Segoe UI | 18 px | Bold | All dashboard headers |
 | **Section headers** | Segoe UI | 14 px | Bold | Contact form sections |
 | **GroupBox titles** | Segoe UI | 12 px | Bold | All grouped sections |
 | **Welcome title** | Segoe UI | 16 px | Bold | Welcome dialog |
@@ -925,7 +925,8 @@ ThemeManager.apply_global_palette(app)  # sets QPalette plus QStyleSheet
 | **Step titles** | Segoe UI | 10 px | Bold | Wizard step titles |
 | **Step descriptions** | Segoe UI | 9 px | Regular | Wizard step descriptions |
 | **Metric icons** | Segoe UI Emoji | 24 px | Regular | Dashboard metric icons |
-| **Metric values** | Segoe UI | 20 px | Bold | Dashboard metric values |
+| **Metric values (Large)** | Segoe UI | 24 px | Bold | Analytics & AI dashboards |
+| **Metric values (Medium)** | Segoe UI | 20 px | Bold | Dashboard & Sync Monitor summaries |
 | **Dialog titles** | Segoe UI | 11-12 px | Bold | Dialog headers |
 | **Dialog disclaimers** | Segoe UI | 7 px | Regular | Small disclaimers |
 | **Status icons** | Segoe UI | 12 px | Bold | Status indicator text |
