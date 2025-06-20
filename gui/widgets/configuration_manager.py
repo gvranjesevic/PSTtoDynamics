@@ -2252,7 +2252,7 @@ class ConfigurationManager(QWidget):
                 padding-top: 15px;
                 background-color: {colors['ui_surface']};
                 font-size: 14px;
-                min-height: 240px;
+                min-height: 200px;
             }}
             QGroupBox::title {{
                 subcontrol-origin: margin;
@@ -2266,7 +2266,7 @@ class ConfigurationManager(QWidget):
         """)
         email_layout = QVBoxLayout(email_section)
         email_layout.setContentsMargins(20, 15, 20, 15)
-        email_layout.setSpacing(8)
+        email_layout.setSpacing(5)  # Reduced from 8 to 5
         
         # Create and store email processing settings with defaults and descriptions
         self.batch_size_edit = QLineEdit("50")  # Default: 50 emails per batch
@@ -2304,7 +2304,7 @@ class ConfigurationManager(QWidget):
                 padding-top: 15px;
                 background-color: {colors['ui_surface']};
                 font-size: 14px;
-                min-height: 240px;
+                min-height: 200px;
             }}
             QGroupBox::title {{
                 subcontrol-origin: margin;
@@ -2318,7 +2318,7 @@ class ConfigurationManager(QWidget):
         """)
         perf_layout = QVBoxLayout(perf_section)
         perf_layout.setContentsMargins(20, 15, 20, 15)
-        perf_layout.setSpacing(8)
+        perf_layout.setSpacing(5)  # Reduced from 8 to 5
         
         # Create and store performance settings with defaults and descriptions
         self.thread_pool_edit = QLineEdit("4")    # Default: 4 threads
@@ -2356,7 +2356,7 @@ class ConfigurationManager(QWidget):
                 padding-top: 15px;
                 background-color: {colors['ui_surface']};
                 font-size: 14px;
-                min-height: 240px;
+                min-height: 200px;
             }}
             QGroupBox::title {{
                 subcontrol-origin: margin;
@@ -2370,7 +2370,7 @@ class ConfigurationManager(QWidget):
         """)
         ai_layout = QVBoxLayout(ai_section)
         ai_layout.setContentsMargins(20, 15, 20, 15)
-        ai_layout.setSpacing(8)
+        ai_layout.setSpacing(5)  # Reduced from 8 to 5
         
         # Create and store AI intelligence settings with defaults and descriptions
         self.ai_analysis_checkbox = QCheckBox("Enable")
@@ -2478,7 +2478,7 @@ class ConfigurationManager(QWidget):
             # Create main horizontal container
             row_container = QWidget()
             row_layout = QHBoxLayout(row_container)
-            row_layout.setContentsMargins(0, 8, 0, 8)
+            row_layout.setContentsMargins(0, 4, 0, 4)  # Reduced from 8 to 4
             row_layout.setSpacing(15)
             
             # Left side: Label + Input (1/3 of width)
@@ -2487,7 +2487,7 @@ class ConfigurationManager(QWidget):
             left_container.setMinimumWidth(200)
             left_layout = QVBoxLayout(left_container)
             left_layout.setContentsMargins(0, 0, 0, 0)
-            left_layout.setSpacing(5)
+            left_layout.setSpacing(3)  # Reduced from 5 to 3
             
             # Label
             label = QLabel(label_text)
@@ -2574,7 +2574,7 @@ class ConfigurationManager(QWidget):
                     font-size: 12px;
                     line-height: 1.4;
                     margin: 0px;
-                    padding: 4px 0px;
+                    padding: 2px 0px;
                 }}
             """)
             description_label.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
