@@ -1160,4 +1160,34 @@ Built with PyQt6 and modern design principles.
 
 ---
 
+## 12 · ThemeManager Integration
+
+### Global QPalette Mapping
+
+| QPalette Role | Color Token | Source |
+|---------------|------------|--------|
+| `Window` | `ui.canvas` | Main app window background |
+| `WindowText` | `text.primary` | Default window text |
+| `Base` | `ui.surface` | Card and input backgrounds |
+| `AlternateBase` | `ui.border` | Table gridlines / alternates |
+| `ToolTipBase` | `ui.surface` | Tooltip background |
+| `ToolTipText` | `text.primary` | Tooltip text |
+| `Text` | `text.primary` | Default control text |
+| `Button` | `ui.surface` | Button background |
+| `ButtonText` | `text.primary` | Button text |
+| `BrightText` | `state.error` | Error text (alerts) |
+| `Link` | `brand.primary` | Hyperlinks |
+| `Highlight` | `brand.primary` | Selection background |
+| `HighlightedText` | `ui.surface` | Selection text |
+
+`ThemeManager.apply_global_palette(app)` sets the palette using these roles when the application starts. All colour tokens defined in Section 1 are therefore consumable both in CSS and in Qt palette roles.
+
+### Theme Change Signal
+
+| Signal | Arguments | Emitted When | Subscribers |
+|--------|-----------|--------------|-------------|
+| `theme_changed` | `str theme_name` | `ThemeManager.set_theme()` successfully applies a new theme | Any widget registered via `ThemeManager.register_widget()` implementing `apply_theme()` |
+
+Widgets should implement `apply_theme(theme_definition)` to receive live updates. **Do not** set static colours inside widget code; always consult the current theme definition for dynamic adaptability.
+
 *End of specification.* 
