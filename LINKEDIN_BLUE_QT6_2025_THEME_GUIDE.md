@@ -71,8 +71,8 @@ This document captures **every single visual, behavioural, and structural decisi
 | `text.aiPurple` | `#6C3483` | AI section title colour |
 | `state.successHover` | `#229954` | Hover shade for success buttons |
 | `text.successDeep` | `#196F3D` | Dark green headings on success sections |
-| `ui.buttonDark` | `#5A6268` | Dark-grey button base (disabled hover) |
-| `ui.buttonDarker` | `#545B62` | Dark-grey button pressed |
+| `ui.buttonDark` | `#5A6268` | Secondary button background (e.g., Clear) |
+| `ui.buttonDarker` | `#545B62` | Secondary button hover & pressed state |
 | `legacy.success` | `#2ECC71` | Pre-conversion success green (legacy) |
 | `brand.primaryBorder` | `#006097` | 1 px bottom border under headers |
 | `brand.primaryHoverAlt` | `#004471` | Extra-dark hover shade (scrollbar handle, hover outlines) |
