@@ -2464,13 +2464,15 @@ class ConfigurationManager(QWidget):
             # Get theme colors
             if THEME_MANAGER_AVAILABLE:
                 theme_manager = get_theme_manager()
-                colors = theme_manager.get_current_theme_colors()
+                theme_def = theme_manager.get_theme_definition()
+                colors = theme_def['colors']
             else:
+                # Fallback colors matching LinkedIn Blue theme
                 colors = {
                     'text_primary': '#2C3E50',
                     'text_secondary': '#666666',
                     'ui_surface': '#FFFFFF',
-                    'ui_divider': '#E1E8ED'
+                    'ui_divider': '#D0D7DE'
                 }
             
             # Create main horizontal container
@@ -2491,7 +2493,7 @@ class ConfigurationManager(QWidget):
             label = QLabel(label_text)
             label.setStyleSheet(f"""
                 QLabel {{
-                    color: {colors['text_primary']};
+                    color: {colors.get('text_primary', '#2C3E50')};
                     font-weight: bold;
                     font-size: 13px;
                     margin: 0px;
@@ -2504,28 +2506,28 @@ class ConfigurationManager(QWidget):
                 widget.setStyleSheet(f"""
                     QLineEdit {{
                         padding: 8px 12px;
-                        border: 1px solid {colors['ui_divider']};
+                        border: 1px solid {colors.get('ui_divider', '#D0D7DE')};
                         border-radius: 4px;
-                        background-color: {colors['ui_surface']};
+                        background-color: {colors.get('ui_surface', '#FFFFFF')};
                         font-size: 13px;
                         min-height: 20px;
                     }}
                     QLineEdit:focus {{
-                        border: 2px solid #0077B5;
+                        border: 2px solid {colors.get('brand_primary', '#0077B5')};
                     }}
                 """)
             elif isinstance(widget, QComboBox):
                 widget.setStyleSheet(f"""
                     QComboBox {{
                         padding: 8px 12px;
-                        border: 1px solid {colors['ui_divider']};
+                        border: 1px solid {colors.get('ui_divider', '#D0D7DE')};
                         border-radius: 4px;
-                        background-color: {colors['ui_surface']};
+                        background-color: {colors.get('ui_surface', '#FFFFFF')};
                         font-size: 13px;
                         min-height: 20px;
                     }}
                     QComboBox:focus {{
-                        border: 2px solid #0077B5;
+                        border: 2px solid {colors.get('brand_primary', '#0077B5')};
                     }}
                     QComboBox::drop-down {{
                         border: none;
@@ -2539,19 +2541,19 @@ class ConfigurationManager(QWidget):
                 widget.setStyleSheet(f"""
                     QCheckBox {{
                         font-size: 13px;
-                        color: {colors['text_primary']};
+                        color: {colors.get('text_primary', '#2C3E50')};
                         spacing: 8px;
                     }}
                     QCheckBox::indicator {{
                         width: 18px;
                         height: 18px;
-                        border: 2px solid {colors['ui_divider']};
+                        border: 2px solid {colors.get('ui_divider', '#D0D7DE')};
                         border-radius: 3px;
-                        background-color: {colors['ui_surface']};
+                        background-color: {colors.get('ui_surface', '#FFFFFF')};
                     }}
                     QCheckBox::indicator:checked {{
-                        background-color: #0077B5;
-                        border-color: #0077B5;
+                        background-color: {colors.get('brand_primary', '#0077B5')};
+                        border-color: {colors.get('brand_primary', '#0077B5')};
                     }}
                     QCheckBox::indicator:checked::after {{
                         content: "✓";
@@ -2568,7 +2570,7 @@ class ConfigurationManager(QWidget):
             description_label.setWordWrap(True)
             description_label.setStyleSheet(f"""
                 QLabel {{
-                    color: {colors['text_secondary']};
+                    color: {colors.get('text_secondary', '#666666')};
                     font-size: 12px;
                     line-height: 1.4;
                     margin: 0px;
