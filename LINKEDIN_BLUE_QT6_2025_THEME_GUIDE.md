@@ -913,7 +913,7 @@ ThemeManager.apply_global_palette(app)  # sets QPalette plus QStyleSheet
 |---------|-------------|------|--------|---------|
 | **Panel headers** | Segoe UI | 18 px | Bold | All dashboard headers |
 | **Section headers** | Segoe UI | 14 px | Bold | Contact form sections |
-| **GroupBox titles** | Segoe UI | 12 px | Bold | All grouped sections |
+| **GroupBox titles** | Segoe UI | 14 px | Bold | All grouped sections |
 | **Welcome title** | Segoe UI | 16 px | Bold | Welcome dialog |
 | **Auth title** | Segoe UI | 18 px | Bold | Authentication widget |
 | **Wizard titles** | Segoe UI | 16 px | Bold | Import Wizard steps |
