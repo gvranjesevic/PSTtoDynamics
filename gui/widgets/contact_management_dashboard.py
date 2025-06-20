@@ -1155,9 +1155,10 @@ class ContactManagementDashboard(QWidget):
             self.export_contacts_btn, self.refresh_btn
         ]
         
-        controls_layout.addStretch()
+        # Add some space between buttons and status
+        controls_layout.addSpacing(20)
         
-        # Status label inline with controls
+        # Status label positioned between buttons and contact count for full visibility
         self.status_label = QLabel("Ready")
         self.status_label.setStyleSheet(f"""
             QLabel {{
@@ -1166,9 +1167,13 @@ class ContactManagementDashboard(QWidget):
                 font-weight: bold;
                 font-style: italic;
                 padding: 8px 12px;
+                min-width: 120px;
             }}
         """)
         controls_layout.addWidget(self.status_label)
+        
+        # Add stretch to push contact count to the right
+        controls_layout.addStretch()
         
         # Contact count in header area
         self.contact_count_label = QLabel("0 contacts")
