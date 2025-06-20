@@ -2252,7 +2252,7 @@ class ConfigurationManager(QWidget):
                 padding-top: 15px;
                 background-color: {colors['ui_surface']};
                 font-size: 14px;
-                min-height: 160px;
+                min-height: 240px;
             }}
             QGroupBox::title {{
                 subcontrol-origin: margin;
@@ -2264,21 +2264,34 @@ class ConfigurationManager(QWidget):
                 font-weight: bold;
             }}
         """)
-        email_layout = QFormLayout(email_section)
+        email_layout = QVBoxLayout(email_section)
         email_layout.setContentsMargins(20, 15, 20, 15)
-        email_layout.setSpacing(12)
+        email_layout.setSpacing(8)
         
-        # Create and store email processing settings with defaults
+        # Create and store email processing settings with defaults and descriptions
         self.batch_size_edit = QLineEdit("50")  # Default: 50 emails per batch
         self.timeout_edit = QLineEdit("30")     # Default: 30 seconds timeout
         self.max_attachments_edit = QLineEdit("10")  # Default: 10 max attachments
         self.auto_retry_checkbox = QCheckBox("Enable")
         self.auto_retry_checkbox.setChecked(True)  # Default: enabled
         
-        email_layout.addRow("Batch Size:", self.batch_size_edit)
-        email_layout.addRow("Timeout (seconds):", self.timeout_edit)
-        email_layout.addRow("Max Attachments:", self.max_attachments_edit)
-        email_layout.addRow("Auto-retry Failed:", self.auto_retry_checkbox)
+        # Use enhanced layout with descriptions
+        self.add_config_row_with_description(
+            email_layout, "Batch Size:", self.batch_size_edit,
+            "Number of emails processed in each batch. Higher values process faster but use more memory. Recommended: 25-100 for small systems, 100-500 for powerful systems."
+        )
+        self.add_config_row_with_description(
+            email_layout, "Timeout (seconds):", self.timeout_edit,
+            "Maximum time to wait for each email operation before timing out. Increase for slow networks or large attachments. Recommended: 30-120 seconds."
+        )
+        self.add_config_row_with_description(
+            email_layout, "Max Attachments:", self.max_attachments_edit,
+            "Maximum number of attachments to process per email. Higher values may slow processing. Set to 0 for unlimited. Recommended: 5-20 attachments."
+        )
+        self.add_config_row_with_description(
+            email_layout, "Auto-retry Failed:", self.auto_retry_checkbox,
+            "Automatically retry failed email imports after temporary network or server errors. Recommended: Enable for reliable import processing."
+        )
         scroll_layout.addWidget(email_section)
         
         perf_section = QGroupBox("⚡ Performance Settings")
@@ -2291,7 +2304,7 @@ class ConfigurationManager(QWidget):
                 padding-top: 15px;
                 background-color: {colors['ui_surface']};
                 font-size: 14px;
-                min-height: 160px;
+                min-height: 240px;
             }}
             QGroupBox::title {{
                 subcontrol-origin: margin;
@@ -2303,21 +2316,34 @@ class ConfigurationManager(QWidget):
                 font-weight: bold;
             }}
         """)
-        perf_layout = QFormLayout(perf_section)
+        perf_layout = QVBoxLayout(perf_section)
         perf_layout.setContentsMargins(20, 15, 20, 15)
-        perf_layout.setSpacing(12)
+        perf_layout.setSpacing(8)
         
-        # Create and store performance settings with defaults
+        # Create and store performance settings with defaults and descriptions
         self.thread_pool_edit = QLineEdit("4")    # Default: 4 threads
         self.memory_limit_edit = QLineEdit("512") # Default: 512 MB memory limit
         self.cache_size_edit = QLineEdit("128")   # Default: 128 MB cache
         self.enable_logging_checkbox = QCheckBox("Enable")
         self.enable_logging_checkbox.setChecked(True)  # Default: enabled
         
-        perf_layout.addRow("Thread Pool Size:", self.thread_pool_edit)
-        perf_layout.addRow("Memory Limit (MB):", self.memory_limit_edit)
-        perf_layout.addRow("Cache Size (MB):", self.cache_size_edit)
-        perf_layout.addRow("Enable Logging:", self.enable_logging_checkbox)
+        # Use enhanced layout with descriptions
+        self.add_config_row_with_description(
+            perf_layout, "Thread Pool Size:", self.thread_pool_edit,
+            "Number of parallel processing threads. More threads = faster processing but higher CPU usage. Match your CPU cores. Recommended: 2-8 threads."
+        )
+        self.add_config_row_with_description(
+            perf_layout, "Memory Limit (MB):", self.memory_limit_edit,
+            "Maximum memory the application can use before optimization kicks in. Higher values allow larger PST files. Recommended: 256-1024 MB based on available RAM."
+        )
+        self.add_config_row_with_description(
+            perf_layout, "Cache Size (MB):", self.cache_size_edit,
+            "Amount of memory reserved for caching frequently accessed data. Larger cache improves speed but uses more RAM. Recommended: 64-256 MB."
+        )
+        self.add_config_row_with_description(
+            perf_layout, "Enable Logging:", self.enable_logging_checkbox,
+            "Records detailed operation logs for troubleshooting and monitoring. Minimal performance impact. Recommended: Enable for production monitoring."
+        )
         scroll_layout.addWidget(perf_section)
         
         ai_section = QGroupBox("🧠 AI Intelligence Settings")
@@ -2330,7 +2356,7 @@ class ConfigurationManager(QWidget):
                 padding-top: 15px;
                 background-color: {colors['ui_surface']};
                 font-size: 14px;
-                min-height: 160px;
+                min-height: 240px;
             }}
             QGroupBox::title {{
                 subcontrol-origin: margin;
@@ -2342,11 +2368,11 @@ class ConfigurationManager(QWidget):
                 font-weight: bold;
             }}
         """)
-        ai_layout = QFormLayout(ai_section)
+        ai_layout = QVBoxLayout(ai_section)
         ai_layout.setContentsMargins(20, 15, 20, 15)
-        ai_layout.setSpacing(12)
+        ai_layout.setSpacing(8)
         
-        # Create and store AI intelligence settings with defaults
+        # Create and store AI intelligence settings with defaults and descriptions
         self.ai_analysis_checkbox = QCheckBox("Enable")
         self.ai_analysis_checkbox.setChecked(True)  # Default: enabled
         self.confidence_threshold_edit = QLineEdit("0.85")  # Default: 85% confidence
@@ -2356,10 +2382,23 @@ class ConfigurationManager(QWidget):
         self.pattern_recognition_checkbox = QCheckBox("Enable")
         self.pattern_recognition_checkbox.setChecked(True)  # Default: enabled
         
-        ai_layout.addRow("Enable AI Analysis:", self.ai_analysis_checkbox)
-        ai_layout.addRow("Confidence Threshold:", self.confidence_threshold_edit)
-        ai_layout.addRow("Learning Mode:", self.learning_mode_combo)
-        ai_layout.addRow("Pattern Recognition:", self.pattern_recognition_checkbox)
+        # Use enhanced layout with descriptions
+        self.add_config_row_with_description(
+            ai_layout, "Enable AI Analysis:", self.ai_analysis_checkbox,
+            "Uses machine learning to analyze email content for better categorization and insights. Improves over time. Recommended: Enable for enhanced functionality."
+        )
+        self.add_config_row_with_description(
+            ai_layout, "Confidence Threshold:", self.confidence_threshold_edit,
+            "Minimum confidence level (0.0-1.0) for AI predictions to be accepted. Lower values = more predictions, higher risk. Recommended: 0.75-0.90 for balanced accuracy."
+        )
+        self.add_config_row_with_description(
+            ai_layout, "Learning Mode:", self.learning_mode_combo,
+            "Active: Learns from user feedback. Passive: Uses existing models only. Disabled: No AI learning. Recommended: Active for continuous improvement."
+        )
+        self.add_config_row_with_description(
+            ai_layout, "Pattern Recognition:", self.pattern_recognition_checkbox,
+            "Identifies common patterns in email data for automated processing suggestions. Helps optimize future imports. Recommended: Enable for workflow optimization."
+        )
         scroll_layout.addWidget(ai_section)
         
         # Add bottom padding to scroll content
@@ -2418,6 +2457,141 @@ class ConfigurationManager(QWidget):
         
         # Add footer to main layout
         layout.addWidget(footer)
+    
+    def add_config_row_with_description(self, parent_layout, label_text: str, widget, description: str):
+        """Add a configuration row with 1/3 input field and 2/3 description layout"""
+        try:
+            # Get theme colors
+            if THEME_MANAGER_AVAILABLE:
+                theme_manager = get_theme_manager()
+                colors = theme_manager.get_current_theme_colors()
+            else:
+                colors = {
+                    'text_primary': '#2C3E50',
+                    'text_secondary': '#666666',
+                    'ui_surface': '#FFFFFF',
+                    'ui_divider': '#E1E8ED'
+                }
+            
+            # Create main horizontal container
+            row_container = QWidget()
+            row_layout = QHBoxLayout(row_container)
+            row_layout.setContentsMargins(0, 8, 0, 8)
+            row_layout.setSpacing(15)
+            
+            # Left side: Label + Input (1/3 of width)
+            left_container = QWidget()
+            left_container.setMaximumWidth(200)  # Fixed width for consistency
+            left_container.setMinimumWidth(200)
+            left_layout = QVBoxLayout(left_container)
+            left_layout.setContentsMargins(0, 0, 0, 0)
+            left_layout.setSpacing(5)
+            
+            # Label
+            label = QLabel(label_text)
+            label.setStyleSheet(f"""
+                QLabel {{
+                    color: {colors['text_primary']};
+                    font-weight: bold;
+                    font-size: 13px;
+                    margin: 0px;
+                }}
+            """)
+            left_layout.addWidget(label)
+            
+            # Input widget with consistent styling
+            if isinstance(widget, QLineEdit):
+                widget.setStyleSheet(f"""
+                    QLineEdit {{
+                        padding: 8px 12px;
+                        border: 1px solid {colors['ui_divider']};
+                        border-radius: 4px;
+                        background-color: {colors['ui_surface']};
+                        font-size: 13px;
+                        min-height: 20px;
+                    }}
+                    QLineEdit:focus {{
+                        border: 2px solid #0077B5;
+                    }}
+                """)
+            elif isinstance(widget, QComboBox):
+                widget.setStyleSheet(f"""
+                    QComboBox {{
+                        padding: 8px 12px;
+                        border: 1px solid {colors['ui_divider']};
+                        border-radius: 4px;
+                        background-color: {colors['ui_surface']};
+                        font-size: 13px;
+                        min-height: 20px;
+                    }}
+                    QComboBox:focus {{
+                        border: 2px solid #0077B5;
+                    }}
+                    QComboBox::drop-down {{
+                        border: none;
+                    }}
+                    QComboBox::down-arrow {{
+                        width: 12px;
+                        height: 12px;
+                    }}
+                """)
+            elif isinstance(widget, QCheckBox):
+                widget.setStyleSheet(f"""
+                    QCheckBox {{
+                        font-size: 13px;
+                        color: {colors['text_primary']};
+                        spacing: 8px;
+                    }}
+                    QCheckBox::indicator {{
+                        width: 18px;
+                        height: 18px;
+                        border: 2px solid {colors['ui_divider']};
+                        border-radius: 3px;
+                        background-color: {colors['ui_surface']};
+                    }}
+                    QCheckBox::indicator:checked {{
+                        background-color: #0077B5;
+                        border-color: #0077B5;
+                    }}
+                    QCheckBox::indicator:checked::after {{
+                        content: "✓";
+                        color: white;
+                        font-weight: bold;
+                    }}
+                """)
+            
+            left_layout.addWidget(widget)
+            left_layout.addStretch()
+            
+            # Right side: Description (2/3 of width)
+            description_label = QLabel(description)
+            description_label.setWordWrap(True)
+            description_label.setStyleSheet(f"""
+                QLabel {{
+                    color: {colors['text_secondary']};
+                    font-size: 12px;
+                    line-height: 1.4;
+                    margin: 0px;
+                    padding: 4px 0px;
+                }}
+            """)
+            description_label.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
+            
+            # Add to horizontal layout
+            row_layout.addWidget(left_container)  # Fixed width
+            row_layout.addWidget(description_label, 1)  # Stretch to fill remaining space
+            
+            # Add the row to parent layout
+            parent_layout.addWidget(row_container)
+            
+        except Exception as e:
+            logger.error(f"Error creating config row with description: {e}")
+            # Fallback to simple layout
+            fallback_container = QWidget()
+            fallback_layout = QHBoxLayout(fallback_container)
+            fallback_layout.addWidget(QLabel(label_text))
+            fallback_layout.addWidget(widget)
+            parent_layout.addWidget(fallback_container)
     
     def save_all_settings(self):
         """Save all configuration settings"""
