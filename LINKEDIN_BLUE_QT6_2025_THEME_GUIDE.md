@@ -191,7 +191,7 @@ header.setStyleSheet(f"""
 layout = QHBoxLayout(header)
 layout.setContentsMargins(20, 0, 20, 0)
 ```
-Place title `QLabel` (H1 spec) on left, stretch, optional quick-action buttons on right.
+Place title `QLabel` (H1 spec) on **left**, stretch, optional quick-action buttons on right. The title is left-aligned within the layout as per the typography alignment rules.
 
 ### 4.2 Footer Bar (80 px Standard)  — *Adopted from Import Wizard / Fixed Settings*
 
@@ -303,7 +303,7 @@ Use `QGridLayout` / `QVBoxLayout` inside with `setContentsMargins(space.5)`.
 | Wrapper | `QFrame` (`Shape.StyledPanel`), `border: 2px solid brand.primary`, `border-radius: 8px`, `background: ui.surfaceAlt` |
 | Internal layout | `QVBoxLayout`, `margins(space.5)`, `spacing(space.2)` |
 | Title | H2 (14 px bold, colour brand.primary) |
-| Value | **24 px** bold, colour `#000000` or brand.primary (analytics) |
+| Value | **24 px** bold for Large metrics (e.g., Analytics), **20 px** bold for Medium metrics (e.g., Sync Monitor), colour `#000000` or brand.primary (analytics) |
 | Subtitle | 10 px, text.secondary |
 | Hover | Darken border via `darken_color()` util (primary→primaryHover) |
 
@@ -776,7 +776,7 @@ ThemeManager.apply_global_palette(app)  # sets QPalette plus QStyleSheet
 | **Small controls** | 4 px | Progress bars, small inputs |
 | **Rounded buttons** | 8 px | Action buttons, controls |
 | **Circular elements** | 17 px | Step numbers, badges |
-| **Sidebar elements** | 12 px | Navigation highlights |
+| **Sidebar elements** | 8 px | Navigation sidebar container |
 | **Form inputs** | 4 px | QLineEdit, QTextEdit, QComboBox |
 | **Minimal elements** | 3 px | Status frames, small controls |
 
@@ -1253,8 +1253,8 @@ The application currently uses placeholder text to guide user input rather than 
 | **Error Frame** | Same as Sync Frame |
 | **Error Title & Count** | Same as Sync Title and Count |
 | **Conflict Table** | `background-color: #FFFFFF; border: 1px solid #D0D7DE; border-radius: 8px; gridline-color: #E1E4E8; selection-background-color: #E8F4FD;` Items: `border-bottom: 1px solid #E1E4E8;` Hover: `background-color: #E8F4FD; color: #0077B5;` Selected: `background-color: #0077B5; color: #FFFFFF;` Header: `border-right: 1px solid #005885;` |
-| **Resolve Button** | `background-color: #0077B5; color: #FFFFFF; border: none; border-radius: 8px; padding: 8px 16px;` Hover: `background-color: #005885;` Pressed: `background-color: #004A70;` |
-| **Clear Button** | `background-color: #6C757D; color: #FFFFFF; border: none; border-radius: 8px; padding: 8px 16px;` Hover: `background-color: #5A6268;` Pressed: `background-color: #545B62;` |
+| **Resolve Button** | `background-color: #0077B5; color: #FFFFFF; border: none; border-radius: 8px;` **Uses Small Button padding (8px 16px).** Hover: `background-color: #005885;` Pressed: `background-color: #004A70;` |
+| **Clear Button** | `background-color: #6C757D; color: #FFFFFF; border: none; border-radius: 8px;` **Uses Small Button padding (8px 16px).** Hover: `background-color: #5A6268;` Pressed: `background-color: #545B62;` |
 | **Export Button** | Same as Resolve Button |
 
 ### 14.2 Import Wizard Specific Styling
