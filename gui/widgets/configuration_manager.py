@@ -2555,11 +2555,6 @@ class ConfigurationManager(QWidget):
                         background-color: {colors.get('brand_primary', '#0077B5')};
                         border-color: {colors.get('brand_primary', '#0077B5')};
                     }}
-                    QCheckBox::indicator:checked::after {{
-                        content: "✓";
-                        color: white;
-                        font-weight: bold;
-                    }}
                 """)
             
             left_layout.addWidget(widget)

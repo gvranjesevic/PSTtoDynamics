@@ -124,7 +124,8 @@ class ComprehensiveQtFilter:
             'maxSize=POINT',
             'maxpos=POINT',
             'maxtrack=POINT',
-            'mintrack=POINT'
+            'mintrack=POINT',
+            'Unknown property content'
         ]
         
         for pattern in qt_patterns_to_remove:
@@ -227,6 +228,7 @@ class QtOutputSuppressor:
         if any(warning in text for warning in [
             'Unknown property box-shadow',
             'Unknown property transform', 
+            'Unknown property content',
             'Unknown property',
             'QWindowsWindow::setGeometry',
             'Unable to set geometry',
@@ -282,6 +284,7 @@ def launch_gui():
                 """Apply comprehensive Qt warning filtering"""
                 qt_patterns_to_remove = [
                     'Unknown property',
+                    'Unknown property content',
                     'box-shadow',
                     'QLayout: Attempting to add QLayout',
                     'QWindowsWindow::setGeometry',
