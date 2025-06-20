@@ -421,7 +421,7 @@ QMenuBar {
 }
 QMenuBar::item { padding: 8px 16px; }
 QMenuBar::item:selected {
-    background: #0077B5;
+    background-color: #0077B5;
     color: #FFFFFF;
 }
 ```
@@ -1189,5 +1189,51 @@ Built with PyQt6 and modern design principles.
 | `theme_changed` | `str theme_name` | `ThemeManager.set_theme()` successfully applies a new theme | Any widget registered via `ThemeManager.register_widget()` implementing `apply_theme()` |
 
 Widgets should implement `apply_theme(theme_definition)` to receive live updates. **Do not** set static colours inside widget code; always consult the current theme definition for dynamic adaptability.
+
+---
+
+## 13 · Accessibility & Internationalization
+
+### Keyboard Navigation System
+
+The application includes a comprehensive `KeyboardNavigationManager` to ensure full UI control without a mouse.
+
+| Feature | Description |
+|---------|-------------|
+| **Navigation Groups** | Widgets are registered into logical groups (e.g., 'main', 'contacts'). |
+| **Group Switching** | Users can switch between groups using `Ctrl+1`, `Ctrl+2`, etc. |
+| **In-Group Navigation** | `Tab`/`Shift+Tab` and **Arrow Keys** (`Up`/`Down`/`Left`/`Right`) navigate between widgets within the active group. |
+| **Focus Indicator** | A vivid blue focus frame (see Section 4.23) clearly highlights the currently focused widget. |
+| **Focus Management** | `Escape` key clears the current focus. |
+
+#### Global Keyboard Shortcuts (Managed by KeyboardNavigationManager)
+
+| Shortcut | Action |
+|----------|--------|
+| `Tab` / `Shift+Tab` | Navigate next/previous in group |
+| Arrow Keys | Navigate next/previous in group |
+| `Ctrl+1` through `Ctrl+4` | Switch to navigation groups 1-4 |
+| `Ctrl+H` / `F1` | Trigger 'help' action |
+| `Ctrl+T` | Trigger 'theme_toggle' action |
+| `F11` | Trigger 'fullscreen' action |
+| `Escape` | Clear current navigation focus |
+
+### Accessibility Features (`AccessibilityManager`)
+
+The application is architected to support accessibility enhancements. The `AccessibilityManager` provides hooks for these features, although they are currently implemented as stubs.
+
+| Feature | Status | Description |
+|---------|--------|-------------|
+| **High Contrast Mode** | Architected | A high-contrast theme is defined (`ThemeType.HIGH_CONTRAST`). |
+| **Large Text Mode** | Stub | `enable_large_text()` method exists for future implementation. |
+| **Screen Reader Support** | Stub | `enable_screen_reader()` method exists for future ARIA integration. |
+
+### Internationalization (i18n)
+
+The application is currently **not** localized. All user-facing strings are hard-coded in English. The code does not use Qt's `tr()` function for translation. Future internationalization would require wrapping all strings in `tr()`.
+
+### Input Validation & Masks
+
+The application currently uses placeholder text to guide user input rather than explicit `QValidator` or `setInputMask` rules. All form validation is handled at the logic/model layer upon submission.
 
 *End of specification.* 
