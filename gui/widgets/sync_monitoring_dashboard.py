@@ -37,21 +37,25 @@ class SyncMetricsWidget(QWidget):
         
         # Metrics Grid
         metrics_grid = QHBoxLayout()
+        metrics_grid.setSpacing(20)
         
         # Sync Count
         sync_frame = QFrame()
         sync_frame.setStyleSheet("""
             QFrame {
+                background-color: #FFFFFF;
+                border: 2px solid #0077B5;
+                border-radius: 8px;
+                padding: 10px;
+            }
+            QFrame:hover {
+                border-color: #005885;
                 background-color: #F9FAFB;
-                border: 1px solid #E1E4E8;
-                border-radius: 6px;
-                padding: 12px;
-                margin: 2px;
             }
         """)
         sync_layout = QVBoxLayout()
-        sync_layout.setContentsMargins(12, 10, 12, 10)
-        sync_layout.setSpacing(4)
+        sync_layout.setContentsMargins(20, 20, 20, 20)
+        sync_layout.setSpacing(8)
         sync_title = QLabel("Total Syncs")
         sync_title.setStyleSheet("color: #666666; font-size: 11px; font-weight: bold;")
         self.sync_count_label = QLabel("0")
@@ -65,16 +69,19 @@ class SyncMetricsWidget(QWidget):
         conflict_frame = QFrame()
         conflict_frame.setStyleSheet("""
             QFrame {
+                background-color: #FFFFFF;
+                border: 2px solid #0077B5;
+                border-radius: 8px;
+                padding: 10px;
+            }
+            QFrame:hover {
+                border-color: #005885;
                 background-color: #F9FAFB;
-                border: 1px solid #E1E4E8;
-                border-radius: 6px;
-                padding: 12px;
-                margin: 2px;
             }
         """)
         conflict_layout = QVBoxLayout()
-        conflict_layout.setContentsMargins(12, 10, 12, 10)
-        conflict_layout.setSpacing(4)
+        conflict_layout.setContentsMargins(20, 20, 20, 20)
+        conflict_layout.setSpacing(8)
         conflict_title = QLabel("Conflicts")
         conflict_title.setStyleSheet("color: #666666; font-size: 11px; font-weight: bold;")
         self.conflict_count_label = QLabel("0")
@@ -88,16 +95,19 @@ class SyncMetricsWidget(QWidget):
         error_frame = QFrame()
         error_frame.setStyleSheet("""
             QFrame {
+                background-color: #FFFFFF;
+                border: 2px solid #0077B5;
+                border-radius: 8px;
+                padding: 10px;
+            }
+            QFrame:hover {
+                border-color: #005885;
                 background-color: #F9FAFB;
-                border: 1px solid #E1E4E8;
-                border-radius: 6px;
-                padding: 12px;
-                margin: 2px;
             }
         """)
         error_layout = QVBoxLayout()
-        error_layout.setContentsMargins(12, 10, 12, 10)
-        error_layout.setSpacing(4)
+        error_layout.setContentsMargins(20, 20, 20, 20)
+        error_layout.setSpacing(8)
         error_title = QLabel("Errors")
         error_title.setStyleSheet("color: #666666; font-size: 11px; font-weight: bold;")
         self.error_count_label = QLabel("0")
@@ -396,42 +406,42 @@ class SyncMonitoringDashboard(QWidget):
         content_layout.addWidget(self.metrics_widget)
         
         # Create tab widget for conflicts and logs
-        tab_widget = QTabWidget()
-        tab_widget.setStyleSheet("""
+        self.tab_widget = QTabWidget()
+        self.tab_widget.setStyleSheet("""
             QTabWidget::pane {
                 border: none;
                 background-color: #F3F6F8;
+                margin-top: 0px;
             }
             QTabBar::tab {
-                background-color: #F9FAFB;
-                color: #666666;
+                background-color: transparent;
+                color: #6C757D;
                 padding: 12px 24px;
-                margin-right: 2px;
+                border: none;
                 border-top-left-radius: 8px;
                 border-top-right-radius: 8px;
-                font-weight: bold;
                 font-size: 14px;
+                font-weight: bold;
+            }
+            QTabBar::tab:hover {
+                background-color: #E8EBED;
             }
             QTabBar::tab:selected {
                 background-color: #0077B5;
                 color: white;
-            }
-            QTabBar::tab:hover {
-                background-color: #E8EBED;
-                color: #0077B5;
             }
         """)
         
         # Add conflict resolution tab
         self.conflict_widget = ConflictResolutionWidget()
         self.conflict_widget.conflict_resolved.connect(self.handle_conflict_resolution)
-        tab_widget.addTab(self.conflict_widget, "Conflict Resolution")
+        self.tab_widget.addTab(self.conflict_widget, "Conflict Resolution")
         
         # Add sync logs tab
         self.log_widget = SyncLogWidget()
-        tab_widget.addTab(self.log_widget, "Sync Logs")
+        self.tab_widget.addTab(self.log_widget, "Sync Logs")
         
-        content_layout.addWidget(tab_widget)
+        content_layout.addWidget(self.tab_widget)
         main_layout.addWidget(content_widget)
     
     def update_dashboard(self):

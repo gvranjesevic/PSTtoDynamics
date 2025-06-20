@@ -174,13 +174,13 @@ class AIMetricCard(QFrame):
         """Set up the metric card UI"""
         self.setFixedSize(280, 140)
         self.setStyleSheet("""
-            AIMetricCard {
+            QFrame {
                 background-color: #FFFFFF;
                 border: 2px solid #0077B5;
                 border-radius: 8px;
-                margin: 8px;
+                padding: 10px;
             }
-            AIMetricCard:hover {
+            QFrame:hover {
                 border-color: #005885;
                 background-color: #F9FAFB;
             }
@@ -264,21 +264,6 @@ class AIMetricCard(QFrame):
         }
         color = trend_colors.get(trend, '#6b7280')
         self.trend_label.setStyleSheet(f"color: {color};")
-    
-    def enterEvent(self, event):
-        """Handle mouse enter event"""
-        super().enterEvent(event)
-        # Use margin changes instead of transform (Qt doesn't support CSS transform)
-        self.setStyleSheet(self.styleSheet().replace(
-            "margin: 8px;", "margin: 4px; border: 3px solid #3b82f6;"
-        ))
-    
-    def leaveEvent(self, event):
-        """Handle mouse leave event"""
-        super().leaveEvent(event)
-        self.setStyleSheet(self.styleSheet().replace(
-            "margin: 4px; border: 3px solid #3b82f6;", "margin: 8px;"
-        ))
 
 class AIPerformanceChart(QWidget):
     """AI Performance visualization with PyQtGraph"""
