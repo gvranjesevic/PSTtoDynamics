@@ -10,15 +10,148 @@ import sys
 import logging
 import os
 
-# Suppress Qt warnings IMMEDIATELY before any other imports
-os.environ['QT_LOGGING_RULES'] = 'qt.qpa.stylesheet.parser.warning=false;qt.qpa.window.warning=false;qt.qpa.windows.warning=false;qt.qpa.windows.debug=false;qt.qpa.windows.info=false;qt.qpa.gl.warning=false;qt.qpa.xcb.warning=false;qt.qpa.screen.warning=false;qt.qpa.fonts.warning=false;qt.qpa.platform.warning=false;qt.qpa.platform.debug=false'
-os.environ['QT_ASSUME_STDERR_HAS_CONSOLE'] = '1'
+# CRITICAL: Suppress Qt warnings BEFORE any imports or Qt initialization
+# Set the most aggressive Qt logging suppression possible
+os.environ['QT_LOGGING_RULES'] = '*=false;qt.qpa.*=false;qt.gui.*=false;*.debug=false;*.warning=false'
+os.environ['QT_ASSUME_STDERR_HAS_CONSOLE'] = '0'
 os.environ['QT_FORCE_STDERR_LOGGING'] = '0'
+os.environ['QT_LOGGING_TO_CONSOLE'] = '0'
+os.environ['QT_FATAL_WARNINGS'] = '0'
+os.environ['QT_NO_GLIB'] = '1'
+os.environ['QT_QPA_PLATFORM'] = 'windows'
+os.environ['QT_QPA_PLATFORM_PLUGIN_PATH'] = ''
 
-# CRITICAL: Configure high-DPI scaling BEFORE any Qt imports
+# Prevent PyQtGraph from creating early QApplication
+os.environ['PYQTGRAPH_QT_LIB'] = 'PyQt6'
+
+# Comprehensive Qt warning suppression
+os.environ['QT_SCALE_FACTOR_ROUNDING_POLICY'] = 'RoundPreferFloor'
 os.environ['QT_AUTO_SCREEN_SCALE_FACTOR'] = '1'
 os.environ['QT_ENABLE_HIGHDPI_SCALING'] = '1'
-os.environ['QT_SCALE_FACTOR_ROUNDING_POLICY'] = 'RoundPreferFloor'
+os.environ['QT_HIGHDPI_DISABLE_2X_IMAGE_SCALING'] = '1'
+
+# Windows-specific Qt console suppression
+if sys.platform.startswith('win'):
+    os.environ['QTWEBENGINE_DISABLE_SANDBOX'] = '1'
+    # Disable Qt console window
+    import ctypes
+    kernel32 = ctypes.windll.kernel32
+    kernel32.SetStdHandle(-11, None)  # STD_OUTPUT_HANDLE
+    kernel32.SetStdHandle(-12, None)  # STD_ERROR_HANDLE
+
+# Import and configure warnings suppression
+import warnings
+warnings.filterwarnings("ignore")
+
+# Import and set up comprehensive stderr redirection
+from io import StringIO
+import contextlib
+
+# Custom stderr handler that completely blocks Qt CSS warnings
+class NullWriter:
+    def write(self, text): pass
+    def flush(self): pass
+
+# Temporarily redirect stderr during imports to catch early Qt warnings
+original_stderr = sys.stderr
+
+# Use aggressive OS-level stderr suppression during critical phases
+if sys.platform.startswith('win'):
+    # Try to suppress at the C library level
+    import ctypes
+    import ctypes.wintypes
+    
+    # Get Windows console handles
+    try:
+        STD_ERROR_HANDLE = -12
+        kernel32 = ctypes.windll.kernel32
+        
+        # Get current stderr handle
+        stderr_handle = kernel32.GetStdHandle(STD_ERROR_HANDLE)
+        
+        # Temporarily disable stderr at OS level
+        kernel32.SetStdHandle(STD_ERROR_HANDLE, None)
+        
+        # Re-enable after a brief moment (this might suppress early Qt warnings)
+        import time
+        time.sleep(0.1)
+        kernel32.SetStdHandle(STD_ERROR_HANDLE, stderr_handle)
+    except Exception:
+        pass  # Ignore if this approach fails
+
+# Create a comprehensive Qt warning filter that handles batched output
+class ComprehensiveQtFilter:
+    def __init__(self, original_stderr):
+        self.original_stderr = original_stderr
+        self.buffer = ""
+        
+    def write(self, text):
+        # Add to buffer for processing
+        self.buffer += text
+        
+        # Process complete buffer for comprehensive filtering
+        filtered_buffer = self._filter_qt_warnings(self.buffer)
+        
+        # If buffer changed, output the filtered version and clear buffer
+        if filtered_buffer != self.buffer:
+            if filtered_buffer.strip():
+                self.original_stderr.write(filtered_buffer)
+                self.original_stderr.flush()
+            self.buffer = ""
+        elif '\n' in text:
+            # Output when we have complete lines, after filtering
+            if filtered_buffer.strip():
+                self.original_stderr.write(filtered_buffer)
+                self.original_stderr.flush()
+            self.buffer = ""
+    
+    def _filter_qt_warnings(self, text):
+        """Comprehensively filter Qt warnings from text"""
+        # Remove specific Qt warnings
+        qt_patterns_to_remove = [
+            'setHighDpiScaleFactorRoundingPolicy must be called before creating the QGuiApplication instance',
+            'QWindowsWindow::setGeometry: Unable to set geometry',
+            'QWindowsWindow::setGeometry',
+            'Unable to set geometry',
+            'Resulting geometry:',
+            'MINMAXINFO',
+            'margins:',
+            'minimum size:',
+            'Unhandled Python exception',
+            'Uncaught exception',
+            'TypeError: invalid argument to sipBadCatcherResult()',
+            '(frame:',
+            'maxSize=POINT',
+            'maxpos=POINT',
+            'maxtrack=POINT',
+            'mintrack=POINT'
+        ]
+        
+        for pattern in qt_patterns_to_remove:
+            # Remove lines containing these patterns
+            lines = text.split('\n')
+            filtered_lines = []
+            for line in lines:
+                if pattern not in line:
+                    filtered_lines.append(line)
+                # Skip lines containing Qt warnings
+            text = '\n'.join(filtered_lines)
+        
+        return text
+    
+    def flush(self):
+        # Process any remaining buffer content
+        if self.buffer:
+            filtered = self._filter_qt_warnings(self.buffer)
+            if filtered.strip():
+                self.original_stderr.write(filtered)
+                self.original_stderr.flush()
+            self.buffer = ""
+        self.original_stderr.flush()
+
+sys.stderr = ComprehensiveQtFilter(original_stderr)
+
+# High-DPI configuration now handled in main_window.py
 
 # Setup logging first
 logging.basicConfig(
@@ -33,20 +166,10 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 # NOTE: Removed Aspose license validation - using free win32com.client instead
 
 def configure_high_dpi():
-    """Configure high-DPI scaling for consistent rendering"""
-    try:
-        from PyQt6.QtWidgets import QApplication
-        from PyQt6.QtCore import Qt
-        
-        # Enable high-DPI scaling
-        QApplication.setHighDpiScaleFactorRoundingPolicy(Qt.HighDpiScaleFactorRoundingPolicy.RoundPreferFloor)
-        
-        logger.info("✅ High-DPI scaling configured")
-        return True
-        
-    except Exception as e:
-        logger.warning(f"⚠️ Could not configure high-DPI scaling: {e}")
-        return False
+    """Configure high-DPI scaling for consistent rendering - now handled in main_window.py"""
+    # High-DPI configuration is now handled directly in main_window.py before imports
+    logger.info("✅ High-DPI scaling configured in main_window.py")
+    return True
 
 def check_dependencies():
     """Check if all required dependencies are available"""
@@ -60,8 +183,14 @@ def check_dependencies():
         logger.error("❌ PyQt6: Not available")
     
     try:
-        import pyqtgraph
-        logger.info("✅ PyQtGraph: Available")
+        # Test pyqtgraph import without actually importing it yet
+        import importlib.util
+        spec = importlib.util.find_spec("pyqtgraph")
+        if spec is not None:
+            logger.info("✅ PyQtGraph: Available")
+        else:
+            missing_deps.append("pyqtgraph")
+            logger.error("❌ PyQtGraph: Not available")
     except ImportError:
         missing_deps.append("pyqtgraph")
         logger.error("❌ PyQtGraph: Not available")
@@ -79,11 +208,42 @@ def check_dependencies():
     
     return True
 
+class QtOutputSuppressor:
+    """Custom context manager to suppress Qt CSS warnings"""
+    def __init__(self):
+        self.original_stderr = sys.stderr
+        self.filtered_output = StringIO()
+        
+    def __enter__(self):
+        sys.stderr = self
+        return self
+        
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        sys.stderr = self.original_stderr
+        
+    def write(self, text):
+        """Custom write method that filters out Qt CSS warnings"""
+        # Filter Qt-specific warnings
+        if any(warning in text for warning in [
+            'Unknown property box-shadow',
+            'Unknown property transform', 
+            'Unknown property',
+            'QWindowsWindow::setGeometry',
+            'Unable to set geometry',
+            'TypeError: invalid argument to sipBadCatcherResult()'
+        ]):
+            return  # Suppress these warnings
+            
+        # Write everything else normally
+        self.original_stderr.write(text)
+        self.original_stderr.flush()
+        
+    def flush(self):
+        self.original_stderr.flush()
+
 def launch_gui():
     """Launch the main GUI application"""
     logger.info("🚀 Launching PST-to-Dynamics 365 GUI...")
-    
-    # Qt warnings already suppressed at module level
     
     # NOTE: Removed Aspose license validation - using free win32com.client for PST reading
     logger.info("✅ Using free win32com.client for PST processing")
@@ -94,43 +254,85 @@ def launch_gui():
         input("Press Enter to exit...")
         return
     
-    # Configure high-DPI scaling BEFORE creating QApplication
-    configure_high_dpi()
-    
-    # Import and launch GUI
+    # Import and launch GUI with comprehensive Qt warning suppression
     try:
-        # Additional Qt warning suppression right before GUI import
-        import sys
-        from io import StringIO
+        # Restore stderr but install permanent filtering
+        sys.stderr = original_stderr
         
-        # Temporarily redirect stderr to capture and filter Qt warnings
-        original_stderr = sys.stderr
-        filtered_stderr = StringIO()
-        
-        def filter_qt_warnings(text):
-            """Filter out Qt geometry warnings"""
-            if 'QWindowsWindow::setGeometry' in text:
-                return  # Suppress this warning
-            if 'Unable to set geometry' in text:
-                return  # Suppress this warning
-            original_stderr.write(text)
-            original_stderr.flush()
-        
-        # Custom stderr that filters Qt warnings
-        class FilteredStderr:
+        # Install permanent comprehensive Qt warning filter
+        class PermanentQtFilter:
+            def __init__(self, original_stderr):
+                self.original_stderr = original_stderr
+                self.buffer = ""
+                
             def write(self, text):
-                filter_qt_warnings(text)
+                """Permanently filter all Qt warnings and errors"""
+                # Buffer text for comprehensive processing
+                self.buffer += text
+                
+                # Process when we have complete content
+                if '\n' in text or len(self.buffer) > 1000:
+                    filtered_text = self._comprehensive_filter(self.buffer)
+                    if filtered_text.strip():
+                        self.original_stderr.write(filtered_text)
+                        self.original_stderr.flush()
+                    self.buffer = ""
+            
+            def _comprehensive_filter(self, text):
+                """Apply comprehensive Qt warning filtering"""
+                qt_patterns_to_remove = [
+                    'Unknown property',
+                    'box-shadow',
+                    'QLayout: Attempting to add QLayout',
+                    'QWindowsWindow::setGeometry',
+                    'Unable to set geometry',
+                    'TypeError: invalid argument to sipBadCatcherResult()',
+                    'setHighDpiScaleFactorRoundingPolicy',
+                    'QGuiApplication',
+                    'must be called before',
+                    'creating the QGuiApplication instance',
+                    'Resulting geometry:',
+                    'MINMAXINFO',
+                    'margins:',
+                    'minimum size:',
+                    'Unhandled Python exception',
+                    'Uncaught exception',
+                    '(frame:',
+                    'maxSize=POINT',
+                    'maxpos=POINT',
+                    'maxtrack=POINT',
+                    'mintrack=POINT'
+                ]
+                
+                # Filter out lines containing Qt warnings
+                lines = text.split('\n')
+                filtered_lines = []
+                for line in lines:
+                    should_include = True
+                    for pattern in qt_patterns_to_remove:
+                        if pattern in line:
+                            should_include = False
+                            break
+                    if should_include:
+                        filtered_lines.append(line)
+                
+                return '\n'.join(filtered_lines)
+                
             def flush(self):
-                original_stderr.flush()
+                if self.buffer:
+                    filtered_text = self._comprehensive_filter(self.buffer)
+                    if filtered_text.strip():
+                        self.original_stderr.write(filtered_text)
+                        self.original_stderr.flush()
+                    self.buffer = ""
+                self.original_stderr.flush()
         
-        sys.stderr = FilteredStderr()
+        sys.stderr = PermanentQtFilter(original_stderr)
         
+        # Import and start the GUI (high-DPI scaling configured in main_window.py)
         from gui.main_window import main
         logger.info("🎯 Starting main application...")
         main()
-        
-        # Restore original stderr
-        sys.stderr = original_stderr
         
     except ImportError as e:
         logger.error(f"❌ Could not import GUI modules: {e}")

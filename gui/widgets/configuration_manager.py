@@ -98,8 +98,12 @@ class ConnectivityTestThread(QThread):
             self.test_client_secret_connectivity()
             
             # Test 4: Organization URL - Dynamics 365 accessibility
-            self.progress_updated.emit(80, "Testing Dynamics 365 organization access...")
+            self.progress_updated.emit(60, "Testing Dynamics 365 organization access...")
             self.test_organization_url_connectivity()
+            
+            # Test 5: COMPREHENSIVE DATA ACCESS TEST - This is the real functionality test!
+            self.progress_updated.emit(80, "🔍 Testing actual data access (contacts API)...")
+            self.test_comprehensive_data_access()
             
             self.progress_updated.emit(100, "All tests completed!")
             self.msleep(500)  # Brief pause to show completion
@@ -305,6 +309,124 @@ class ConnectivityTestThread(QThread):
         except Exception as e:
             self.results['org_url_valid'] = False
             self.results['org_error'] = f"Organization URL test error: {str(e)}"
+    
+    def test_comprehensive_data_access(self):
+        """
+        COMPREHENSIVE TEST: This tests the actual functionality that users will experience!
+        Tests real data access to Dynamics 365 contacts API with proper OAuth for Dynamics.
+        """
+        try:
+            import requests
+        except ImportError:
+            self.results['data_access_valid'] = False
+            self.results['data_access_error'] = "requests library not available"
+            return
+        
+        # Only proceed if previous tests passed
+        if not self.results.get('secret_valid', False):
+            self.results['data_access_valid'] = False
+            self.results['data_access_error'] = "Cannot test data access - authentication failed"
+            return
+        
+        if not self.results.get('org_url_valid', False):
+            self.results['data_access_valid'] = False
+            self.results['data_access_error'] = "Cannot test data access - organization URL invalid"
+            return
+        
+        try:
+            # Step 1: Get Dynamics 365-specific OAuth token (this is different from Graph token!)
+            token_url = f"https://login.microsoftonline.com/{self.tenant_id}/oauth2/token"
+            
+            # Extract base domain for Dynamics 365 resource
+            org_url = self.org_url
+            if org_url.startswith('http'):
+                base_domain = org_url.split('//')[1].split('/')[0]
+            else:
+                base_domain = org_url.split('/')[0]
+            
+            # Use OAuth v1.0 parameters for Dynamics 365 authentication (not v2.0!)
+            token_data = {
+                'grant_type': 'client_credentials',
+                'client_id': self.client_id,
+                'client_secret': self.client_secret,
+                'resource': f"https://{base_domain}"  # Dynamics 365 specific resource
+            }
+            
+            token_response = requests.post(token_url, data=token_data, timeout=10)
+            
+            if token_response.status_code != 200:
+                error_data = token_response.json() if token_response.content else {}
+                error_desc = error_data.get('error_description', f'HTTP {token_response.status_code}')
+                self.results['data_access_valid'] = False
+                self.results['data_access_error'] = f"Dynamics 365 authentication failed: {error_desc}"
+                return
+            
+            dynamics_token = token_response.json().get('access_token')
+            if not dynamics_token:
+                self.results['data_access_valid'] = False
+                self.results['data_access_error'] = "No access token received for Dynamics 365"
+                return
+            
+            # Step 2: Test actual Dynamics 365 data access (contacts API)
+            if not org_url.startswith('http'):
+                org_url = f"https://{org_url}"
+            if not org_url.endswith('/api/data/v9.2'):
+                org_url = f"{org_url.rstrip('/')}/api/data/v9.2"
+            
+            contacts_url = f"{org_url}/contacts"
+            headers = {
+                'Authorization': f'Bearer {dynamics_token}',
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'OData-MaxVersion': '4.0',
+                'OData-Version': '4.0'
+            }
+            
+            # Request just a few contacts to test permissions
+            params = {
+                '$select': 'contactid,fullname,emailaddress1',
+                '$top': 5  # Just test with 5 contacts
+            }
+            
+            contacts_response = requests.get(contacts_url, headers=headers, params=params, timeout=15)
+            
+            if contacts_response.status_code == 200:
+                contacts_data = contacts_response.json()
+                contacts = contacts_data.get('value', [])
+                self.results['data_access_valid'] = True
+                self.results['data_access_error'] = None
+                self.results['contacts_count'] = len(contacts)
+                self.results['data_access_details'] = f"Successfully retrieved {len(contacts)} contacts"
+                
+            elif contacts_response.status_code == 403:
+                error_data = contacts_response.json() if contacts_response.content else {}
+                error_message = error_data.get('error', {}).get('message', 'Permission denied')
+                self.results['data_access_valid'] = False
+                self.results['data_access_error'] = f"PERMISSIONS INSUFFICIENT: {error_message}"
+                self.results['data_access_details'] = (
+                    "Authentication successful but app lacks Dynamics 365 permissions. "
+                    "Need to add 'Dynamics CRM' > 'user_impersonation' permission and grant admin consent."
+                )
+                
+            elif contacts_response.status_code == 401:
+                self.results['data_access_valid'] = False
+                self.results['data_access_error'] = "Unauthorized - invalid token for Dynamics 365"
+                self.results['data_access_details'] = "Token authentication failed with Dynamics 365 API"
+                
+            else:
+                self.results['data_access_valid'] = False
+                self.results['data_access_error'] = f"Data access failed (HTTP {contacts_response.status_code})"
+                self.results['data_access_details'] = f"Unexpected response from Dynamics 365: {contacts_response.text[:200]}"
+                
+        except requests.exceptions.Timeout:
+            self.results['data_access_valid'] = False
+            self.results['data_access_error'] = "Timeout accessing Dynamics 365 data"
+        except requests.exceptions.ConnectionError:
+            self.results['data_access_valid'] = False
+            self.results['data_access_error'] = "Network connection error accessing Dynamics 365 data"
+        except Exception as e:
+            self.results['data_access_valid'] = False
+            self.results['data_access_error'] = f"Data access test error: {str(e)}"
 
 
 class ConfigurationTestThread(QThread):
@@ -495,7 +617,7 @@ class DynamicsAuthWidget(QWidget):
         
         instructions_text.setWordWrap(True)
         instructions_text.setTextFormat(Qt.TextFormat.RichText)
-        instructions_text.setOpenExternalLinks(True)
+        # Note: QLabel with RichText automatically handles clickable links
         instructions_text.setStyleSheet(f"""
             QLabel {{
                 color: {colors['text_secondary']};
@@ -577,13 +699,7 @@ class DynamicsAuthWidget(QWidget):
         tenant_help_btn.setFixedSize(30, 30)
         tenant_help_btn.setStyleSheet(self.get_help_button_style())
         tenant_help_btn.setToolTip("Azure Portal → Azure Active Directory → Properties → Tenant ID")
-        tenant_help_btn.clicked.connect(lambda: self.show_help_dialog("Tenant ID", 
-            "📍 <b>Where to find your Tenant ID:</b><br><br>"
-            "1. Go to <a href='https://portal.azure.com'>portal.azure.com</a><br>"
-            "2. Navigate to 'Azure Active Directory'<br>"
-            "3. Click on 'Properties' in the left menu<br>"
-            "4. Copy the <b>Tenant ID</b> (also called Directory ID)<br><br>"
-            "💡 This uniquely identifies your Azure AD tenant."))
+        tenant_help_btn.clicked.connect(self._show_tenant_help)
         
         tenant_layout.addWidget(self.tenant_id_edit, 1)
         tenant_layout.addWidget(tenant_help_btn, 0)
@@ -609,13 +725,7 @@ class DynamicsAuthWidget(QWidget):
         client_help_btn.setFixedSize(30, 30)
         client_help_btn.setStyleSheet(self.get_help_button_style())
         client_help_btn.setToolTip("Azure Portal → App registrations → Your app → Overview → Application ID")
-        client_help_btn.clicked.connect(lambda: self.show_help_dialog("Client ID", 
-            "📍 <b>Where to find your Client ID:</b><br><br>"
-            "1. Go to <a href='https://portal.azure.com'>portal.azure.com</a><br>"
-            "2. Navigate to 'Azure Active Directory' → 'App registrations'<br>"
-            "3. Find your app (or create new registration)<br>"
-            "4. Copy the <b>Application (client) ID</b> from Overview page<br><br>"
-            "💡 This identifies your specific application in Azure."))
+        client_help_btn.clicked.connect(self._show_client_help)
         
         client_layout.addWidget(self.client_id_edit, 1)
         client_layout.addWidget(client_help_btn, 0)
@@ -642,14 +752,7 @@ class DynamicsAuthWidget(QWidget):
         secret_help_btn.setFixedSize(30, 30)
         secret_help_btn.setStyleSheet(self.get_help_button_style())
         secret_help_btn.setToolTip("App registration → Certificates & secrets → Client secrets → Value")
-        secret_help_btn.clicked.connect(lambda: self.show_help_dialog("Client Secret", 
-            "📍 <b>How to create a Client Secret:</b><br><br>"
-            "1. In your app registration, go to 'Certificates & secrets'<br>"
-            "2. Click 'New client secret'<br>"
-            "3. Add description and set expiration<br>"
-            "4. Copy the <b>Value</b> (not the Secret ID)<br><br>"
-            "⚠️ <b>Important:</b> Save this immediately - you can't view it again!<br><br>"
-            "💡 This is like a password for your application."))
+        secret_help_btn.clicked.connect(self._show_secret_help)
         
         secret_layout.addWidget(self.client_secret_edit, 1)
         secret_layout.addWidget(secret_help_btn, 0)
@@ -675,14 +778,7 @@ class DynamicsAuthWidget(QWidget):
         url_help_btn.setFixedSize(30, 30)
         url_help_btn.setStyleSheet(self.get_help_button_style())
         url_help_btn.setToolTip("Power Platform Admin Center → Environments → Your environment URL")
-        url_help_btn.clicked.connect(lambda: self.show_help_dialog("Organization URL", 
-            "📍 <b>Where to find your Organization URL:</b><br><br>"
-            "1. Go to <a href='https://admin.powerplatform.microsoft.com'>admin.powerplatform.microsoft.com</a><br>"
-            "2. Click on 'Environments'<br>"
-            "3. Find your Dynamics 365 environment<br>"
-            "4. Copy the <b>Environment URL</b><br><br>"
-            "📝 <b>Format:</b> https://[your-org].crm.dynamics.com<br><br>"
-            "💡 This is the web address of your Dynamics 365 instance."))
+        url_help_btn.clicked.connect(self._show_url_help)
         
         url_layout.addWidget(self.org_url_edit, 1)
         url_layout.addWidget(url_help_btn, 0)
@@ -811,6 +907,60 @@ class DynamicsAuthWidget(QWidget):
         """)
         
         dialog.exec()
+    
+    def _show_tenant_help(self):
+        """Safe handler for tenant ID help button"""
+        try:
+            self.show_help_dialog("Tenant ID", 
+                "📍 <b>Where to find your Tenant ID:</b><br><br>"
+                "1. Go to <a href='https://portal.azure.com'>portal.azure.com</a><br>"
+                "2. Navigate to 'Azure Active Directory'<br>"
+                "3. Click on 'Properties' in the left menu<br>"
+                "4. Copy the <b>Tenant ID</b> (also called Directory ID)<br><br>"
+                "💡 This uniquely identifies your Azure AD tenant.")
+        except Exception as e:
+            print(f"Warning: Could not show tenant help: {e}")
+    
+    def _show_client_help(self):
+        """Safe handler for client ID help button"""
+        try:
+            self.show_help_dialog("Client ID", 
+                "📍 <b>Where to find your Client ID:</b><br><br>"
+                "1. Go to <a href='https://portal.azure.com'>portal.azure.com</a><br>"
+                "2. Navigate to 'Azure Active Directory' → 'App registrations'<br>"
+                "3. Find your app (or create new registration)<br>"
+                "4. Copy the <b>Application (client) ID</b> from Overview page<br><br>"
+                "💡 This identifies your specific application in Azure.")
+        except Exception as e:
+            print(f"Warning: Could not show client help: {e}")
+    
+    def _show_secret_help(self):
+        """Safe handler for client secret help button"""
+        try:
+            self.show_help_dialog("Client Secret", 
+                "📍 <b>How to create a Client Secret:</b><br><br>"
+                "1. In your app registration, go to 'Certificates & secrets'<br>"
+                "2. Click 'New client secret'<br>"
+                "3. Add description and set expiration<br>"
+                "4. Copy the <b>Value</b> (not the Secret ID)<br><br>"
+                "⚠️ <b>Important:</b> Save this immediately - you can't view it again!<br><br>"
+                "💡 This is like a password for your application.")
+        except Exception as e:
+            print(f"Warning: Could not show secret help: {e}")
+    
+    def _show_url_help(self):
+        """Safe handler for organization URL help button"""
+        try:
+            self.show_help_dialog("Organization URL", 
+                "📍 <b>Where to find your Organization URL:</b><br><br>"
+                "1. Go to <a href='https://admin.powerplatform.microsoft.com'>admin.powerplatform.microsoft.com</a><br>"
+                "2. Click on 'Environments'<br>"
+                "3. Find your Dynamics 365 environment<br>"
+                "4. Copy the <b>Environment URL</b><br><br>"
+                "📝 <b>Format:</b> https://[your-org].crm.dynamics.com<br><br>"
+                "💡 This is the web address of your Dynamics 365 instance.")
+        except Exception as e:
+            print(f"Warning: Could not show URL help: {e}")
     
     def test_connection(self):
         """Test authentication connection with detailed component validation"""
@@ -971,6 +1121,18 @@ class DynamicsAuthWidget(QWidget):
         from PyQt6.QtCore import QTimer, QThread, pyqtSignal
         from PyQt6.QtGui import QFont
         
+        # Get theme colors for styling
+        if THEME_MANAGER_AVAILABLE:
+            colors = get_theme_manager().get_theme_definition()['colors']
+        else:
+            colors = {
+                'brand_primary': '#0077B5',
+                'state_errorButton': '#DC3545',
+                'state_error': '#C0392B',
+                'text_inverse': '#FFFFFF'
+            }
+        text_inverse = colors.get('text_inverse', '#FFFFFF')
+        
         # Create progress dialog
         progress_dialog = QDialog(self)
         progress_dialog.setWindowTitle("🔗 Testing Connection")
@@ -1036,28 +1198,84 @@ class DynamicsAuthWidget(QWidget):
         
         # Start connectivity test thread
         self.connectivity_thread = ConnectivityTestThread(tenant_id, client_id, client_secret, org_url)
-        self.connectivity_thread.progress_updated.connect(lambda progress, status: (
-            progress_bar.setValue(progress),
-            status_label.setText(status)
-        ))
-        self.connectivity_thread.test_completed.connect(lambda results: (
-            progress_dialog.accept(),
-            print(f"DEBUG: Connectivity test results: {results}"),
-            self.show_detailed_test_results_with_connectivity(tenant_id, client_id, client_secret, org_url, results)
-        ))
-        self.connectivity_thread.test_failed.connect(lambda error: (
-            progress_dialog.accept(),
-            print(f"DEBUG: Connectivity test failed: {error}"),
-            self.show_detailed_test_results_with_fallback(tenant_id, client_id, client_secret, org_url, error)
-        ))
         
-        cancel_button.clicked.connect(lambda: (
-            self.connectivity_thread.terminate(),
-            progress_dialog.reject()
-        ))
+        # Store progress dialog and components for safe access
+        self.current_progress_dialog = progress_dialog
+        self.current_progress_bar = progress_bar
+        self.current_status_label = status_label
+        self.current_test_params = (tenant_id, client_id, client_secret, org_url)
+        
+        # Connect signals to safe methods instead of lambdas
+        self.connectivity_thread.progress_updated.connect(self._on_connectivity_progress)
+        self.connectivity_thread.test_completed.connect(self._on_connectivity_completed)
+        self.connectivity_thread.test_failed.connect(self._on_connectivity_failed)
+        
+        cancel_button.clicked.connect(self._on_connectivity_cancelled)
         
         self.connectivity_thread.start()
         progress_dialog.exec()
+    
+    def _on_connectivity_progress(self, progress: int, status: str):
+        """Safe handler for connectivity test progress updates"""
+        try:
+            if hasattr(self, 'current_progress_bar') and self.current_progress_bar:
+                self.current_progress_bar.setValue(progress)
+            if hasattr(self, 'current_status_label') and self.current_status_label:
+                self.current_status_label.setText(status)
+        except Exception as e:
+            print(f"Warning: Could not update progress: {e}")
+    
+    def _on_connectivity_completed(self, results: dict):
+        """Safe handler for connectivity test completion"""
+        try:
+            if hasattr(self, 'current_progress_dialog') and self.current_progress_dialog:
+                self.current_progress_dialog.accept()
+            
+            if hasattr(self, 'current_test_params') and self.current_test_params:
+                tenant_id, client_id, client_secret, org_url = self.current_test_params
+                print(f"DEBUG: Connectivity test results: {results}")
+                self.show_detailed_test_results_with_connectivity(tenant_id, client_id, client_secret, org_url, results)
+        except Exception as e:
+            print(f"Warning: Could not handle test completion: {e}")
+        finally:
+            self._cleanup_connectivity_test()
+    
+    def _on_connectivity_failed(self, error: str):
+        """Safe handler for connectivity test failure"""
+        try:
+            if hasattr(self, 'current_progress_dialog') and self.current_progress_dialog:
+                self.current_progress_dialog.accept()
+            
+            if hasattr(self, 'current_test_params') and self.current_test_params:
+                tenant_id, client_id, client_secret, org_url = self.current_test_params
+                print(f"DEBUG: Connectivity test failed: {error}")
+                self.show_detailed_test_results_with_fallback(tenant_id, client_id, client_secret, org_url, error)
+        except Exception as e:
+            print(f"Warning: Could not handle test failure: {e}")
+        finally:
+            self._cleanup_connectivity_test()
+    
+    def _on_connectivity_cancelled(self):
+        """Safe handler for connectivity test cancellation"""
+        try:
+            if hasattr(self, 'connectivity_thread') and self.connectivity_thread:
+                self.connectivity_thread.terminate()
+            if hasattr(self, 'current_progress_dialog') and self.current_progress_dialog:
+                self.current_progress_dialog.reject()
+        except Exception as e:
+            print(f"Warning: Could not cancel test: {e}")
+        finally:
+            self._cleanup_connectivity_test()
+    
+    def _cleanup_connectivity_test(self):
+        """Clean up connectivity test resources"""
+        try:
+            self.current_progress_dialog = None
+            self.current_progress_bar = None
+            self.current_status_label = None
+            self.current_test_params = None
+        except Exception:
+            pass
     
     def show_detailed_test_results_with_connectivity(self, tenant_id: str, client_id: str, client_secret: str, org_url: str, connectivity_results: dict):
         """Show detailed test results including real connectivity tests"""
@@ -1065,14 +1283,23 @@ class DynamicsAuthWidget(QWidget):
         from PyQt6.QtCore import Qt
         from PyQt6.QtGui import QFont
         
-        # Create custom dialog
+        # Get theme colors for styling
+        if THEME_MANAGER_AVAILABLE:
+            colors = get_theme_manager().get_theme_definition()['colors']
+        else:
+            colors = {
+                'brand_primary': '#0077B5'
+            }
+        
+        # Create custom dialog with compact sizing (70% scale)
         dialog = QDialog(self)
         dialog.setWindowTitle("🔍 Complete Connection Test Results")
-        dialog.setMinimumSize(520, 360)
-        dialog.setMaximumSize(620, 420)
-        dialog.resize(560, 380)
+        dialog.setMinimumSize(406, 280)  # 70% of 580x400
+        dialog.resize(434, 315)         # 70% of 620x450
         dialog.setModal(True)
         dialog.setWindowFlags(Qt.WindowType.Dialog | Qt.WindowType.WindowTitleHint | Qt.WindowType.WindowCloseButtonHint)
+        # Remove size constraints that cause distortion on move
+        dialog.setSizeGripEnabled(True)
         dialog.setStyleSheet("""
             QDialog {
                 background-color: #f8f9fa;
@@ -1080,13 +1307,13 @@ class DynamicsAuthWidget(QWidget):
         """)
         
         layout = QVBoxLayout(dialog)
-        layout.setContentsMargins(15, 15, 15, 15)
-        layout.setSpacing(8)
+        layout.setContentsMargins(14, 14, 14, 14)  # 70% of 20
+        layout.setSpacing(7)                       # 70% of 10
         
         # Title
         title = QLabel("Complete Authentication Test Results")
-        title.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
-        title.setStyleSheet(f"color: {colors.get('brand_primary', '#0077B5')}; margin-bottom: 4px;")
+        title.setFont(QFont("Segoe UI", 8, QFont.Weight.Bold))  # 70% of 12 ≈ 8
+        title.setStyleSheet(f"color: {colors.get('brand_primary', '#0077B5')}; margin-bottom: 3px;")  # 70% of 4
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(title)
         
@@ -1095,7 +1322,8 @@ class DynamicsAuthWidget(QWidget):
             ("🏢 Tenant ID", tenant_id, connectivity_results.get('tenant_valid', False)),
             ("📱 Client ID", client_id, connectivity_results.get('client_valid', False)),
             ("🔑 Client Secret", client_secret, connectivity_results.get('secret_valid', False)),
-            ("🌐 Organization URL", org_url, connectivity_results.get('org_url_valid', False))
+            ("🌐 Organization URL", org_url, connectivity_results.get('org_url_valid', False)),
+            ("🔍 Data Access", "Contacts API test", connectivity_results.get('data_access_valid', False))
         ]
         
         for component_name, value, is_valid in components:
@@ -1105,30 +1333,41 @@ class DynamicsAuthWidget(QWidget):
         # Overall result
         all_valid = all(result[2] for result in components)
         overall_frame = QFrame()
-        overall_frame.setMinimumHeight(30)
-        overall_frame.setMaximumHeight(35)
-        overall_frame.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        overall_frame.setMinimumHeight(28)  # 70% of 40
+        overall_frame.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         overall_frame.setStyleSheet(f"""
             QFrame {{
                 background-color: {'#d4edda' if all_valid else '#f8d7da'};
-                border: 2px solid {'#28a745' if all_valid else '#dc3545'};
-                border-radius: 4px;
-                padding: 6px;
-                margin-top: 4px;
-                min-height: 30px;
-                max-height: 35px;
+                border: 1px solid {'#28a745' if all_valid else '#dc3545'};  /* 70% of 2px ≈ 1px */
+                border-radius: 3px;        /* 70% of 4px ≈ 3px */
+                padding: 6px;              /* 70% of 8px ≈ 6px */
+                margin-top: 4px;           /* 70% of 6px ≈ 4px */
+                min-height: 28px;          /* 70% of 40px */
             }}
         """)
         
         overall_layout = QHBoxLayout(overall_frame)
-        overall_layout.setContentsMargins(4, 2, 4, 2)
+        overall_layout.setContentsMargins(6, 4, 6, 4)  # 70% of 8,6
         overall_icon = QLabel("✓" if all_valid else "✗")
-        overall_icon.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
-        overall_icon.setMinimumSize(16, 16)
-        overall_icon.setMaximumSize(16, 16)
+        overall_icon.setFont(QFont("Segoe UI", 8, QFont.Weight.Bold))  # 70% of 12 ≈ 8
+        overall_icon.setMinimumSize(11, 11)  # 70% of 16
+        overall_icon.setMaximumSize(11, 11)  # 70% of 16
         overall_icon.setStyleSheet(f"color: {'#28a745' if all_valid else '#dc3545'}; background-color: transparent;")
-        overall_text = QLabel("🎉 Ready for Dynamics 365 connection!" if all_valid else "❌ Authentication setup incomplete")
-        overall_text.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
+        # More specific messaging based on what was actually tested
+        data_access_valid = connectivity_results.get('data_access_valid', False)
+        auth_components_valid = all(connectivity_results.get(key, False) for key in ['tenant_valid', 'client_valid', 'secret_valid', 'org_url_valid'])
+        
+        if all_valid and data_access_valid:
+            message = "🎉 FULL FUNCTIONALITY CONFIRMED! Ready for production use."
+        elif auth_components_valid and not data_access_valid:
+            message = "⚠️ Authentication works, but permissions needed for data access"
+        elif not auth_components_valid:
+            message = "❌ Authentication configuration has issues"
+        else:
+            message = "❌ Connection test incomplete"
+            
+        overall_text = QLabel(message)
+        overall_text.setFont(QFont("Segoe UI", 6, QFont.Weight.Bold))  # 70% of 9 ≈ 6
         overall_text.setStyleSheet(f"color: {'#155724' if all_valid else '#721c24'};")
         overall_text.setWordWrap(True)
         
@@ -1138,24 +1377,23 @@ class DynamicsAuthWidget(QWidget):
         
         # Close button
         button_layout = QHBoxLayout()
-        button_layout.setContentsMargins(0, 8, 0, 0)
+        button_layout.setContentsMargins(0, 11, 0, 0)  # 70% of 15 ≈ 11
         button_layout.addStretch()
         
         close_button = QPushButton("OK")
-        close_button.setMinimumSize(60, 24)
-        close_button.setMaximumSize(80, 28)
+        close_button.setMinimumSize(56, 22)  # 70% of 80x32
         close_button.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         close_button.setStyleSheet("""
             QPushButton {
                 background-color: #0077B5;
                 color: white;
                 border: none;
-                border-radius: 4px;
-                font-size: 10px;
+                border-radius: 4px;        /* 70% of 6px ≈ 4px */
+                font-size: 8px;            /* 70% of 11px ≈ 8px */
                 font-weight: bold;
-                padding: 4px 12px;
-                min-width: 60px;
-                min-height: 24px;
+                padding: 6px 11px;         /* 70% of 8px 16px ≈ 6px 11px */
+                min-width: 56px;           /* 70% of 80px */
+                min-height: 22px;          /* 70% of 32px */
             }
             QPushButton:hover {
                 background-color: #005885;
@@ -1266,37 +1504,40 @@ class DynamicsAuthWidget(QWidget):
     def create_connectivity_test_result_item(self, component_name: str, value: str, is_valid: bool, connectivity_results: dict) -> QFrame:
         """Create a connectivity test result item widget with detailed test info"""
         print(f"DEBUG: Creating connectivity test item - {component_name}: {is_valid}, value: {value[:20]}...")
+        
+        # Special handling for Data Access errors to provide better guidance
+        if component_name == "🔍 Data Access" and not is_valid:
+            return self.create_enhanced_data_access_error_item(connectivity_results)
+        
         frame = QFrame()
-        frame.setMinimumHeight(75)
-        frame.setMaximumHeight(85)
-        frame.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        frame.setMinimumHeight(49)  # 70% of 70
+        frame.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         frame.setStyleSheet(f"""
             QFrame {{
                 background-color: {'#d4edda' if is_valid else '#f8d7da'};
-                border-left: 3px solid {'#28a745' if is_valid else '#dc3545'};
-                border-radius: 3px;
-                padding: 6px;
-                margin: 1px 0px;
-                min-height: 60px;
-                max-height: 70px;
+                border-left: 2px solid {'#28a745' if is_valid else '#dc3545'};  /* 70% of 3px ≈ 2px */
+                border-radius: 2px;    /* 70% of 3px ≈ 2px */
+                padding: 6px;          /* 70% of 8px ≈ 6px */
+                margin: 1px 0px;       /* 70% of 2px ≈ 1px */
+                min-height: 49px;      /* 70% of 70px */
             }}
         """)
         
         layout = QHBoxLayout(frame)
-        layout.setContentsMargins(8, 4, 8, 4)
-        layout.setSpacing(10)
+        layout.setContentsMargins(8, 6, 8, 6)  # 70% of 12,8
+        layout.setSpacing(8)                   # 70% of 12
         
         # Status icon - ensure visibility
         status_icon = QLabel("✓" if is_valid else "✗")
-        status_icon.setFont(QFont("Segoe UI", 16, QFont.Weight.Bold))
-        status_icon.setMinimumSize(24, 24)
-        status_icon.setMaximumSize(24, 24)
+        status_icon.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))  # 70% of 16 ≈ 11
+        status_icon.setMinimumSize(17, 17)  # 70% of 24
+        status_icon.setMaximumSize(17, 17)  # 70% of 24
         status_icon.setAlignment(Qt.AlignmentFlag.AlignCenter)
         status_icon.setStyleSheet(f"""
             color: {'#28a745' if is_valid else '#dc3545'};
             background-color: transparent;
             border: none;
-            padding: 2px;
+            padding: 1px;              /* 70% of 2px ≈ 1px */
         """)
         status_icon.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
         layout.addWidget(status_icon)
@@ -1306,46 +1547,46 @@ class DynamicsAuthWidget(QWidget):
         info_layout.setSpacing(1)
         info_layout.setContentsMargins(0, 0, 0, 0)
         
-        # Component name and status - larger font and ensure visibility
+        # Component name and status - scaled font and ensure visibility
         name_status = f"{component_name} - {'Valid' if is_valid else 'Invalid'}"
         name_label = QLabel(name_status)
-        name_label.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
+        name_label.setFont(QFont("Segoe UI", 8, QFont.Weight.Bold))  # 70% of 11 ≈ 8
         name_label.setStyleSheet(f"""
             color: {'#155724' if is_valid else '#721c24'};
             background-color: transparent;
-            padding: 2px;
-            min-height: 16px;
+            padding: 1px;       /* 70% of 2px ≈ 1px */
+            min-height: 11px;   /* 70% of 16px ≈ 11px */
         """)
         name_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         
-        # Connectivity test details - larger font
+        # Connectivity test details - scaled font
         test_details = self.get_connectivity_test_details(component_name, is_valid, connectivity_results)
         test_label = QLabel(test_details)
-        test_label.setFont(QFont("Segoe UI", 9))
+        test_label.setFont(QFont("Segoe UI", 6))  # 70% of 9 ≈ 6
         test_label.setStyleSheet("""
             color: #5a6c7d; 
             font-style: italic;
             background-color: transparent;
             padding: 1px;
-            min-height: 14px;
+            min-height: 10px;   /* 70% of 14px ≈ 10px */
         """)
         test_label.setWordWrap(True)
         test_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         
-        # Value display - larger font
+        # Value display - scaled font
         display_value = value
         if "Secret" in component_name:
-            display_value = "•" * min(len(value), 20) + " (hidden)"
-        elif len(value) > 40:
-            display_value = value[:37] + "..."
+            display_value = "•" * min(len(value), 14) + " (hidden)"  # 70% of 20 ≈ 14
+        elif len(value) > 28:  # 70% of 40 ≈ 28
+            display_value = value[:26] + "..."  # 70% of 37 ≈ 26
             
         value_label = QLabel(display_value)
-        value_label.setFont(QFont("Segoe UI", 9))
+        value_label.setFont(QFont("Segoe UI", 6))  # 70% of 9 ≈ 6
         value_label.setStyleSheet(f"""
             color: {'#6c757d' if is_valid else '#721c24'};
             background-color: transparent;
             padding: 1px;
-            min-height: 14px;
+            min-height: 10px;   /* 70% of 14px ≈ 10px */
         """)
         value_label.setWordWrap(True)
         value_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
@@ -1357,6 +1598,408 @@ class DynamicsAuthWidget(QWidget):
         layout.addLayout(info_layout, 1)
         
         return frame
+    
+    def create_enhanced_data_access_error_item(self, connectivity_results: dict) -> QFrame:
+        """Create an enhanced error display for Data Access failures with clear guidance"""
+        frame = QFrame()
+        frame.setMinimumHeight(70)  # Taller for more content
+        frame.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        frame.setStyleSheet("""
+            QFrame {
+                background-color: #fff3cd;  /* Warning yellow background */
+                border-left: 3px solid #ffc107;  /* Warning yellow border */
+                border-radius: 3px;
+                padding: 8px;
+                margin: 1px 0px;
+                min-height: 70px;
+            }
+        """)
+        
+        layout = QVBoxLayout(frame)
+        layout.setContentsMargins(4, 4, 4, 4)
+        layout.setSpacing(4)
+        
+        # Header with icon and title
+        header_layout = QHBoxLayout()
+        header_layout.setSpacing(6)
+        
+        # Warning icon
+        icon_label = QLabel("⚠️")
+        icon_label.setFont(QFont("Segoe UI", 10, QFont.Weight.Bold))
+        icon_label.setStyleSheet("color: #856404; background-color: transparent;")
+        icon_label.setMinimumSize(15, 15)
+        icon_label.setMaximumSize(15, 15)
+        header_layout.addWidget(icon_label)
+        
+        # Title
+        title_label = QLabel("Data Access - Permissions Required")
+        title_label.setFont(QFont("Segoe UI", 8, QFont.Weight.Bold))
+        title_label.setStyleSheet("color: #856404; background-color: transparent;")
+        header_layout.addWidget(title_label)
+        header_layout.addStretch()
+        
+        layout.addLayout(header_layout)
+        
+        # Error message
+        error_msg = connectivity_results.get('data_access_error', 'Data access failed')
+        error_label = QLabel(f"❌ {error_msg}")
+        error_label.setFont(QFont("Segoe UI", 6))
+        error_label.setStyleSheet("color: #721c24; background-color: transparent; padding: 2px;")
+        error_label.setWordWrap(True)
+        layout.addWidget(error_label)
+        
+        # Fix guidance
+        fix_button = QPushButton("🔧 How to Fix This")
+        fix_button.setFont(QFont("Segoe UI", 6, QFont.Weight.Bold))
+        fix_button.setStyleSheet("""
+            QPushButton {
+                background-color: #ffc107;
+                color: #856404;
+                border: none;
+                border-radius: 3px;
+                padding: 4px 8px;
+                text-align: left;
+                min-height: 18px;
+            }
+            QPushButton:hover {
+                background-color: #e0a800;
+            }
+        """)
+        fix_button.clicked.connect(lambda: self.show_data_access_fix_guidance(connectivity_results))
+        layout.addWidget(fix_button)
+        
+        return frame
+    
+    def show_data_access_fix_guidance(self, connectivity_results: dict):
+        """Show comprehensive guidance on how to fix data access permissions for ordinary users"""
+        from PyQt6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QTextEdit, QTabWidget, QWidget, QScrollArea, QTextBrowser
+        from PyQt6.QtCore import Qt
+        from PyQt6.QtGui import QFont
+        
+        # Get current Client ID from the form
+        current_client_id = self.client_id_edit.text().strip()
+        
+        dialog = QDialog(self)
+        dialog.setWindowTitle("🔧 Complete Setup Guide - Fix Data Access")
+        dialog.setMinimumSize(600, 500)
+        dialog.resize(650, 550)
+        dialog.setModal(True)
+        
+        layout = QVBoxLayout(dialog)
+        layout.setContentsMargins(15, 15, 15, 15)
+        layout.setSpacing(10)
+        
+        # Title
+        title = QLabel("🔧 Complete Setup Guide: Fix Dynamics 365 Data Access")
+        title.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
+        title.setStyleSheet("color: #0077B5; margin-bottom: 5px;")
+        layout.addWidget(title)
+        
+        # Problem explanation
+        problem_label = QLabel("❌ <b>Issue:</b> Authentication works, but data access fails due to incomplete setup.")
+        problem_label.setFont(QFont("Segoe UI", 9))
+        problem_label.setWordWrap(True)
+        problem_label.setStyleSheet("color: #721c24; background-color: #f8d7da; padding: 8px; border-radius: 4px;")
+        layout.addWidget(problem_label)
+        
+        # Tab widget for two-part solution
+        tab_widget = QTabWidget()
+        tab_widget.setStyleSheet("""
+            QTabWidget::pane {
+                border: 1px solid #dee2e6;
+                background-color: #ffffff;
+            }
+            QTabBar::tab {
+                background-color: #f8f9fa;
+                padding: 8px 16px;
+                margin-right: 2px;
+                border-top-left-radius: 4px;
+                border-top-right-radius: 4px;
+            }
+            QTabBar::tab:selected {
+                background-color: #0077B5;
+                color: white;
+            }
+        """)
+        
+        # Step 1 Tab: Azure AD Permissions
+        step1_widget = QWidget()
+        step1_layout = QVBoxLayout(step1_widget)
+        step1_layout.setContentsMargins(15, 15, 15, 15)
+        
+        step1_title = QLabel("1️⃣ Azure AD App Permissions")
+        step1_title.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
+        step1_title.setStyleSheet("color: #0077B5; margin-bottom: 8px;")
+        step1_layout.addWidget(step1_title)
+        
+        # Add clickable links instruction
+        step1_instruction = QLabel("💡 Tip: Blue underlined links below are clickable and will open in your browser")
+        step1_instruction.setFont(QFont("Segoe UI", 8))
+        step1_instruction.setStyleSheet("color: #6c757d; font-style: italic; margin-bottom: 5px;")
+        step1_layout.addWidget(step1_instruction)
+        
+        step1_content = QTextBrowser()
+        step1_content.setMaximumHeight(250)
+        # Enable clickable links
+        step1_content.setOpenExternalLinks(True)
+        step1_html = """
+<div style="font-family: Segoe UI; font-size: 10px; line-height: 1.5;">
+<b>🔗 Add Azure AD Permissions:</b>
+<ol>
+<li><b>Go to:</b> <a href="https://portal.azure.com" style="color: #0077B5; text-decoration: underline; font-weight: bold;">🔗 Azure Portal (portal.azure.com)</a></li>
+<li><b>Navigate:</b> Azure Active Directory → App registrations</li>
+<li><b>Find your app:</b> "PST To Dynamics Import Tool"</li>
+<li><b>Click:</b> "API permissions" (in left menu)</li>
+<li><b>Add permission:</b> Click "+ Add a permission"</li>
+<li><b>Select:</b> "Dynamics CRM" from the APIs list</li>
+<li><b>Choose:</b> "Delegated permissions"</li>
+<li><b>Check:</b> ✅ "user_impersonation"</li>
+<li><b>Click:</b> "Add permissions"</li>
+<li><b>🚨 CRITICAL:</b> Click "Grant admin consent for [your organization]"</li>
+<li><b>Verify:</b> Status shows "Granted for [your organization]" with green checkmark</li>
+</ol>
+</div>
+"""
+        step1_content.setHtml(step1_html)
+        step1_content.setStyleSheet("background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; padding: 10px;")
+        step1_layout.addWidget(step1_content)
+        
+        tab_widget.addTab(step1_widget, "Step 1: Azure AD")
+        
+        # Step 2 Tab: Dynamics 365 Application User
+        step2_widget = QWidget()
+        step2_layout = QVBoxLayout(step2_widget)
+        step2_layout.setContentsMargins(15, 15, 15, 15)
+        
+        step2_title = QLabel("2️⃣ Dynamics 365 Application User")
+        step2_title.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
+        step2_title.setStyleSheet("color: #0077B5; margin-bottom: 8px;")
+        step2_layout.addWidget(step2_title)
+        
+        # Add clickable links instruction
+        step2_instruction = QLabel("💡 Tip: Blue underlined links below are clickable and will open in your browser")
+        step2_instruction.setFont(QFont("Segoe UI", 8))
+        step2_instruction.setStyleSheet("color: #6c757d; font-style: italic; margin-bottom: 5px;")
+        step2_layout.addWidget(step2_instruction)
+        
+        step2_content = QTextBrowser()
+        step2_content.setMaximumHeight(250)
+        # Enable clickable links
+        step2_content.setOpenExternalLinks(True)
+        step2_html = f"""
+<div style="font-family: Segoe UI; font-size: 10px; line-height: 1.5;">
+<b>👤 Create Application User in Dynamics 365:</b>
+<ol>
+<li><b>Go to:</b> <a href="https://admin.powerplatform.microsoft.com" style="color: #0077B5; text-decoration: underline; font-weight: bold;">🔗 Power Platform Admin Center</a></li>
+<li><b>Navigate:</b> Environments → [Your Environment] → Settings</li>
+<li><b>Click:</b> "Users + permissions" → "Application users"</li>
+<li><b>Click:</b> "+ New app user"</li>
+<li><b>Add an app:</b> Click "Add an app"</li>
+<li><b>Select:</b> Your "PST To Dynamics Import Tool" app (use Client ID: <code>{current_client_id}</code> to find it)</li>
+<li><b>Business Unit Field:</b> 
+   <ul style="margin-top: 5px;">
+   <li>📝 <b>Type your organization name</b> (e.g., "Contoso", "Your Company Name")</li>
+   <li>📝 <b>OR try common patterns:</b> "Root Business Unit", "[OrganizationName]", "Default Business Unit"</li>
+   <li>📝 <b>If dropdown shows no results:</b> Leave it blank and continue - it will use default</li>
+   <li>💡 <b>Tip:</b> This is usually your main organization/company name from Dynamics 365</li>
+   </ul>
+</li>
+<li><b>🔐 CRITICAL - Assign Security Roles:</b>
+   <ul>
+   <li>✅ <b>System Administrator</b> (full access) OR</li>
+   <li>✅ <b>System Customizer</b> + <b>Sales Manager</b> (contacts access) OR</li>
+   <li>✅ Custom role with Contact: Create, Read, Write, Delete permissions</li>
+   </ul>
+</li>
+<li><b>Click:</b> "Create" to save the application user</li>
+<li><b>Verify:</b> Application user appears in the list with "Enabled" status</li>
+</ol>
+</div>
+"""
+        step2_content.setHtml(step2_html)
+        step2_content.setStyleSheet("background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 4px; padding: 10px;")
+        step2_layout.addWidget(step2_content)
+        
+        tab_widget.addTab(step2_widget, "Step 2: D365 User")
+        
+        layout.addWidget(tab_widget)
+        
+        # Important notes
+        notes_label = QLabel("⚠️ <b>Important Notes:</b>")
+        notes_label.setFont(QFont("Segoe UI", 9, QFont.Weight.Bold))
+        notes_label.setStyleSheet("color: #856404; margin-top: 10px;")
+        layout.addWidget(notes_label)
+        
+        notes_content = QLabel("""• You need <b>Global Administrator</b> or <b>Application Administrator</b> rights in Azure AD for Step 1
+• You need <b>System Administrator</b> rights in Dynamics 365 for Step 2  
+• Both steps are required - Azure AD permissions alone are not sufficient
+• After completing both steps, restart this application and test again
+• If you don't have admin rights, ask your IT administrator to complete these steps""")
+        notes_content.setFont(QFont("Segoe UI", 8))
+        notes_content.setWordWrap(True)
+        notes_content.setStyleSheet("color: #856404; background-color: #fff3cd; padding: 8px; border-radius: 4px; border-left: 3px solid #ffc107;")
+        layout.addWidget(notes_content)
+        
+        # Buttons
+        button_layout = QHBoxLayout()
+        button_layout.addStretch()
+        
+        # Help button for more info
+        help_button = QPushButton("📞 Need Help?")
+        help_button.setFont(QFont("Segoe UI", 9))
+        help_button.setStyleSheet("""
+            QPushButton {
+                background-color: #6c757d;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                padding: 8px 16px;
+                margin-right: 10px;
+            }
+            QPushButton:hover {
+                background-color: #5a6268;
+            }
+        """)
+        help_button.clicked.connect(lambda: self.show_additional_help_dialog())
+        button_layout.addWidget(help_button)
+        
+        # Close button
+        close_button = QPushButton("✅ I'll Complete These Steps")
+        close_button.setFont(QFont("Segoe UI", 10, QFont.Weight.Bold))
+        close_button.setStyleSheet("""
+            QPushButton {
+                background-color: #28a745;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                padding: 8px 16px;
+                min-width: 120px;
+            }
+            QPushButton:hover {
+                background-color: #218838;
+            }
+        """)
+        close_button.clicked.connect(dialog.accept)
+        button_layout.addWidget(close_button)
+        
+        layout.addLayout(button_layout)
+        
+        dialog.exec()
+    
+    def show_additional_help_dialog(self):
+        """Show additional help and troubleshooting information"""
+        from PyQt6.QtWidgets import QDialog, QVBoxLayout, QLabel, QPushButton, QTextEdit, QTextBrowser
+        from PyQt6.QtCore import Qt
+        from PyQt6.QtGui import QFont
+        
+        dialog = QDialog(self)
+        dialog.setWindowTitle("📞 Additional Help & Troubleshooting")
+        dialog.setMinimumSize(550, 400)
+        dialog.resize(600, 450)
+        dialog.setModal(True)
+        
+        layout = QVBoxLayout(dialog)
+        layout.setContentsMargins(15, 15, 15, 15)
+        layout.setSpacing(10)
+        
+        # Title
+        title = QLabel("📞 Additional Help & Troubleshooting")
+        title.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
+        title.setStyleSheet("color: #0077B5; margin-bottom: 5px;")
+        layout.addWidget(title)
+        
+        # Help content
+        help_content = QTextBrowser()
+        # Enable clickable links
+        help_content.setOpenExternalLinks(True)
+        help_html = """
+<div style="font-family: Segoe UI; font-size: 10px; line-height: 1.5;">
+
+<h3 style="color: #0077B5;">🔍 Common Issues & Solutions:</h3>
+
+<b>❓ "I don't have admin rights"</b><br/>
+→ Ask your IT administrator to complete both setup steps<br/>
+→ Send them this guide: they'll know what to do<br/>
+→ You'll need both Azure AD and Dynamics 365 admin permissions<br/><br/>
+
+<b>❓ "Can't find my app in Azure Portal"</b><br/>
+→ Make sure you're in the correct Azure AD tenant<br/>
+→ Check that the app name is exactly "PST To Dynamics Import Tool"<br/>
+→ Try searching by the Client ID instead of name<br/><br/>
+
+<b>❓ "Dynamics CRM permission not available"</b><br/>
+→ Make sure you have Dynamics 365 licenses in your tenant<br/>
+→ The API may be called "Common Data Service" in some tenants<br/>
+→ Look for "CRM" or "Dynamics" in the API list<br/><br/>
+
+<b>❓ "Can't find Application Users in Dynamics 365"</b><br/>
+→ Make sure you're in the Power Platform Admin Center (not Dynamics 365 web app)<br/>
+→ You need System Administrator role in Dynamics 365<br/>
+→ Navigate: Environments → [Your Environment] → Settings → Users + permissions<br/><br/>
+
+<b>❓ "Business Unit dropdown shows no results"</b><br/>
+→ Try typing your company/organization name (e.g., "Contoso", "Acme Corp")<br/>
+→ Try common patterns: "Root Business Unit", "Default Business Unit", "[YourOrgName]"<br/>
+→ If nothing works, leave it blank - the system will use the default business unit<br/>
+→ Business unit names match your organization's structure in Dynamics 365<br/><br/>
+
+<b>❓ "Still getting permission errors after setup"</b><br/>
+→ Wait 10-15 minutes for permissions to propagate<br/>
+→ Make sure you granted admin consent (step is often missed)<br/>
+→ Verify the Application User has correct security roles assigned<br/>
+→ Try logging out and back into Azure/Dynamics 365<br/><br/>
+
+<h3 style="color: #0077B5;">🆘 Need More Help?</h3>
+
+<b>Contact Information:</b><br/>
+• Your IT Administrator (for permission issues)<br/>
+• Microsoft Support (for Azure AD or Dynamics 365 specific issues)<br/>
+• Application Support: Check the application documentation for contact details<br/><br/>
+
+<b>What to include when asking for help:</b><br/>
+• Screenshot of the error message from this application<br/>
+• Your Azure AD tenant domain name<br/>
+• Your Dynamics 365 organization URL<br/>
+• Whether you completed both setup steps<br/>
+• Any specific error messages from Azure Portal or Power Platform Admin Center<br/>
+
+</div>
+"""
+        help_content.setHtml(help_html)
+        help_content.setStyleSheet("""
+            QTextEdit {
+                background-color: #f8f9fa;
+                border: 1px solid #dee2e6;
+                border-radius: 4px;
+                padding: 12px;
+            }
+        """)
+        layout.addWidget(help_content)
+        
+        # Close button
+        button_layout = QVBoxLayout()
+        close_button = QPushButton("✅ Back to Setup Guide")
+        close_button.setFont(QFont("Segoe UI", 10, QFont.Weight.Bold))
+        close_button.setStyleSheet("""
+            QPushButton {
+                background-color: #0077B5;
+                color: white;
+                border: none;
+                border-radius: 4px;
+                padding: 8px 16px;
+                min-width: 120px;
+            }
+            QPushButton:hover {
+                background-color: #005885;
+            }
+        """)
+        close_button.clicked.connect(dialog.accept)
+        
+        button_layout.addWidget(close_button)
+        button_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addLayout(button_layout)
+        
+        dialog.exec()
     
     def get_connectivity_test_details(self, component_name: str, is_valid: bool, connectivity_results: dict) -> str:
         """Get detailed connectivity test results for each component"""
@@ -1380,6 +2023,17 @@ class DynamicsAuthWidget(QWidget):
                 return "✓ Dynamics 365 organization accessible"
             else:
                 return f"✗ {connectivity_results.get('org_error', 'Organization URL not accessible')}"
+        elif component_name == "🔍 Data Access":
+            if is_valid:
+                contacts_count = connectivity_results.get('contacts_count', 0)
+                return f"✓ Successfully accessed Dynamics 365 data ({contacts_count} contacts retrieved)"
+            else:
+                error_msg = connectivity_results.get('data_access_error', 'Data access failed')
+                details = connectivity_results.get('data_access_details', '')
+                if details:
+                    return f"✗ {error_msg}\n   {details}"
+                else:
+                    return f"✗ {error_msg}"
         return "Test completed"
     
     def get_test_criteria_text(self, component_name: str, is_valid: bool) -> str:
@@ -1400,6 +2054,10 @@ class DynamicsAuthWidget(QWidget):
             "🌐 Organization URL": {
                 "valid": "✓ Format: Valid Dynamics 365 URL (*.crm*.dynamics.com)",
                 "invalid": "✗ Expected: Dynamics 365 URL format (orgname.crm.dynamics.com)"
+            },
+            "🔍 Data Access": {
+                "valid": "✓ Real Data Access: Contacts API accessed successfully with proper permissions",
+                "invalid": "✗ Data Access Failed: Cannot retrieve live Dynamics 365 data (permissions needed)"
             }
         }
         

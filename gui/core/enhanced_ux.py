@@ -322,11 +322,13 @@ class EnhancedTooltip(QLabel):
         )
         
         # Adjust if tooltip would go off screen
-        screen_geometry = QApplication.primaryScreen().geometry()
-        if tooltip_pos.x() + self.width() > screen_geometry.width():
-            tooltip_pos.setX(screen_geometry.width() - self.width() - 10)
-        if tooltip_pos.x() < 10:
-            tooltip_pos.setX(10)
+        app_instance = QApplication.instance()
+        if app_instance:
+            screen_geometry = app_instance.primaryScreen().geometry()
+            if tooltip_pos.x() + self.width() > screen_geometry.width():
+                tooltip_pos.setX(screen_geometry.width() - self.width() - 10)
+            if tooltip_pos.x() < 10:
+                tooltip_pos.setX(10)
         
         # Convert to parent coordinates
         parent_pos = self.parent().mapFromGlobal(tooltip_pos)

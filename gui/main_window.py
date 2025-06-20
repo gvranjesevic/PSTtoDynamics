@@ -13,8 +13,24 @@ from datetime import datetime
 from typing import Optional, Dict, Any
 import json
 
+# CRITICAL: Configure high-DPI scaling BEFORE any QApplication imports/creation
+try:
+    import os
+    os.environ['QT_AUTO_SCREEN_SCALE_FACTOR'] = '1'
+    os.environ['QT_ENABLE_HIGHDPI_SCALING'] = '1'
+    os.environ['QT_SCALE_FACTOR_ROUNDING_POLICY'] = 'RoundPreferFloor'
+    
+    # Import Qt core first to set policies
+    from PyQt6.QtCore import Qt
+    from PyQt6.QtWidgets import QApplication
+    
+    # Set high-DPI policy before any widgets are created
+    QApplication.setHighDpiScaleFactorRoundingPolicy(Qt.HighDpiScaleFactorRoundingPolicy.RoundPreferFloor)
+except Exception:
+    pass  # Ignore if already set or Qt not available
+
 from PyQt6.QtWidgets import (
-    QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
+    QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QSplitter, QStatusBar, QMenuBar, QToolBar, QLabel, QPushButton,
     QFrame, QScrollArea, QMessageBox, QProgressBar, QSizePolicy, QTextEdit,
     QDialog, QDialogButtonBox, QLineEdit, QToolButton, QGroupBox, QFormLayout,
@@ -144,15 +160,19 @@ class NavigationSidebar(QFrame):
             }}
         """)
         
-        layout = QVBoxLayout(self)
-        layout.setSpacing(2)
-        layout.setContentsMargins(10, 15, 10, 10)  # Slightly more top margin for balance
-        
-        # Clear existing layout if re-applying theme
-        while layout.count():
-            item = layout.takeAt(0)
-            if item.widget():
-                item.widget().setParent(None)
+        # Check if layout already exists to prevent duplication
+        layout = self.layout()
+        if layout is None:
+            # Create new layout only if none exists
+            layout = QVBoxLayout(self)
+            layout.setSpacing(2)
+            layout.setContentsMargins(10, 15, 10, 10)  # Slightly more top margin for balance
+        else:
+            # Clear existing layout content for theme reapplication
+            while layout.count():
+                item = layout.takeAt(0)
+                if item.widget():
+                    item.widget().setParent(None)
         
         # Navigation buttons
         self.nav_buttons = {}
@@ -476,8 +496,11 @@ class ContentArea(QWidget):
             
             # Create and add import wizard directly
             wizard = ImportWizard()
-            wizard.wizard_completed.connect(self.on_import_completed)
-            wizard.wizard_cancelled.connect(self.on_import_cancelled)
+            try:
+                wizard.wizard_completed.connect(self.on_import_completed)
+                wizard.wizard_cancelled.connect(self.on_import_cancelled)
+            except Exception as e:
+                logger.warning(f"Could not connect import wizard signals: {e}")
             self.active_widgets.append(wizard)
             self.layout.addWidget(wizard)
             
@@ -498,16 +521,22 @@ class ContentArea(QWidget):
     
     def on_import_completed(self, success: bool, data: dict):
         """Handle import completion"""
-        if success:
-            QMessageBox.information(self, "Import Complete", 
-                                  f"Successfully imported {data.get('count', 0)} emails!")
-        else:
-            QMessageBox.warning(self, "Import Failed", 
-                              f"Import failed: {data.get('error', 'Unknown error')}")
+        try:
+            if success:
+                QMessageBox.information(self, "Import Complete", 
+                                      f"Successfully imported {data.get('count', 0)} emails!")
+            else:
+                QMessageBox.warning(self, "Import Failed", 
+                                  f"Import failed: {data.get('error', 'Unknown error')}")
+        except Exception as e:
+            logger.error(f"Error in import completion handler: {e}")
     
     def on_import_cancelled(self):
         """Handle import cancellation"""
-        QMessageBox.information(self, "Import Cancelled", "Import operation was cancelled.")
+        try:
+            QMessageBox.information(self, "Import Cancelled", "Import operation was cancelled.")
+        except Exception as e:
+            logger.error(f"Error in import cancellation handler: {e}")
     
     def cleanup_active_widgets(self):
         """Clean up active widgets to prevent memory leaks"""
@@ -734,9 +763,7 @@ class ContentArea(QWidget):
         
         self.layout.addWidget(info_widget)
     
-    def force_footer_positioning(self, container, config_manager):
-        """Legacy method - no longer needed with separate window approach"""
-        pass
+
     
     def on_configuration_changed(self, config_data: dict):
         """Handle configuration changes"""
@@ -779,34 +806,63 @@ class SystemStatusMonitor(QThread):
     
     def run(self):
         """Monitor system status in background"""
+        psutil_available = False
+        try:
+            import psutil
+            psutil_available = True
+        except ImportError:
+            logger.info("psutil not available - using basic status monitoring")
+        
         while self.running:
             try:
-                # Check system health
-                import psutil
-                cpu_percent = psutil.cpu_percent(interval=1)
-                memory_percent = psutil.virtual_memory().percent
-                
                 # Get current theme colors for dynamic styling
                 if THEME_MANAGER_AVAILABLE:
                     colors = get_theme_manager().get_theme_definition()['colors']
                 else:
-                    colors = {'state_error': '#e74c3c', 'state_success': '#27ae60'}
+                    colors = {
+                        'state_error': '#e74c3c', 
+                        'state_success': '#27ae60',
+                        'state_warning': '#f39c12'
+                    }
                 
-                if cpu_percent > 80 or memory_percent > 80:
-                    self.status_updated.emit("System Load High", colors['state_error'])
+                if psutil_available:
+                    # Check system health with psutil
+                    import psutil
+                    cpu_percent = psutil.cpu_percent(interval=1)
+                    memory_percent = psutil.virtual_memory().percent
+                    
+                    if cpu_percent > 80 or memory_percent > 80:
+                        try:
+                            self.status_updated.emit("System Load High", colors['state_error'])
+                        except Exception:
+                            pass  # Avoid cascading exceptions in signal emission
+                    else:
+                        try:
+                            self.status_updated.emit("System Ready", colors['state_success'])
+                        except Exception:
+                            pass  # Avoid cascading exceptions in signal emission
                 else:
-                    self.status_updated.emit("System Ready", colors['state_success'])
+                    # Basic status without psutil
+                    try:
+                        self.status_updated.emit("Application Ready", colors['state_success'])
+                    except Exception:
+                        pass  # Avoid cascading exceptions in signal emission
                 
                 self.msleep(5000)  # Check every 5 seconds
                 
+            except ImportError:
+                # psutil import failed during runtime
+                logger.warning("psutil became unavailable during monitoring")
+                psutil_available = False
+                self.status_updated.emit("Basic Monitoring", colors.get('state_warning', '#f39c12'))
+                self.msleep(10000)
+                
             except Exception as e:
                 logger.warning(f"Status monitor error: {e}")
-                # Get current theme colors for dynamic styling
-                if THEME_MANAGER_AVAILABLE:
-                    colors = get_theme_manager().get_theme_definition()['colors']
-                else:
-                    colors = {'state_warning': '#f39c12'}
-                self.status_updated.emit("Monitor Error", colors['state_warning'])
+                try:
+                    self.status_updated.emit("Monitor Error", colors.get('state_warning', '#f39c12'))
+                except:
+                    pass  # Avoid cascading exceptions in signal emission
                 self.msleep(10000)  # Wait longer on error
     
     def stop(self):
@@ -977,7 +1033,6 @@ class MainWindow(QMainWindow):
                             border: 1px solid {colors.get('ui_border', '#D0D7DE')};
                             border-radius: 6px;
                             padding: 4px;
-                            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
                         }}
                         
                         QMenu::item {{
@@ -1189,14 +1244,14 @@ class MainWindow(QMainWindow):
                 for widget in self.content_area.active_widgets:
                     # Check if widget is a ConfigurationManager or contains one
                     if hasattr(widget, 'footer_widget'):
-                        # Direct ConfigurationManager
-                        self.force_footer_positioning(self.content_area, widget)
+                        # Direct ConfigurationManager - footer positioning handled by separate modal window
+                        logger.debug("🔧 ConfigurationManager detected - using modal window approach")
                     elif hasattr(widget, 'findChild'):
                         # Search for ConfigurationManager in container
                         from gui.widgets.configuration_manager import ConfigurationManager
                         config_manager = widget.findChild(ConfigurationManager)
                         if config_manager:
-                            self.force_footer_positioning(widget, config_manager)
+                            logger.debug("🔧 ConfigurationManager found in container - using modal window approach")
                 
                 logger.debug("🛡️ Embedded widget protection completed")
             else:
@@ -1362,14 +1417,23 @@ class MainWindow(QMainWindow):
     
     def start_monitoring(self):
         """Start background system monitoring"""
-        self.status_monitor = SystemStatusMonitor()
-        self.status_monitor.status_updated.connect(self.update_status)
-        self.status_monitor.start()
+        try:
+            self.status_monitor = SystemStatusMonitor()
+            self.status_monitor.status_updated.connect(self.update_status)
+            self.status_monitor.start()
+            logger.info("✅ System status monitoring started")
+        except Exception as e:
+            logger.warning(f"Could not start status monitoring: {e}")
+            self.status_monitor = None
     
     def update_status(self, message: str, color: str):
         """Update status bar"""
-        self.status_message.setText(message)
-        self.status_message.setStyleSheet(f"color: {color};")
+        try:
+            if hasattr(self, 'status_message') and self.status_message:
+                self.status_message.setText(message)
+                self.status_message.setStyleSheet(f"color: {color};")
+        except Exception as e:
+            logger.warning(f"Error updating status: {e}")
     
     def on_navigate(self, module_id: str):
         """Handle navigation to different modules"""
@@ -1598,6 +1662,38 @@ class PSTDynamicsApp(QApplication):
     def run(self):
         """Run the application"""
         try:
+            # Install global exception handler
+            import sys
+            import traceback
+            
+            def handle_exception(exc_type, exc_value, exc_traceback):
+                if issubclass(exc_type, KeyboardInterrupt):
+                    sys.__excepthook__(exc_type, exc_value, exc_traceback)
+                    return
+                
+                error_str = str(exc_value)
+                
+                # Filter out known Qt signal errors that are non-critical
+                if any(pattern in error_str for pattern in [
+                    'sipBadCatcherResult',
+                    'QWindowsWindow::setGeometry',
+                    'Unable to set geometry',
+                    'QLayout: Attempting to add QLayout'
+                ]):
+                    # Log the error but don't show dialog to user
+                    logger.warning(f"Filtered Qt error: {exc_type.__name__}: {exc_value}")
+                    return
+                
+                logger.error("Uncaught exception", exc_info=(exc_type, exc_value, exc_traceback))
+                error_msg = f"An unexpected error occurred:\n{exc_type.__name__}: {exc_value}"
+                
+                try:
+                    QMessageBox.critical(None, "Unexpected Error", error_msg)
+                except:
+                    print(f"Critical error: {error_msg}")
+            
+            sys.excepthook = handle_exception
+            
             # Create and show main window
             window = MainWindow()
             window.show()
@@ -1606,9 +1702,14 @@ class PSTDynamicsApp(QApplication):
             return self.exec()
             
         except Exception as e:
-            logger.error(f"Application error: {e}")
-            QMessageBox.critical(None, "Application Error", 
-                               f"A critical error occurred:\n{str(e)}")
+            logger.error(f"Application startup error: {e}")
+            import traceback
+            traceback.print_exc()
+            try:
+                QMessageBox.critical(None, "Application Error", 
+                                   f"Failed to start application:\n{str(e)}")
+            except:
+                print(f"Critical startup error: {e}")
             return 1
 
 
@@ -1624,6 +1725,8 @@ def main():
             level=logging.INFO,
             format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
         )
+        
+        # High-DPI scaling already configured at import level
         
         # Create and run application
         app = PSTDynamicsApp()

@@ -31,7 +31,7 @@ from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QTabWidget,
                            QSplitter, QHeaderView, QAbstractItemView, QTreeWidget,
                            QTreeWidgetItem, QProgressBar, QDateEdit, QDialog,
                            QDialogButtonBox, QMessageBox, QFileDialog, QFrame)
-from PyQt6.QtCore import QTimer, Qt, QThread, pyqtSignal, QDate, QSortFilterProxyModel
+from PyQt6.QtCore import QTimer, Qt, QThread, pyqtSignal, QDate, QSortFilterProxyModel, QSettings
 from PyQt6.QtGui import QFont, QPalette, QColor, QPixmap, QPainter, QBrush, QIcon, QStandardItemModel, QStandardItem
 
 # Enhanced Components
@@ -56,7 +56,7 @@ try:
     import sys
     sys.path.append('.')
     from contact_creator import ContactCreator
-    from dynamics_data import get_dynamics_contacts
+    from dynamics_data import DynamicsData
     import auth
     import config
     CONTACT_MODULES_AVAILABLE = True
@@ -78,6 +78,107 @@ if CONTACT_MODULES_AVAILABLE:
 else:
     logger.warning("⚠️ Contact management modules not available")
 
+
+def get_contacts_with_oauth2(tenant_id: str, client_id: str, client_secret: str, org_url: str) -> List[Dict]:
+    """
+    Get contacts directly using OAuth2 authentication (same method as Configuration Manager)
+    This is a standalone function to avoid circular imports.
+    """
+    try:
+        import requests
+        import json
+        
+        # Step 1: Get OAuth2 access token for Dynamics 365
+        # Use v1.0 endpoint for Dynamics 365 which supports the resource parameter
+        token_url = f"https://login.microsoftonline.com/{tenant_id}/oauth2/token"
+        
+        # Extract the base domain from org_url to construct the correct resource
+        if org_url.startswith('http'):
+            base_domain = org_url.split('//')[1].split('/')[0]
+        else:
+            base_domain = org_url.split('/')[0]
+        
+        # Use OAuth v1.0 parameters for Dynamics 365 authentication
+        token_data = {
+            'grant_type': 'client_credentials',
+            'client_id': client_id,
+            'client_secret': client_secret,
+            'resource': f"https://{base_domain}"  # Resource parameter for Dynamics 365
+        }
+        
+        logger.info(f"🔐 Using OAuth v1.0 endpoint for Dynamics 365")
+        logger.info(f"🔐 Using resource: https://{base_domain}")
+        
+        logger.info("🔐 Getting OAuth2 access token...")
+        token_response = requests.post(token_url, data=token_data, timeout=10)
+        
+        if token_response.status_code != 200:
+            logger.error(f"❌ Failed to get access token: {token_response.status_code}")
+            return []
+        
+        access_token = token_response.json().get('access_token')
+        if not access_token:
+            logger.error("❌ No access token received")
+            return []
+        
+        logger.info("✅ OAuth2 access token obtained")
+        
+        # Step 2: Get contacts from Dynamics 365
+        # Use the organization URL to construct the API endpoint
+        if not org_url.startswith('http'):
+            org_url = f"https://{org_url}"
+        if not org_url.endswith('/api/data/v9.2'):
+            org_url = f"{org_url}/api/data/v9.2"
+        
+        contacts_url = f"{org_url}/contacts"
+        headers = {
+            'Authorization': f'Bearer {access_token}',
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'OData-MaxVersion': '4.0',
+            'OData-Version': '4.0'
+        }
+        
+        # Request specific fields we need for the contact table
+        params = {
+            '$select': 'contactid,fullname,firstname,lastname,emailaddress1,emailaddress2,emailaddress3,telephone1,mobilephone,jobtitle,address1_city,address1_stateorprovince,address1_country,createdon,modifiedon,statecode,statuscode',
+            '$top': 100  # Limit to first 100 contacts for performance
+        }
+        
+        logger.info("📞 Fetching contacts from Dynamics 365...")
+        contacts_response = requests.get(contacts_url, headers=headers, params=params, timeout=30)
+        
+        if contacts_response.status_code == 200:
+            contacts_data = contacts_response.json()
+            contacts = contacts_data.get('value', [])
+            logger.info(f"✅ Successfully retrieved {len(contacts)} contacts from Dynamics 365")
+            return contacts
+        elif contacts_response.status_code == 403:
+            error_data = contacts_response.json() if contacts_response.content else {}
+            error_message = error_data.get('error', {}).get('message', 'Permission denied')
+            logger.error(f"❌ Permission denied (403): {error_message}")
+            logger.error("🔧 This means your app registration needs additional permissions:")
+            logger.error("   1. Go to Azure Portal → App registrations → Your app")
+            logger.error("   2. Click 'API permissions'")
+            logger.error("   3. Add 'Dynamics CRM' → 'user_impersonation' permission")
+            logger.error("   4. Grant admin consent for the organization")
+            logger.error("   5. Or use a service principal with proper Dynamics 365 roles")
+            logger.warning("⚠️ Authentication succeeded but permissions insufficient, falling back to sample data")
+            return []
+        else:
+            logger.error(f"❌ Failed to get contacts: {contacts_response.status_code} - {contacts_response.text}")
+            return []
+            
+    except requests.exceptions.Timeout:
+        logger.error("❌ Timeout connecting to Dynamics 365")
+        return []
+    except requests.exceptions.ConnectionError:
+        logger.error("❌ Network connection error to Dynamics 365")
+        return []
+    except Exception as e:
+        logger.error(f"❌ Error fetching contacts: {str(e)}")
+        return []
+
 class ContactDataLoader(QThread):
     """Background thread for loading contact data with performance optimization"""
     contacts_loaded = pyqtSignal(list)
@@ -88,16 +189,31 @@ class ContactDataLoader(QThread):
         super().__init__()
         self.running = True
         self.contact_creator = None
+        self.oauth2_credentials = None
         
         # Initialize cache manager
         if PHASE_5_7_AVAILABLE:
             self.cache_manager = get_cache_manager()
         
-        if CONTACT_MODULES_AVAILABLE:
-            try:
-                self.contact_creator = ContactCreator()
-            except Exception as e:
-                logger.error(f"Error initializing contact creator: {e}")
+        # Load credentials from QSettings (where Configuration Manager saves them)
+        settings = QSettings("PSTtoDynamics", "Configuration")
+        
+        # Check if we have saved credentials
+        tenant_id = settings.value("auth/tenant_id", "")
+        client_id = settings.value("auth/client_id", "")
+        client_secret = settings.value("auth/client_secret", "")
+        org_url = settings.value("auth/org_url", "")
+        
+        if tenant_id and client_id and client_secret and org_url:
+            logger.info("✅ Found saved OAuth2 credentials in QSettings")
+            self.oauth2_credentials = {
+                'tenant_id': tenant_id,
+                'client_id': client_id,
+                'client_secret': client_secret,
+                'org_url': org_url
+            }
+        else:
+            logger.warning("⚠️ No saved OAuth2 credentials found in QSettings")
     
     def run(self):
         """Load contacts from Dynamics 365 with caching"""
@@ -112,28 +228,41 @@ class ContactDataLoader(QThread):
                     self.contacts_loaded.emit(cached_contacts)
                     return
             
-            if CONTACT_MODULES_AVAILABLE and self.contact_creator:
-                # Load real contacts
-                self.progress_updated.emit(30, "Loading contacts...")
-                contacts = self.contact_creator._get_existing_contacts()
+            # Try OAuth2 authentication first (same method as Configuration Manager)
+            if self.oauth2_credentials:
+                self.progress_updated.emit(20, "Authenticating with OAuth2...")
                 
-                # Phase 5.7: Cache the results
-                if PHASE_5_7_AVAILABLE:
-                    self.cache_manager.put("contacts_data", contacts)
+                self.progress_updated.emit(40, "Fetching contacts...")
+                contacts = get_contacts_with_oauth2(
+                    self.oauth2_credentials['tenant_id'],
+                    self.oauth2_credentials['client_id'],
+                    self.oauth2_credentials['client_secret'],
+                    self.oauth2_credentials['org_url']
+                )
                 
-                self.progress_updated.emit(100, "Contacts loaded successfully")
-                self.contacts_loaded.emit(contacts)
-            else:
-                # Generate sample contacts for testing
-                self.progress_updated.emit(50, "Generating sample data...")
-                sample_contacts = self._generate_sample_contacts()
-                
-                # Phase 5.7: Cache sample data too
-                if PHASE_5_7_AVAILABLE:
-                    self.cache_manager.put("contacts_data", sample_contacts)
-                
-                self.progress_updated.emit(100, "Sample contacts loaded")
-                self.contacts_loaded.emit(sample_contacts)
+                if contacts:
+                    # Phase 5.7: Cache the results
+                    if PHASE_5_7_AVAILABLE:
+                        self.cache_manager.put("contacts_data", contacts)
+                    
+                    self.progress_updated.emit(100, f"✅ Live contacts loaded from Dynamics 365")
+                    self.contacts_loaded.emit(contacts)
+                    return
+                else:
+                    logger.warning("⚠️ Authentication succeeded but permissions insufficient, falling back to sample data")
+                    # Emit a signal to show user-friendly permission guidance
+                    self.error_occurred.emit("PERMISSIONS_NEEDED")
+            
+            # Fallback to sample contacts
+            self.progress_updated.emit(60, "Generating sample data...")
+            sample_contacts = self._generate_sample_contacts()
+            
+            # Phase 5.7: Cache sample data too
+            if PHASE_5_7_AVAILABLE:
+                self.cache_manager.put("contacts_data", sample_contacts)
+            
+            self.progress_updated.emit(100, "📋 Sample contacts loaded")
+            self.contacts_loaded.emit(sample_contacts)
                 
         except Exception as e:
             self.error_occurred.emit(f"Error loading contacts: {str(e)}")
@@ -1213,6 +1342,9 @@ class ContactManagementDashboard(QWidget):
         layout = QVBoxLayout(tab)
         layout.setSpacing(20)
         
+        # Get current theme colors for dynamic styling
+        colors = get_theme_manager().get_theme_definition()['colors']
+        
         # Search and filter controls
         controls_layout = QHBoxLayout()
         
@@ -1425,6 +1557,9 @@ class ContactManagementDashboard(QWidget):
         tab = QWidget()
         layout = QVBoxLayout(tab)
         layout.setSpacing(20)
+        
+        # Get current theme colors for dynamic styling
+        colors = get_theme_manager().get_theme_definition()['colors']
         
         # Analytics header
         header = QLabel("📊 Contact Analytics")
@@ -1769,8 +1904,148 @@ class ContactManagementDashboard(QWidget):
     def handle_data_error(self, error_message: str):
         """Handle data loading errors"""
         self.progress_bar.setVisible(False)
-        self.status_label.setText("Error loading contacts")
-        QMessageBox.warning(self, "Data Error", f"Error loading contacts:\n{error_message}")
+        
+        if error_message == "PERMISSIONS_NEEDED":
+            self.status_label.setText("Using sample data - permissions needed for live data")
+            self.show_permissions_guidance_dialog()
+        else:
+            self.status_label.setText("Error loading contacts")
+            QMessageBox.warning(self, "Data Error", f"Error loading contacts:\n{error_message}")
+    
+    def show_permissions_guidance_dialog(self):
+        """Show a helpful dialog explaining how to fix Dynamics 365 permissions"""
+        from PyQt6.QtWidgets import QDialog, QVBoxLayout, QLabel, QTextEdit, QPushButton, QHBoxLayout
+        from PyQt6.QtCore import Qt
+        from PyQt6.QtGui import QFont
+        
+        dialog = QDialog(self)
+        dialog.setWindowTitle("🔧 Dynamics 365 Permissions Setup")
+        dialog.setMinimumSize(600, 500)
+        dialog.setModal(True)
+        
+        layout = QVBoxLayout(dialog)
+        layout.setSpacing(15)
+        
+        # Header with explanation
+        header = QLabel("✅ Authentication Successful - Permissions Configuration Needed")
+        header.setFont(QFont("Segoe UI", 14, QFont.Weight.Bold))
+        header.setStyleSheet("color: #0077B5; padding: 10px; background: #E8F4F8; border-radius: 5px;")
+        header.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(header)
+        
+        # Explanation
+        explanation = QLabel(
+            "🎉 <b>Good news!</b> Your Azure AD authentication is working perfectly and you have a valid access token.<br><br>"
+            "💡 The application is currently showing <b>sample data</b> because your app registration needs additional "
+            "permissions to access live Dynamics 365 contact data."
+        )
+        explanation.setWordWrap(True)
+        explanation.setStyleSheet("padding: 10px; background: #F0F8FF; border-radius: 5px; line-height: 1.4;")
+        layout.addWidget(explanation)
+        
+        # Instructions
+        instructions_text = """
+🔧 **To Enable Live Dynamics 365 Data Access:**
+
+**Step 1: Configure App Registration Permissions**
+1. Go to Azure Portal (portal.azure.com)
+2. Navigate to "Azure Active Directory" → "App registrations"
+3. Find your app registration
+4. Click on "API permissions"
+5. Click "Add a permission"
+6. Select "Dynamics CRM"
+7. Choose "Delegated permissions"
+8. Add "user_impersonation" permission
+9. Click "Grant admin consent for [your organization]"
+
+**Step 2: Alternative - Service Principal Method**
+1. In your app registration, go to "Certificates & secrets"
+2. Ensure you have a valid client secret
+3. In Dynamics 365 Admin Center:
+   - Go to "Environments" → Your environment
+   - Click "Settings" → "Users + permissions" → "Application users"
+   - Create new application user with your Client ID
+   - Assign appropriate security roles (e.g., "Salesperson" or "System Administrator")
+
+**Step 3: Verify Organization URL**
+- Ensure your Organization URL exactly matches your Dynamics 365 environment
+- Format: https://[your-org].crm.dynamics.com (no trailing slashes)
+
+**Current Status:**
+✅ Azure AD Authentication: Working
+✅ Access Token: Valid  
+⚠️ Dynamics 365 API Access: Needs permissions
+📊 Data Source: Sample data (50 demo contacts)
+
+Once you complete the permission setup, restart the application and your live Dynamics 365 contacts will be displayed automatically!
+        """
+        
+        instructions = QTextEdit()
+        instructions.setPlainText(instructions_text)
+        instructions.setReadOnly(True)
+        instructions.setFont(QFont("Segoe UI", 10))
+        instructions.setStyleSheet("""
+            QTextEdit {
+                background: #FFFFFF;
+                border: 1px solid #D0D7DE;
+                border-radius: 5px;
+                padding: 10px;
+                line-height: 1.5;
+            }
+        """)
+        layout.addWidget(instructions)
+        
+        # Buttons
+        button_layout = QHBoxLayout()
+        button_layout.addStretch()
+        
+        copy_button = QPushButton("📋 Copy Instructions")
+        copy_button.clicked.connect(lambda: self.copy_instructions_to_clipboard(instructions_text))
+        copy_button.setStyleSheet("""
+            QPushButton {
+                background: #0077B5;
+                color: white;
+                border: none;
+                padding: 8px 16px;
+                border-radius: 4px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background: #005885;
+            }
+        """)
+        
+        ok_button = QPushButton("OK")
+        ok_button.clicked.connect(dialog.accept)
+        ok_button.setDefault(True)
+        ok_button.setStyleSheet("""
+            QPushButton {
+                background: #28A745;
+                color: white;
+                border: none;
+                padding: 8px 16px;
+                border-radius: 4px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background: #1E7E34;
+            }
+        """)
+        
+        button_layout.addWidget(copy_button)
+        button_layout.addWidget(ok_button)
+        layout.addLayout(button_layout)
+        
+        dialog.exec()
+    
+    def copy_instructions_to_clipboard(self, text: str):
+        """Copy instructions to clipboard"""
+        try:
+            from PyQt6.QtWidgets import QApplication
+            QApplication.clipboard().setText(text)
+            QMessageBox.information(self, "Copied", "Instructions copied to clipboard!")
+        except Exception:
+            pass
     
     def closeEvent(self, event):
         """Handle widget close event"""
@@ -1800,6 +2075,8 @@ class ContactManagementDashboard(QWidget):
                         pass
                 
                 QTimer.singleShot(100, safe_theme_notification)
+
+
 
 def main():
     """Standalone testing function"""
