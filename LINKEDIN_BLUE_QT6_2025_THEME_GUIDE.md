@@ -328,7 +328,7 @@ Add a 1 px `ui.border` top divider *inside* scroll if it butt-joins header.
 | Container | `QFrame` with `objectName="NavigationSidebar"`, **fixed width 200 px** |
 | Style | `background: ui.surface; border-right: 1px solid ui.border; border-radius: 8px` |
 | Internal layout | `QVBoxLayout`, margins `(10,15,10,10)`, spacing `space.1` |
-| Navigation Button | 50 px height, medium-weight Segoe UI 10 pt, icon + title text-aligned left |
+| Navigation Button | 50 px height, **Segoe UI 12 px SemiBold**, icon + title text-aligned left |
 | Normal State | **transparent** background, `text.primary` colour |
 | Hover | Background `#ECF0F1`, text unchanged |
 | Pressed | Background `#D5DBDB` |
@@ -1254,7 +1254,7 @@ The application currently uses placeholder text to guide user input rather than 
 | **Error Title & Count** | Same as Sync Title and Count |
 | **Conflict Table** | `background-color: #FFFFFF; border: 1px solid #D0D7DE; border-radius: 8px; gridline-color: #E1E4E8; selection-background-color: #E8F4FD;` Items: `border-bottom: 1px solid #E1E4E8;` Hover: `background-color: #E8F4FD; color: #0077B5;` Selected: `background-color: #0077B5; color: #FFFFFF;` Header: `border-right: 1px solid #005885;` |
 | **Resolve Button** | `background-color: #0077B5; color: #FFFFFF; border: none; border-radius: 8px;` **Uses Small Button padding (8px 16px).** Hover: `background-color: #005885;` Pressed: `background-color: #004A70;` |
-| **Clear Button** | `background-color: #6C757D; color: #FFFFFF; border: none; border-radius: 8px;` **Uses Small Button padding (8px 16px).** Hover: `background-color: #5A6268;` Pressed: `background-color: #545B62;` |
+| **Clear Button** | `background-color: #5A6268; color: #FFFFFF; border: none; border-radius: 8px;` **Uses Small Button padding (8px 16px).** Hover: `background-color: #545B62;` Pressed: `background-color: #545B62;` |
 | **Export Button** | Same as Resolve Button |
 
 ### 14.2 Import Wizard Specific Styling
@@ -1273,9 +1273,7 @@ The application currently uses placeholder text to guide user input rather than 
 | **Batch Size Spinner** | `border: 2px solid #BDC3C7; border-radius: 6px; padding-right: 20px; padding-left: 10px;` Focus: `border-color: #E67E22;` Up/Down Buttons: `background: #F8F9FA; border-left: 1px solid #BDC3C7;` Hover: `background: #E9ECEF;` |
 | **Analytics Group** | `border: 2px solid #27AE60; border-radius: 10px; background-color: #E8F8F5;` Title: `color: #196F3D; background-color: #E8F8F5;` |
 | **Checkbox** | `color: #2C3E50; font-size: 13px; font-weight: 600; spacing: 12px;` Indicator: `border: 2px solid #BDC3C7; background-color: #FFFFFF;` Checked: `background-color: #0077B5; border-color: #0077B5;` Hover: `border-color: #0077B5;` |
-| **Main Progress Bar** | `border: 2px solid #BDC3C7; border-radius: 8px; background-color: #F9FAFB;` Chunk: `background-color: #0077B5;` |
-| **Status Label** | `color: #2C3E50; padding: 10px;` |
-| **Log Area** | `background-color: #2C3E50; color: #ECF0F1; border: none; border-radius: 6px; padding: 10px; font-family: Consolas, monospace; font-size: 10px; line-height: 1.4;` |
+| **Main Progress Bar** | `border: 2px solid #BDC3C7; border-radius: 8px; background-color: #F9FAFB;` Chunk: `background-color: #0077B5;`
 
 ### 14.3 Additional Color Usages
 
@@ -1289,6 +1287,6 @@ The application currently uses placeholder text to guide user input rather than 
 
 ## 15 · Final Notes on Completeness
 
-This specification now captures **every single detail** of the PST to Dynamics 365 GUI as of the latest codebase review. With the addition of widget-specific styling for Sync Monitoring and Import Wizard components, along with any remaining color tokens, this document ensures **zero ambiguity** for reproduction by any developer or AI tool. Every visual element, layout rule, behavioral aspect, and interaction pattern has been documented to achieve pixel-perfect accuracy and identical functionality across implementations.
+This specification now captures **every single detail** of the PST to Dynamics 365 GUI as of the latest codebase review. With the addition of widget-specific styling for Sync Monitoring and Import Wizard components, along with the expanded colour token list, this document ensures **zero ambiguity** for reproduction by any developer or AI tool. Every visual element, layout rule, behavioral aspect, and interaction pattern has been documented to achieve pixel-perfect accuracy and identical functionality across implementations.
 
-*End of specification.* 
+*End of specification.*
