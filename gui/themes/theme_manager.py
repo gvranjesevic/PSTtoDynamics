@@ -27,6 +27,7 @@ from enum import Enum
 from PyQt6.QtWidgets import QApplication, QWidget
 from PyQt6.QtCore import QObject, pyqtSignal, QSettings, QTimer
 from PyQt6.QtGui import QPalette, QColor
+from gui.themes.linkedin_blue_theme import LinkedInBlueTheme  # NEW IMPORT for LinkedIn Blue spec application
 
 class ThemeType(Enum):
     """Available theme types"""
@@ -355,6 +356,13 @@ class ThemeManager(QObject):
         palette.setColor(QPalette.ColorRole.HighlightedText, QColor(colors['background']))
         
         app.setPalette(palette)
+        
+        # Apply global stylesheet for LinkedIn Blue theme (2025 spec)
+        if self.current_theme == ThemeType.LINKEDIN_BLUE:
+            try:
+                app.setStyleSheet(LinkedInBlueTheme.get_stylesheet())
+            except Exception as e:
+                logger.warning(f"Failed to apply LinkedIn Blue global stylesheet: {e}")
     
     def _notify_widgets_theme_changed(self):
         """Notify all registered widgets that the theme has changed"""

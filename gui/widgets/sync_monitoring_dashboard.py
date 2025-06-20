@@ -25,6 +25,9 @@ from PyQt6.QtGui import QColor, QFont, QIcon
 
 from sync.sync_engine import SyncEngine, SyncMonitor
 
+# Theme manager to access LinkedIn Blue tokens dynamically
+from gui.themes.theme_manager import get_theme_manager
+
 class SyncMetricsWidget(QWidget):
     """Widget displaying real-time sync metrics"""
     
@@ -35,31 +38,39 @@ class SyncMetricsWidget(QWidget):
     def setup_ui(self):
         layout = QVBoxLayout()
         
+        # Prepare theme colours
+        colors = get_theme_manager().get_theme_definition()['colors']
+        primary = colors['primary']
+        hover = colors.get('secondary', primary)
+        surface = colors['surface']
+        surface_alt = colors.get('surface_secondary', surface)
+        text_secondary = colors['text_secondary']
+
         # Metrics Grid
         metrics_grid = QHBoxLayout()
         metrics_grid.setSpacing(20)
         
         # Sync Count
         sync_frame = QFrame()
-        sync_frame.setStyleSheet("""
-            QFrame {
-                background-color: #FFFFFF;
-                border: 2px solid #0077B5;
+        sync_frame.setStyleSheet(f"""
+            QFrame {{
+                background-color: {surface};
+                border: 2px solid {primary};
                 border-radius: 8px;
                 padding: 10px;
-            }
-            QFrame:hover {
-                border-color: #005885;
-                background-color: #F9FAFB;
-            }
+            }}
+            QFrame:hover {{
+                border-color: {hover};
+                background-color: {surface_alt};
+            }}
         """)
         sync_layout = QVBoxLayout()
         sync_layout.setContentsMargins(20, 20, 20, 20)
         sync_layout.setSpacing(8)
         sync_title = QLabel("Total Syncs")
-        sync_title.setStyleSheet("color: #666666; font-size: 11px; font-weight: bold;")
+        sync_title.setStyleSheet(f"color: {text_secondary}; font-size: 11px; font-weight: bold;")
         self.sync_count_label = QLabel("0")
-        self.sync_count_label.setStyleSheet("color: #0077B5; font-size: 20px; font-weight: bold;")
+        self.sync_count_label.setStyleSheet(f"color: {primary}; font-size: 20px; font-weight: bold;")
         sync_layout.addWidget(sync_title)
         sync_layout.addWidget(self.sync_count_label)
         sync_frame.setLayout(sync_layout)
@@ -67,25 +78,25 @@ class SyncMetricsWidget(QWidget):
         
         # Conflict Count
         conflict_frame = QFrame()
-        conflict_frame.setStyleSheet("""
-            QFrame {
-                background-color: #FFFFFF;
-                border: 2px solid #0077B5;
+        conflict_frame.setStyleSheet(f"""
+            QFrame {{
+                background-color: {surface};
+                border: 2px solid {primary};
                 border-radius: 8px;
                 padding: 10px;
-            }
-            QFrame:hover {
-                border-color: #005885;
-                background-color: #F9FAFB;
-            }
+            }}
+            QFrame:hover {{
+                border-color: {hover};
+                background-color: {surface_alt};
+            }}
         """)
         conflict_layout = QVBoxLayout()
         conflict_layout.setContentsMargins(20, 20, 20, 20)
         conflict_layout.setSpacing(8)
         conflict_title = QLabel("Conflicts")
-        conflict_title.setStyleSheet("color: #666666; font-size: 11px; font-weight: bold;")
+        conflict_title.setStyleSheet(f"color: {text_secondary}; font-size: 11px; font-weight: bold;")
         self.conflict_count_label = QLabel("0")
-        self.conflict_count_label.setStyleSheet("color: #0077B5; font-size: 20px; font-weight: bold;")
+        self.conflict_count_label.setStyleSheet(f"color: {primary}; font-size: 20px; font-weight: bold;")
         conflict_layout.addWidget(conflict_title)
         conflict_layout.addWidget(self.conflict_count_label)
         conflict_frame.setLayout(conflict_layout)
@@ -93,25 +104,25 @@ class SyncMetricsWidget(QWidget):
         
         # Error Count
         error_frame = QFrame()
-        error_frame.setStyleSheet("""
-            QFrame {
-                background-color: #FFFFFF;
-                border: 2px solid #0077B5;
+        error_frame.setStyleSheet(f"""
+            QFrame {{
+                background-color: {surface};
+                border: 2px solid {primary};
                 border-radius: 8px;
                 padding: 10px;
-            }
-            QFrame:hover {
-                border-color: #005885;
-                background-color: #F9FAFB;
-            }
+            }}
+            QFrame:hover {{
+                border-color: {hover};
+                background-color: {surface_alt};
+            }}
         """)
         error_layout = QVBoxLayout()
         error_layout.setContentsMargins(20, 20, 20, 20)
         error_layout.setSpacing(8)
         error_title = QLabel("Errors")
-        error_title.setStyleSheet("color: #666666; font-size: 11px; font-weight: bold;")
+        error_title.setStyleSheet(f"color: {text_secondary}; font-size: 11px; font-weight: bold;")
         self.error_count_label = QLabel("0")
-        self.error_count_label.setStyleSheet("color: #0077B5; font-size: 20px; font-weight: bold;")
+        self.error_count_label.setStyleSheet(f"color: {primary}; font-size: 20px; font-weight: bold;")
         error_layout.addWidget(error_title)
         error_layout.addWidget(self.error_count_label)
         error_frame.setLayout(error_layout)
