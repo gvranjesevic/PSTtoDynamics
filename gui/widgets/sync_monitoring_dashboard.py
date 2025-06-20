@@ -149,6 +149,15 @@ class ConflictResolutionWidget(QWidget):
     def setup_ui(self):
         layout = QVBoxLayout()
         
+        # Get theme colors dynamically
+        colors = get_theme_manager().get_theme_definition()['colors']
+        primary = colors['primary']
+        secondary = colors.get('secondary', primary)
+        surface = colors['surface']
+        border = colors['border']
+        border_light = colors.get('border_light', border)
+        text_inverse = colors.get('text_inverse', surface)
+        
         # Conflict List
         self.conflict_table = QTableWidget()
         self.conflict_table.setColumnCount(4)
@@ -156,30 +165,30 @@ class ConflictResolutionWidget(QWidget):
             "Field", "Source Value", "Target Value", "Resolution"
         ])
         self.conflict_table.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
-        self.conflict_table.setStyleSheet("""
-            QTableWidget {
-                background-color: #FFFFFF;
-                border: 1px solid #D0D7DE;
-                border-radius: 6px;
-                gridline-color: #E1E4E8;
-                selection-background-color: #E8F4FD;
-            }
-            QTableWidget::item {
+        self.conflict_table.setStyleSheet(f"""
+            QTableWidget {{
+                background-color: {surface};
+                border: 1px solid {border};
+                border-radius: 8px;
+                gridline-color: {border_light};
+                selection-background-color: {colors.get('ui_surfaceHoverAlt', '#E8F4FD')};
+            }}
+            QTableWidget::item {{
                 padding: 8px;
-                border-bottom: 1px solid #E1E4E8;
-            }
-            QTableWidget::item:selected {
-                background-color: #E8F4FD;
-                color: #0077B5;
-            }
-            QHeaderView::section {
-                background-color: #0077B5;
-                color: white;
+                border-bottom: 1px solid {border_light};
+            }}
+            QTableWidget::item:selected {{
+                background-color: {colors.get('ui_surfaceHoverAlt', '#E8F4FD')};
+                color: {primary};
+            }}
+            QHeaderView::section {{
+                background-color: {primary};
+                color: {text_inverse};
                 font-weight: bold;
                 padding: 12px;
                 border: none;
-                border-right: 1px solid #005885;
-            }
+                border-right: 1px solid {secondary};
+            }}
         """)
         layout.addWidget(self.conflict_table)
         
@@ -197,24 +206,57 @@ class ConflictResolutionWidget(QWidget):
         
         resolve_button = QPushButton("Resolve Selected")
         resolve_button.clicked.connect(self.resolve_selected)
-        resolve_button.setStyleSheet("""
-            QPushButton {
-                background-color: #0077B5;
-                color: white;
+        resolve_button.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {primary};
+                color: {text_inverse};
                 border: none;
                 border-radius: 8px;
-                padding: 10px 20px;
+                padding: 8px 16px;
                 font-weight: bold;
                 font-size: 14px;
-            }
-            QPushButton:hover {
-                background-color: #005885;
-            }
-            QPushButton:pressed {
-                background-color: #004A70;
-            }
+            }}
+            QPushButton:hover {{
+                background-color: {secondary};
+            }}
         """)
         controls_layout.addWidget(resolve_button)
+        
+        clear_button = QPushButton("Clear All")
+        clear_button.clicked.connect(self.clear_conflicts)
+        clear_button.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {colors.get('ui_buttonDark', '#5A6268')};
+                color: {text_inverse};
+                border: none;
+                border-radius: 8px;
+                padding: 8px 16px;
+                font-weight: bold;
+                font-size: 14px;
+            }}
+            QPushButton:hover {{
+                background-color: {colors.get('ui_buttonDarker', '#545B62')};
+            }}
+        """)
+        controls_layout.addWidget(clear_button)
+        
+        export_button = QPushButton("Export Conflicts")
+        export_button.clicked.connect(self.export_conflicts)
+        export_button.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {primary};
+                color: {text_inverse};
+                border: none;
+                border-radius: 8px;
+                padding: 8px 16px;
+                font-weight: bold;
+                font-size: 14px;
+            }}
+            QPushButton:hover {{
+                background-color: {secondary};
+            }}
+        """)
+        controls_layout.addWidget(export_button)
         
         layout.addLayout(controls_layout)
         self.setLayout(layout)
@@ -247,6 +289,49 @@ class ConflictResolutionWidget(QWidget):
                 'resolution': resolution,
                 'strategy': self.resolution_strategy.currentText()
             })
+    
+    def clear_conflicts(self):
+        """Clear all conflicts from the table"""
+        self.conflict_table.setRowCount(0)
+    
+    def export_conflicts(self):
+        """Export conflicts to a file"""
+        from PyQt6.QtWidgets import QFileDialog, QMessageBox
+        from datetime import datetime
+        
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"sync_conflicts_{timestamp}.txt"
+        
+        file_path, _ = QFileDialog.getSaveFileName(
+            self, 
+            "Export Conflicts", 
+            filename,
+            "Text Files (*.txt);;All Files (*)"
+        )
+        
+        if file_path:
+            try:
+                with open(file_path, 'w', encoding='utf-8') as f:
+                    f.write(f"PST to Dynamics 365 Sync Conflicts\n")
+                    f.write(f"Exported on: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+                    f.write("=" * 50 + "\n\n")
+                    
+                    for row in range(self.conflict_table.rowCount()):
+                        field = self.conflict_table.item(row, 0).text()
+                        source = self.conflict_table.item(row, 1).text()
+                        target = self.conflict_table.item(row, 2).text()
+                        resolution = self.conflict_table.cellWidget(row, 3).currentText()
+                        
+                        f.write(f"Field: {field}\n")
+                        f.write(f"Source Value: {source}\n")
+                        f.write(f"Target Value: {target}\n")
+                        f.write(f"Resolution: {resolution}\n")
+                        f.write("-" * 30 + "\n")
+                
+                QMessageBox.information(self, "Export Success", f"Conflicts exported to:\n{file_path}")
+                
+            except Exception as e:
+                QMessageBox.critical(self, "Export Error", f"Failed to export conflicts:\n{str(e)}")
 
 class SyncLogWidget(QWidget):
     """Widget for displaying sync logs"""
@@ -258,55 +343,75 @@ class SyncLogWidget(QWidget):
     def setup_ui(self):
         layout = QVBoxLayout()
         
+        # Get theme colors dynamically
+        colors = get_theme_manager().get_theme_definition()['colors']
+        primary = colors['primary']
+        secondary = colors.get('secondary', primary)
+        surface = colors['surface']
+        text_primary = colors['text_primary']
+        text_secondary = colors['text_secondary']
+        text_inverse = colors.get('text_inverse', surface)
+        
         # Log Display
         self.log_display = QTextEdit()
         self.log_display.setReadOnly(True)
+        self.log_display.setStyleSheet(f"""
+            QTextEdit {{
+                background-color: {colors.get('text_darkBackground', '#2C3E50')};
+                color: {colors.get('text_lightOnDark', '#ECF0F1')};
+                border: none;
+                border-radius: 6px;
+                padding: 10px;
+                font-family: Consolas, monospace;
+                font-size: 10px;
+                line-height: 1.4;
+            }}
+        """)
         layout.addWidget(self.log_display)
         
         # Log Controls
         controls_layout = QHBoxLayout()
         
-        clear_button = QPushButton("Clear Logs")
-        clear_button.clicked.connect(self.log_display.clear)
-        clear_button.setStyleSheet("""
-            QPushButton {
-                background-color: #6c757d;
-                color: white;
-                border: none;
-                border-radius: 8px;
-                padding: 10px 20px;
-                font-weight: bold;
-                font-size: 14px;
-            }
-            QPushButton:hover {
-                background-color: #5a6268;
-            }
-            QPushButton:pressed {
-                background-color: #545b62;
-            }
-        """)
-        controls_layout.addWidget(clear_button)
+        self.log_level = QComboBox()
+        self.log_level.addItems(["ALL", "INFO", "WARNING", "ERROR"])
+        controls_layout.addWidget(QLabel("Filter:"))
+        controls_layout.addWidget(self.log_level)
         
-        export_button = QPushButton("Export Logs")
-        export_button.clicked.connect(self.export_logs)
-        export_button.setStyleSheet("""
-            QPushButton {
-                background-color: #0077B5;
-                color: white;
+        clear_log_button = QPushButton("Clear Logs")
+        clear_log_button.clicked.connect(self.clear_logs)
+        clear_log_button.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {colors.get('state_errorButton', '#E74C3C')};
+                color: {text_inverse};
                 border: none;
                 border-radius: 8px;
-                padding: 10px 20px;
+                padding: 8px 16px;
                 font-weight: bold;
                 font-size: 14px;
-            }
-            QPushButton:hover {
-                background-color: #005885;
-            }
-            QPushButton:pressed {
-                background-color: #004A70;
-            }
+            }}
+            QPushButton:hover {{
+                background-color: {colors.get('state_error', '#C0392B')};
+            }}
         """)
-        controls_layout.addWidget(export_button)
+        controls_layout.addWidget(clear_log_button)
+        
+        export_log_button = QPushButton("Export Logs")
+        export_log_button.clicked.connect(self.export_logs)
+        export_log_button.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {primary};
+                color: {text_inverse};
+                border: none;
+                border-radius: 8px;
+                padding: 8px 16px;
+                font-weight: bold;
+                font-size: 14px;
+            }}
+            QPushButton:hover {{
+                background-color: {secondary};
+            }}
+        """)
+        controls_layout.addWidget(export_log_button)
         
         layout.addLayout(controls_layout)
         self.setLayout(layout)
@@ -323,6 +428,10 @@ class SyncLogWidget(QWidget):
         log_text += "-" * 50 + "\n"
         
         self.log_display.append(log_text)
+    
+    def clear_logs(self):
+        """Clear the log display"""
+        self.log_display.clear()
     
     def export_logs(self):
         """Export logs to a file"""
@@ -382,23 +491,50 @@ class SyncMonitoringDashboard(QWidget):
         self.setup_content()
     
     def create_header(self) -> QWidget:
-        """Create dashboard header (standardized to match Settings panel)"""
+        """Create the dashboard header"""
+        colors = get_theme_manager().get_theme_definition()['colors']
+        primary = colors['primary']
+        text_inverse = colors.get('text_inverse', colors['surface'])
+        
         header = QWidget()
         header.setFixedHeight(60)
-        header.setStyleSheet("""
-            background-color: #0077B5;
+        header.setStyleSheet(f"""
+            background-color: {primary};
+            color: {text_inverse};
             border-bottom: 1px solid #006097;
         """)
-        header_layout = QHBoxLayout(header)
-        header_layout.setContentsMargins(20, 0, 20, 0)
-        title = QLabel("Sync Monitor")
-        title.setStyleSheet("""
-            color: white;
+        
+        layout = QHBoxLayout(header)
+        layout.setContentsMargins(20, 0, 20, 0)
+        
+        # Title
+        title = QLabel("🔄 Sync Monitor")
+        title.setStyleSheet(f"""
             font-size: 18px;
             font-weight: bold;
+            color: {text_inverse};
         """)
-        header_layout.addWidget(title)
-        header_layout.addStretch()
+        layout.addWidget(title)
+        
+        layout.addStretch()
+        
+        # Refresh button
+        refresh_button = QPushButton("🔄 Refresh")
+        refresh_button.clicked.connect(self.update_dashboard)
+        refresh_button.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {colors.get('secondary', primary)};
+                color: {text_inverse};
+                border: none;
+                border-radius: 6px;
+                padding: 8px 16px;
+                font-weight: bold;
+            }}
+            QPushButton:hover {{
+                background-color: {colors.get('brand_primaryActive', '#004A70')};
+            }}
+        """)
+        layout.addWidget(refresh_button)
         
         return header
     
@@ -418,29 +554,37 @@ class SyncMonitoringDashboard(QWidget):
         
         # Create tab widget for conflicts and logs
         self.tab_widget = QTabWidget()
-        self.tab_widget.setStyleSheet("""
-            QTabWidget::pane {
+        colors = get_theme_manager().get_theme_definition()['colors']
+        primary = colors['primary']
+        surface_alt = colors.get('surface_secondary', '#F9FAFB')
+        canvas = colors.get('background', '#F3F6F8')
+        text_secondary = colors['text_secondary']
+        hover_bg = colors.get('border_light', '#E8EBED')
+        text_inverse = colors.get('text_inverse', colors['surface'])
+        
+        self.tab_widget.setStyleSheet(f"""
+            QTabWidget::pane {{
                 border: none;
-                background-color: #F3F6F8;
-            }
-            QTabBar::tab {
-                background-color: #F9FAFB;
-                color: #666666;
+                background-color: {canvas};
+            }}
+            QTabBar::tab {{
+                background-color: {surface_alt};
+                color: {text_secondary};
                 padding: 12px 24px;
                 margin-right: 2px;
                 border-top-left-radius: 8px;
                 border-top-right-radius: 8px;
                 font-size: 14px;
                 font-weight: bold;
-            }
-            QTabBar::tab:hover {
-                background-color: #E8EBED;
-                color: #0077B5;
-            }
-            QTabBar::tab:selected {
-                background-color: #0077B5;
-                color: white;
-            }
+            }}
+            QTabBar::tab:hover {{
+                background-color: {hover_bg};
+                color: {primary};
+            }}
+            QTabBar::tab:selected {{
+                background-color: {primary};
+                color: {text_inverse};
+            }}
         """)
         
         # Add conflict resolution tab

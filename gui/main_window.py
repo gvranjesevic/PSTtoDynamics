@@ -69,7 +69,7 @@ except ImportError:
 
 # Import theme manager
 try:
-    from gui.themes.theme_manager import ThemeManager, ThemeType
+    from gui.themes.theme_manager import ThemeManager, ThemeType, get_theme_manager
     THEME_MANAGER_AVAILABLE = True
 except ImportError:
     THEME_MANAGER_AVAILABLE = False
@@ -98,15 +98,61 @@ class NavigationSidebar(QFrame):
     def __init__(self):
         super().__init__()
         self.setup_ui()
+    
+    def apply_theme(self, theme_definition):
+        """Apply theme to navigation sidebar"""
+        colors = theme_definition['colors']
+        
+        # Apply theme to sidebar container
+        self.setStyleSheet(f"""
+            NavigationSidebar {{
+                background: {colors['ui_surface']};
+                border-right: 1px solid {colors['ui_border']};
+                border-radius: 8px;
+            }}
+        """)
+        
+        # Re-setup UI to apply new theme colors
+        self.setup_ui()
         
     def setup_ui(self):
         """Setup the navigation sidebar interface"""
+        # Get current theme colors for dynamic styling
+        if THEME_MANAGER_AVAILABLE:
+            colors = get_theme_manager().get_theme_definition()['colors']
+        else:
+            # Fallback colors if theme manager not available
+            colors = {
+                'ui_surface': '#FFFFFF',
+                'ui_border': '#D0D7DE',
+                'text_primary': '#2C3E50',
+                'ui_surfaceHover': '#ECF0F1',
+                'ui_surfaceHoverAlt': '#D5DBDB',
+                'brand_primary': '#0077B5',
+                'text_inverse': '#FFFFFF',
+                'brand_primaryHover': '#005885',
+                'brand_primaryActive': '#004A70'
+            }
+        
         self.setFixedWidth(200)  # Reduced from 220 to 200 for more compact design
         self.setFrameStyle(QFrame.Shape.StyledPanel)
+        self.setStyleSheet(f"""
+            NavigationSidebar {{
+                background: {colors['ui_surface']};
+                border-right: 1px solid {colors['ui_border']};
+                border-radius: 8px;
+            }}
+        """)
         
         layout = QVBoxLayout(self)
         layout.setSpacing(2)
         layout.setContentsMargins(10, 15, 10, 10)  # Slightly more top margin for balance
+        
+        # Clear existing layout if re-applying theme
+        while layout.count():
+            item = layout.takeAt(0)
+            if item.widget():
+                item.widget().setParent(None)
         
         # Navigation buttons
         self.nav_buttons = {}
@@ -121,7 +167,7 @@ class NavigationSidebar(QFrame):
         ]
         
         for nav_id, icon, title, description in nav_items:
-            btn = self.create_nav_button(nav_id, icon, title, description)
+            btn = self.create_nav_button(nav_id, icon, title, description, colors)
             self.nav_buttons[nav_id] = btn
             layout.addWidget(btn)
         
@@ -131,7 +177,7 @@ class NavigationSidebar(QFrame):
         # Set initial selection
         self.select_nav_item("dashboard")
         
-    def create_nav_button(self, nav_id: str, icon: str, title: str, description: str) -> QPushButton:
+    def create_nav_button(self, nav_id: str, icon: str, title: str, description: str, colors: dict) -> QPushButton:
         """Create a professional navigation button"""
         btn = QPushButton()
         btn.setFixedHeight(50)  # Reduced from 60 to 50 for more compact design
@@ -142,22 +188,22 @@ class NavigationSidebar(QFrame):
         btn.setText(f"{icon}  {title}")
         btn.setFont(QFont("Segoe UI", 10, QFont.Weight.Medium))
         
-        # Style the button
-        btn.setStyleSheet("""
-            QPushButton {
+        # Style the button with dynamic colors
+        btn.setStyleSheet(f"""
+            QPushButton {{
                 text-align: left;
                 padding: 8px 12px;
                 border: none;
                 border-radius: 6px;
                 background-color: transparent;
-                color: #2c3e50;
-            }
-            QPushButton:hover {
-                background-color: #ecf0f1;
-            }
-            QPushButton:pressed {
-                background-color: #d5dbdb;
-            }
+                color: {colors['text_primary']};
+            }}
+            QPushButton:hover {{
+                background-color: {colors['ui_surfaceHover']};
+            }}
+            QPushButton:pressed {{
+                background-color: {colors['ui_surfaceHoverAlt']};
+            }}
         """)
         
         # Connect click event
@@ -172,48 +218,59 @@ class NavigationSidebar(QFrame):
     
     def select_nav_item(self, nav_id: str):
         """Visually select a navigation item"""
+        # Get current theme colors for dynamic styling
+        if THEME_MANAGER_AVAILABLE:
+            colors = get_theme_manager().get_theme_definition()['colors']
+        else:
+            # Fallback colors if theme manager not available
+            colors = {
+                'text_primary': '#2C3E50',
+                'ui_surfaceHover': '#ECF0F1',
+                'ui_surfaceHoverAlt': '#D5DBDB',
+                'brand_primary': '#0077B5',
+                'text_inverse': '#FFFFFF',
+                'brand_primaryHover': '#005885',
+                'brand_primaryActive': '#004A70'
+            }
+        
         # Reset all buttons
         for btn in self.nav_buttons.values():
-            btn.setStyleSheet("""
-                QPushButton {
+            btn.setStyleSheet(f"""
+                QPushButton {{
                     text-align: left;
                     padding: 8px 12px;
                     border: none;
                     border-radius: 6px;
                     background-color: transparent;
-                    color: #2c3e50;
-                }
-                QPushButton:hover {
-                    background-color: #ecf0f1;
-                }
-                QPushButton:pressed {
-                    background-color: #d5dbdb;
-                }
+                    color: {colors['text_primary']};
+                }}
+                QPushButton:hover {{
+                    background-color: {colors['ui_surfaceHover']};
+                }}
+                QPushButton:pressed {{
+                    background-color: {colors['ui_surfaceHoverAlt']};
+                }}
             """)
         
         # Highlight selected button
         if nav_id in self.nav_buttons:
-            self.nav_buttons[nav_id].setStyleSheet("""
-                QPushButton {
+            self.nav_buttons[nav_id].setStyleSheet(f"""
+                QPushButton {{
                     text-align: left;
                     padding: 8px 12px;
                     border: none;
                     border-radius: 6px;
-                    background-color: #0077B5;
-                    color: white;
+                    background-color: {colors['brand_primary']};
+                    color: {colors['text_inverse']};
                     font-weight: bold;
-                }
-                QPushButton:hover {
-                    background-color: #005885;
-                }
-                QPushButton:pressed {
-                    background-color: #004A70;
-                }
+                }}
+                QPushButton:hover {{
+                    background-color: {colors['brand_primaryHover']};
+                }}
+                QPushButton:pressed {{
+                    background-color: {colors['brand_primaryActive']};
+                }}
             """)
-    
-    # def update_status(self, status: str, color: str = "#27ae60"):
-    #     """Update the status indicator - REMOVED: Status indicator removed for compact design"""
-    #     pass
 
 
 class ContentArea(QWidget):
@@ -224,8 +281,30 @@ class ContentArea(QWidget):
         self.active_widgets = []
         self.setup_ui()
     
+    def apply_theme(self, theme_definition):
+        """Apply theme to content area"""
+        colors = theme_definition['colors']
+        
+        # Update content area styling
+        self.setStyleSheet(f"""
+            ContentArea {{
+                background: {colors['ui_canvas']};
+                color: {colors['text_primary']};
+            }}
+        """)
+    
     def setup_ui(self):
         """Setup the content area interface"""
+        # Get current theme colors for dynamic styling
+        if THEME_MANAGER_AVAILABLE:
+            colors = get_theme_manager().get_theme_definition()['colors']
+        else:
+            # Fallback colors if theme manager not available
+            colors = {
+                'text_primary': '#2C3E50',
+                'text_tertiary': '#7F8C8D'
+            }
+        
         self.layout = QVBoxLayout(self)
         self.layout.setContentsMargins(0, 0, 0, 0)  # Remove excessive margins
         # Removed any initial spacing to avoid top gap
@@ -233,12 +312,12 @@ class ContentArea(QWidget):
         # Welcome message
         welcome_label = QLabel("Welcome to PST to Dynamics 365")
         welcome_label.setFont(QFont("Segoe UI", 18, QFont.Weight.Bold))
-        welcome_label.setStyleSheet("color: #2c3e50; margin-bottom: 10px;")
+        welcome_label.setStyleSheet(f"color: {colors['text_primary']}; margin-bottom: 10px;")
         welcome_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         
         subtitle_label = QLabel("Select a module from the sidebar to get started")
         subtitle_label.setFont(QFont("Segoe UI", 12))
-        subtitle_label.setStyleSheet("color: #7f8c8d; margin-bottom: 30px;")
+        subtitle_label.setStyleSheet(f"color: {colors['text_tertiary']}; margin-bottom: 30px;")
         subtitle_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         
         self.layout.addWidget(welcome_label)
@@ -291,17 +370,28 @@ class ContentArea(QWidget):
     
     def create_dashboard_header(self) -> QWidget:
         """Create dashboard header (standardized to match Settings panel)"""
+        # Get current theme colors for dynamic styling
+        if THEME_MANAGER_AVAILABLE:
+            colors = get_theme_manager().get_theme_definition()['colors']
+        else:
+            # Fallback colors if theme manager not available
+            colors = {
+                'brand_primary': '#0077B5',
+                'brand_primaryBorder': '#006097',
+                'text_inverse': '#FFFFFF'
+            }
+        
         header = QWidget()
         header.setFixedHeight(60)
-        header.setStyleSheet("""
-            background-color: #0077B5;
-            border-bottom: 1px solid #006097;
+        header.setStyleSheet(f"""
+            background-color: {colors['brand_primary']};
+            border-bottom: 1px solid {colors['brand_primaryBorder']};
         """)
         header_layout = QHBoxLayout(header)
         header_layout.setContentsMargins(20, 0, 20, 0)
         title = QLabel("Dashboard")
-        title.setStyleSheet("""
-            color: white;
+        title.setStyleSheet(f"""
+            color: {colors['text_inverse']};
             font-size: 18px;
             font-weight: bold;
         """)
@@ -312,6 +402,15 @@ class ContentArea(QWidget):
     
     def setup_dashboard_content(self):
         """Set up dashboard content"""
+        # Get current theme colors for dynamic styling
+        if THEME_MANAGER_AVAILABLE:
+            colors = get_theme_manager().get_theme_definition()['colors']
+        else:
+            # Fallback colors if theme manager not available
+            colors = {
+                'brand_primary': '#0077B5'
+            }
+        
         # Status cards with proper margins
         status_widget = QWidget()
         status_layout = QHBoxLayout(status_widget)
@@ -319,15 +418,15 @@ class ContentArea(QWidget):
         status_layout.setSpacing(15)
         
         # System status card
-        system_card = self.create_status_card("System Status", "✅ Online", "#0077B5")
+        system_card = self.create_status_card("System Status", "✅ Online", colors['brand_primary'])
         status_layout.addWidget(system_card)
         
         # Database status card
-        db_card = self.create_status_card("Database", "✅ Connected", "#0077B5")
+        db_card = self.create_status_card("Database", "✅ Connected", colors['brand_primary'])
         status_layout.addWidget(db_card)
         
         # Last sync card
-        sync_card = self.create_status_card("Last Sync", "🔄 Never", "#0077B5")
+        sync_card = self.create_status_card("Last Sync", "🔄 Never", colors['brand_primary'])
         status_layout.addWidget(sync_card)
         
         self.layout.addWidget(status_widget)
@@ -335,11 +434,20 @@ class ContentArea(QWidget):
     
     def create_status_card(self, title: str, status: str, color: str) -> QFrame:
         """Create a status card widget"""
+        # Get current theme colors for dynamic styling
+        if THEME_MANAGER_AVAILABLE:
+            colors = get_theme_manager().get_theme_definition()['colors']
+        else:
+            # Fallback colors if theme manager not available
+            colors = {
+                'ui_surface': '#FFFFFF'
+            }
+        
         card = QFrame()
         card.setStyleSheet(f"""
             QFrame {{
-                background-color: #FFFFFF;
-                border: 2px solid #0077B5 !important;
+                background-color: {colors['ui_surface']};
+                border: 2px solid {color} !important;
                 border-radius: 8px;
                 padding: 15px;
                 margin: 5px;
@@ -350,7 +458,7 @@ class ContentArea(QWidget):
         
         title_label = QLabel(title)
         title_label.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
-        title_label.setStyleSheet("color: #0077B5;")
+        title_label.setStyleSheet(f"color: {color};")
         
         status_label = QLabel(status)
         status_label.setFont(QFont("Segoe UI", 14))
@@ -375,9 +483,15 @@ class ContentArea(QWidget):
             
         except ImportError:
             # Fallback placeholder
+            # Get current theme colors for dynamic styling
+            if THEME_MANAGER_AVAILABLE:
+                colors = get_theme_manager().get_theme_definition()['colors']
+            else:
+                colors = {'text_tertiary': '#7f8c8d'}
+            
             placeholder = QLabel("📧 Import Wizard\n\nComing Soon...")
             placeholder.setFont(QFont("Segoe UI", 16))
-            placeholder.setStyleSheet("color: #7f8c8d;")
+            placeholder.setStyleSheet(f"color: {colors['text_tertiary']};")
             placeholder.setAlignment(Qt.AlignmentFlag.AlignCenter)
             self.layout.addWidget(placeholder)
             self.layout.addStretch()
@@ -423,9 +537,15 @@ class ContentArea(QWidget):
             
         except ImportError:
             # Fallback placeholder
+            # Get current theme colors for dynamic styling
+            if THEME_MANAGER_AVAILABLE:
+                colors = get_theme_manager().get_theme_definition()['colors']
+            else:
+                colors = {'text_tertiary': '#7f8c8d'}
+            
             placeholder = QLabel("📈 Analytics Dashboard\n\nComing Soon...")
             placeholder.setFont(QFont("Segoe UI", 16))
-            placeholder.setStyleSheet("color: #7f8c8d;")
+            placeholder.setStyleSheet(f"color: {colors['text_tertiary']};")
             placeholder.setAlignment(Qt.AlignmentFlag.AlignCenter)
             self.layout.addWidget(placeholder)
             self.layout.addStretch()
@@ -442,9 +562,15 @@ class ContentArea(QWidget):
             
         except ImportError:
             # Fallback placeholder
+            # Get current theme colors for dynamic styling
+            if THEME_MANAGER_AVAILABLE:
+                colors = get_theme_manager().get_theme_definition()['colors']
+            else:
+                colors = {'text_tertiary': '#7f8c8d'}
+            
             placeholder = QLabel("🧠 AI Intelligence Dashboard\n\nComing Soon...")
             placeholder.setFont(QFont("Segoe UI", 16))
-            placeholder.setStyleSheet("color: #7f8c8d;")
+            placeholder.setStyleSheet(f"color: {colors['text_tertiary']};")
             placeholder.setAlignment(Qt.AlignmentFlag.AlignCenter)
             self.layout.addWidget(placeholder)
             self.layout.addStretch()
@@ -461,9 +587,15 @@ class ContentArea(QWidget):
             
         except ImportError:
             # Fallback placeholder
+            # Get current theme colors for dynamic styling
+            if THEME_MANAGER_AVAILABLE:
+                colors = get_theme_manager().get_theme_definition()['colors']
+            else:
+                colors = {'text_tertiary': '#7f8c8d'}
+            
             placeholder = QLabel("👥 Contact Management\n\nComing Soon...")
             placeholder.setFont(QFont("Segoe UI", 16))
-            placeholder.setStyleSheet("color: #7f8c8d;")
+            placeholder.setStyleSheet(f"color: {colors['text_tertiary']};")
             placeholder.setAlignment(Qt.AlignmentFlag.AlignCenter)
             self.layout.addWidget(placeholder)
             self.layout.addStretch()
@@ -542,7 +674,12 @@ class ContentArea(QWidget):
             traceback.print_exc()
             placeholder = QLabel(f"⚙️ Settings could not be loaded.\n\nError: {e}")
             placeholder.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            placeholder.setStyleSheet("color: #e74c3c; font-size: 14px;")
+            # Get current theme colors for dynamic styling
+            if THEME_MANAGER_AVAILABLE:
+                colors = get_theme_manager().get_theme_definition()['colors']
+            else:
+                colors = {'state_error': '#e74c3c'}
+            placeholder.setStyleSheet(f"color: {colors['state_error']}; font-size: 14px;")
             self.layout.addWidget(placeholder)
             self.layout.addStretch()
     
@@ -556,7 +693,12 @@ class ContentArea(QWidget):
         # Settings icon and title
         title = QLabel("⚙️ System Settings")
         title.setFont(QFont("Segoe UI", 24, QFont.Weight.Bold))
-        title.setStyleSheet("color: #0077B5; margin-bottom: 10px;")
+        # Get current theme colors for dynamic styling
+        if THEME_MANAGER_AVAILABLE:
+            colors = get_theme_manager().get_theme_definition()['colors']
+        else:
+            colors = {'brand_primary': '#0077B5'}
+        title.setStyleSheet(f"color: {colors['brand_primary']}; margin-bottom: 10px;")
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         info_layout.addWidget(title)
         
@@ -568,7 +710,12 @@ class ContentArea(QWidget):
             "• Click the Settings button in the sidebar"
         )
         instructions.setFont(QFont("Segoe UI", 14))
-        instructions.setStyleSheet("color: #2c3e50; line-height: 1.6;")
+        # Get current theme colors for dynamic styling
+        if THEME_MANAGER_AVAILABLE:
+            colors = get_theme_manager().get_theme_definition()['colors']
+        else:
+            colors = {'text_primary': '#2c3e50'}
+        instructions.setStyleSheet(f"color: {colors['text_primary']}; line-height: 1.6;")
         instructions.setAlignment(Qt.AlignmentFlag.AlignCenter)
         info_layout.addWidget(instructions)
         
@@ -607,9 +754,15 @@ class ContentArea(QWidget):
             
         except ImportError:
             # Fallback placeholder
+            # Get current theme colors for dynamic styling
+            if THEME_MANAGER_AVAILABLE:
+                colors = get_theme_manager().get_theme_definition()['colors']
+            else:
+                colors = {'text_tertiary': '#7f8c8d'}
+            
             placeholder = QLabel("🔄 Sync Monitor Dashboard\n\nComing Soon...")
             placeholder.setFont(QFont("Segoe UI", 16))
-            placeholder.setStyleSheet("color: #7f8c8d;")
+            placeholder.setStyleSheet(f"color: {colors['text_tertiary']};")
             placeholder.setAlignment(Qt.AlignmentFlag.AlignCenter)
             self.layout.addWidget(placeholder)
             self.layout.addStretch()
@@ -633,16 +786,27 @@ class SystemStatusMonitor(QThread):
                 cpu_percent = psutil.cpu_percent(interval=1)
                 memory_percent = psutil.virtual_memory().percent
                 
-                if cpu_percent > 80 or memory_percent > 80:
-                    self.status_updated.emit("System Load High", "#e74c3c")
+                # Get current theme colors for dynamic styling
+                if THEME_MANAGER_AVAILABLE:
+                    colors = get_theme_manager().get_theme_definition()['colors']
                 else:
-                    self.status_updated.emit("System Ready", "#27ae60")
+                    colors = {'state_error': '#e74c3c', 'state_success': '#27ae60'}
+                
+                if cpu_percent > 80 or memory_percent > 80:
+                    self.status_updated.emit("System Load High", colors['state_error'])
+                else:
+                    self.status_updated.emit("System Ready", colors['state_success'])
                 
                 self.msleep(5000)  # Check every 5 seconds
                 
             except Exception as e:
                 logger.warning(f"Status monitor error: {e}")
-                self.status_updated.emit("Monitor Error", "#f39c12")
+                # Get current theme colors for dynamic styling
+                if THEME_MANAGER_AVAILABLE:
+                    colors = get_theme_manager().get_theme_definition()['colors']
+                else:
+                    colors = {'state_warning': '#f39c12'}
+                self.status_updated.emit("Monitor Error", colors['state_warning'])
                 self.msleep(10000)  # Wait longer on error
     
     def stop(self):
@@ -766,51 +930,51 @@ class MainWindow(QMainWindow):
     def apply_current_theme(self):
         """Apply the current theme to the main window"""
         try:
-            if hasattr(self, 'theme_manager'):
-                theme_def = self.theme_manager.get_theme_definition()
+            if THEME_MANAGER_AVAILABLE:
+                theme_def = get_theme_manager().get_theme_definition()
                 if theme_def:
                     colors = theme_def.get('colors', {})
                     # Apply comprehensive LinkedIn Blue theme styling
                     self.setStyleSheet(f"""
                         QMainWindow {{
-                            background-color: {colors.get('background', '#F3F6F8')};
-                            color: {colors.get('text_primary', '#000000')};
+                            background-color: {colors.get('ui_canvas', '#F3F6F8')};
+                            color: {colors.get('text_primary', '#2C3E50')};
                             font-family: 'Segoe UI', Arial, sans-serif;
                             font-size: 14px;
                         }}
                         
                         /* Menu Bar Styling */
                         QMenuBar {{
-                            background-color: {colors.get('surface', '#FFFFFF')};
-                            color: {colors.get('text_primary', '#000000')};
-                            border-bottom: 1px solid {colors.get('border', '#D0D7DE')};
+                            background-color: {colors.get('ui_surface', '#FFFFFF')};
+                            color: {colors.get('text_primary', '#2C3E50')};
+                            border-bottom: 1px solid {colors.get('ui_border', '#D0D7DE')};
                             padding: 4px 8px;
                             font-weight: 500;
                         }}
                         
                         QMenuBar::item {{
                             background-color: transparent;
-                            color: {colors.get('text_primary', '#000000')};
+                            color: {colors.get('text_primary', '#2C3E50')};
                             padding: 8px 12px;
                             border-radius: 4px;
                             margin: 2px;
                         }}
                         
                         QMenuBar::item:selected {{
-                            background-color: {colors.get('primary', '#0077B5')};
-                            color: white;
+                            background-color: {colors.get('brand_primary', '#0077B5')};
+                            color: {colors.get('text_inverse', '#FFFFFF')};
                         }}
                         
                         QMenuBar::item:pressed {{
-                            background-color: {colors.get('secondary', '#005885')};
-                            color: white;
+                            background-color: {colors.get('brand_primaryHover', '#005885')};
+                            color: {colors.get('text_inverse', '#FFFFFF')};
                         }}
                         
                         /* Menu Dropdown Styling */
                         QMenu {{
-                            background-color: {colors.get('surface', '#FFFFFF')};
-                            color: {colors.get('text_primary', '#000000')};
-                            border: 1px solid {colors.get('border', '#D0D7DE')};
+                            background-color: {colors.get('ui_surface', '#FFFFFF')};
+                            color: {colors.get('text_primary', '#2C3E50')};
+                            border: 1px solid {colors.get('ui_border', '#D0D7DE')};
                             border-radius: 6px;
                             padding: 4px;
                             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
@@ -818,31 +982,38 @@ class MainWindow(QMainWindow):
                         
                         QMenu::item {{
                             background-color: transparent;
-                            color: {colors.get('text_primary', '#000000')};
+                            color: {colors.get('text_primary', '#2C3E50')};
                             padding: 8px 16px;
                             border-radius: 4px;
                             margin: 1px;
                         }}
                         
                         QMenu::item:selected {{
-                            background-color: {colors.get('primary', '#0077B5')};
-                            color: white;
+                            background-color: {colors.get('brand_primary', '#0077B5')};
+                            color: {colors.get('text_inverse', '#FFFFFF')};
                         }}
                         
                         QMenu::separator {{
                             height: 1px;
-                            background-color: {colors.get('border', '#D0D7DE')};
+                            background-color: {colors.get('ui_border', '#D0D7DE')};
                             margin: 4px 8px;
                         }}
                         
                         /* Status Bar Styling */
                         QStatusBar {{
-                            background-color: {colors.get('surface', '#FFFFFF')};
+                            background-color: {colors.get('ui_surface', '#FFFFFF')};
                             color: {colors.get('text_secondary', '#666666')};
-                            border-top: 1px solid {colors.get('border', '#D0D7DE')};
+                            border-top: 1px solid {colors.get('ui_border', '#D0D7DE')};
                             padding: 4px 8px;
                         }}
                     """)
+                    
+                    # Apply theme to child widgets
+                    if hasattr(self.navigation_sidebar, 'apply_theme'):
+                        self.navigation_sidebar.apply_theme(theme_def)
+                    if hasattr(self.content_area, 'apply_theme'):
+                        self.content_area.apply_theme(theme_def)
+                    
                     logger.info(f"Applied theme: {theme_def.get('name', 'LinkedIn Blue')}")
                 else:
                     logger.warning("⚠️ Could not get theme definition")
@@ -851,7 +1022,7 @@ class MainWindow(QMainWindow):
                 self.setStyleSheet("""
                     QMainWindow {
                         background-color: #F3F6F8;
-                        color: #000000;
+                        color: #2C3E50;
                         font-family: 'Segoe UI', Arial, sans-serif;
                         font-size: 14px;
                     }
@@ -859,7 +1030,7 @@ class MainWindow(QMainWindow):
                     /* Menu Bar Styling */
                     QMenuBar {
                         background-color: #FFFFFF;
-                        color: #000000;
+                        color: #2C3E50;
                         border-bottom: 1px solid #D0D7DE;
                         padding: 4px 8px;
                         font-weight: 500;
@@ -867,7 +1038,7 @@ class MainWindow(QMainWindow):
                     
                     QMenuBar::item {
                         background-color: transparent;
-                        color: #000000;
+                        color: #2C3E50;
                         padding: 8px 12px;
                         border-radius: 4px;
                         margin: 2px;
@@ -875,18 +1046,18 @@ class MainWindow(QMainWindow):
                     
                     QMenuBar::item:selected {
                         background-color: #0077B5;
-                        color: white;
+                        color: #FFFFFF;
                     }
                     
                     QMenuBar::item:pressed {
                         background-color: #005885;
-                        color: white;
+                        color: #FFFFFF;
                     }
                     
                     /* Menu Dropdown Styling */
                     QMenu {
                         background-color: #FFFFFF;
-                        color: #000000;
+                        color: #2C3E50;
                         border: 1px solid #D0D7DE;
                         border-radius: 6px;
                         padding: 4px;
@@ -894,7 +1065,7 @@ class MainWindow(QMainWindow):
                     
                     QMenu::item {
                         background-color: transparent;
-                        color: #000000;
+                        color: #2C3E50;
                         padding: 8px 16px;
                         border-radius: 4px;
                         margin: 1px;
@@ -902,7 +1073,7 @@ class MainWindow(QMainWindow):
                     
                     QMenu::item:selected {
                         background-color: #0077B5;
-                        color: white;
+                        color: #FFFFFF;
                     }
                     
                     QMenu::separator {
@@ -1181,7 +1352,12 @@ class MainWindow(QMainWindow):
         
         # Version info
         version_label = QLabel("v1.0.0")
-        version_label.setStyleSheet("color: #6c757d; font-size: 10px;")
+        # Get current theme colors for dynamic styling
+        if THEME_MANAGER_AVAILABLE:
+            colors = get_theme_manager().get_theme_definition()['colors']
+        else:
+            colors = {'text_secondary': '#6c757d'}
+        version_label.setStyleSheet(f"color: {colors['text_secondary']}; font-size: 10px;")
         self.status_bar.addPermanentWidget(version_label)
     
     def start_monitoring(self):

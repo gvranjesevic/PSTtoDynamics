@@ -26,6 +26,9 @@ from PyQt6.QtWidgets import (QWidget, QVBoxLayout, QHBoxLayout, QTabWidget,
 from PyQt6.QtCore import QTimer, Qt, QThread, pyqtSignal, QPropertyAnimation, QEasingCurve
 from PyQt6.QtGui import QFont, QPalette, QColor, QPixmap, QPainter, QBrush, QIcon
 
+# Theme manager to access LinkedIn Blue tokens dynamically
+from gui.themes.theme_manager import get_theme_manager
+
 # Try to import PyQtGraph with fallback
 try:
     import pyqtgraph as pg
@@ -172,18 +175,27 @@ class AIMetricCard(QFrame):
     
     def setup_ui(self):
         """Set up the metric card UI"""
+        # Get theme colors dynamically
+        colors = get_theme_manager().get_theme_definition()['colors']
+        primary = colors['primary']
+        hover = colors.get('secondary', primary)
+        surface = colors['surface']
+        surface_alt = colors.get('ui_surfaceAlt', '#F9FAFB')
+        text_secondary = colors['text_secondary']
+        text_black = colors.get('text_black', '#000000')
+        
         self.setFixedSize(280, 140)
-        self.setStyleSheet("""
-            QFrame {
-                background-color: #FFFFFF;
-                border: 2px solid #0077B5;
+        self.setStyleSheet(f"""
+            QFrame {{
+                background-color: {surface};
+                border: 2px solid {primary};
                 border-radius: 8px;
                 padding: 10px;
-            }
-            QFrame:hover {
-                border-color: #005885;
-                background-color: #F9FAFB;
-            }
+            }}
+            QFrame:hover {{
+                border-color: {hover};
+                background-color: {surface_alt};
+            }}
         """)
         
         layout = QVBoxLayout(self)
@@ -198,47 +210,44 @@ class AIMetricCard(QFrame):
         header_layout.addWidget(self.icon_label)
         
         self.title_label = QLabel(self.title)
-        self.title_label.setFont(QFont("Segoe UI", 11, QFont.Weight.Medium))
-        self.title_label.setStyleSheet("color: #64748b;")
+        self.title_label.setStyleSheet(f"color: {primary}; font-size: 12px; font-weight: bold;")
         header_layout.addWidget(self.title_label)
         header_layout.addStretch()
         
-        # Trend indicator
-        self.trend_label = QLabel("●")
-        self.trend_label.setFont(QFont("Segoe UI", 12))
-        header_layout.addWidget(self.trend_label)
-        
         layout.addLayout(header_layout)
         
-        # Value
+        # Main value display
         self.value_label = QLabel(self.value)
-        self.value_label.setFont(QFont("Segoe UI", 28, QFont.Weight.Bold))
-        self.value_label.setStyleSheet("color: #1e293b;")
+        self.value_label.setStyleSheet(f"color: {text_black}; font-size: 20px; font-weight: bold;")
+        self.value_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(self.value_label)
         
         # Confidence bar
-        confidence_layout = QHBoxLayout()
-        confidence_layout.addWidget(QLabel("Confidence:"))
-        
         self.confidence_bar = QProgressBar()
         self.confidence_bar.setMaximum(100)
-        self.confidence_bar.setTextVisible(True)
-        self.confidence_bar.setStyleSheet("""
-            QProgressBar {
-                border: 2px solid #e2e8f0;
-                border-radius: 8px;
-                text-align: center;
-                background: #f1f5f9;
-                height: 20px;
-            }
-            QProgressBar::chunk {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
-                    stop:0 #10b981, stop:1 #34d399);
-                border-radius: 6px;
-            }
+        self.confidence_bar.setValue(0)
+        self.confidence_bar.setTextVisible(False)
+        self.confidence_bar.setFixedHeight(8)
+        self.confidence_bar.setStyleSheet(f"""
+            QProgressBar {{
+                border: 1px solid {primary};
+                border-radius: 4px;
+                background-color: {surface_alt};
+            }}
+            QProgressBar::chunk {{
+                background-color: {primary};
+                border-radius: 3px;
+            }}
         """)
-        confidence_layout.addWidget(self.confidence_bar)
-        layout.addLayout(confidence_layout)
+        layout.addWidget(self.confidence_bar)
+        
+        # Trend indicator
+        self.trend_label = QLabel("●")
+        self.trend_label.setStyleSheet(f"color: {text_secondary}; font-size: 10px;")
+        self.trend_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(self.trend_label)
+        
+        layout.addStretch()
     
     def setup_animation(self):
         """Set up hover animations"""
@@ -278,13 +287,22 @@ class AIPerformanceChart(QWidget):
     
     def setup_ui(self):
         """Set up the chart UI"""
+        # Get theme colors
+        colors = get_theme_manager().get_theme_definition()['colors']
+        text_primary = colors['text_primary']
+        primary = colors['primary']
+        state_success = colors.get('state_success', '#10B981')
+        state_warning = colors.get('state_warning', '#F59E0B')
+        ui_canvas = colors.get('ui_canvas', '#F8FAFC')
+        ui_border = colors['border']
+        
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         
         # Title
         title_label = QLabel(self.title)
         title_label.setFont(QFont("Segoe UI", 14, QFont.Weight.Bold))
-        title_label.setStyleSheet("color: #1e293b; margin: 10px;")
+        title_label.setStyleSheet(f"color: {text_primary}; margin: 10px;")
         layout.addWidget(title_label)
         
         if PYQTGRAPH_AVAILABLE:
@@ -295,10 +313,10 @@ class AIPerformanceChart(QWidget):
             self.plot_widget.setLabel('bottom', 'Time')
             self.plot_widget.showGrid(x=True, y=True, alpha=0.3)
             
-            # Create plot lines
-            self.ml_line = self.plot_widget.plot(pen=pg.mkPen('#3b82f6', width=3), name='ML Accuracy')
-            self.opt_line = self.plot_widget.plot(pen=pg.mkPen('#10b981', width=3), name='Optimization')
-            self.pred_line = self.plot_widget.plot(pen=pg.mkPen('#f59e0b', width=3), name='Predictions')
+            # Create plot lines with theme colors
+            self.ml_line = self.plot_widget.plot(pen=pg.mkPen(primary, width=3), name='ML Accuracy')
+            self.opt_line = self.plot_widget.plot(pen=pg.mkPen(state_success, width=3), name='Optimization')
+            self.pred_line = self.plot_widget.plot(pen=pg.mkPen(state_warning, width=3), name='Predictions')
             
             # Add legend
             self.plot_widget.addLegend()
@@ -309,14 +327,14 @@ class AIPerformanceChart(QWidget):
             self.text_display = QTextEdit()
             self.text_display.setReadOnly(True)
             self.text_display.setMaximumHeight(200)
-            self.text_display.setStyleSheet("""
-                QTextEdit {
-                    background: #f8fafc;
-                    border: 2px solid #e2e8f0;
+            self.text_display.setStyleSheet(f"""
+                QTextEdit {{
+                    background: {ui_canvas};
+                    border: 2px solid {ui_border};
                     border-radius: 8px;
                     padding: 8px;
                     font-family: 'Consolas', monospace;
-                }
+                }}
             """)
             layout.addWidget(self.text_display)
     
@@ -502,17 +520,22 @@ class AIIntelligenceDashboard(QWidget):
     
     def create_header(self) -> QWidget:
         """Create dashboard header (standardized to match Settings panel)"""
+        colors = get_theme_manager().get_theme_definition()['colors']
+        primary = colors['primary']
+        primary_border = colors.get('brand_primaryBorder', '#006097')
+        text_inverse = colors.get('text_inverse', '#FFFFFF')
+        
         header = QWidget()
         header.setFixedHeight(60)
-        header.setStyleSheet("""
-            background-color: #0077B5;
-            border-bottom: 1px solid #006097;
+        header.setStyleSheet(f"""
+            background-color: {primary};
+            border-bottom: 1px solid {primary_border};
         """)
         header_layout = QHBoxLayout(header)
         header_layout.setContentsMargins(20, 0, 20, 0)
         title = QLabel("AI Intelligence")
-        title.setStyleSheet("""
-            color: white;
+        title.setStyleSheet(f"""
+            color: {text_inverse};
             font-size: 18px;
             font-weight: bold;
         """)
@@ -525,31 +548,39 @@ class AIIntelligenceDashboard(QWidget):
         """Set up the main content area inside the content container"""
         layout = self.content_layout
         
-        # Create tabs
+        # Create tabs with theme colors
+        colors = get_theme_manager().get_theme_definition()['colors']
+        canvas = colors.get('ui_canvas', '#F3F6F8')
+        surface_alt = colors.get('ui_surfaceAlt', '#F9FAFB')
+        text_secondary = colors['text_secondary']
+        primary = colors['primary']
+        text_inverse = colors.get('text_inverse', '#FFFFFF')
+        border_light = colors.get('border_light', '#E8EBED')
+        
         self.tab_widget = QTabWidget()
-        self.tab_widget.setStyleSheet("""
-            QTabWidget::pane {
+        self.tab_widget.setStyleSheet(f"""
+            QTabWidget::pane {{
                 border: none;
-                background-color: #F3F6F8;
-            }
-            QTabBar::tab {
-                background-color: #F9FAFB;
+                background-color: {canvas};
+            }}
+            QTabBar::tab {{
+                background-color: {surface_alt};
                 padding: 12px 24px;
                 margin-right: 2px;
                 border-top-left-radius: 8px;
                 border-top-right-radius: 8px;
                 font-size: 14px;
                 font-weight: bold;
-                color: #666666;
-            }
-            QTabBar::tab:selected {
-                background-color: #0077B5;
-                color: white;
-            }
-            QTabBar::tab:hover {
-                background-color: #E8EBED;
-                color: #0077B5;
-            }
+                color: {text_secondary};
+            }}
+            QTabBar::tab:selected {{
+                background-color: {primary};
+                color: {text_inverse};
+            }}
+            QTabBar::tab:hover {{
+                background-color: {border_light};
+                color: {primary};
+            }}
         """)
         
         # AI Overview Tab
@@ -577,50 +608,56 @@ class AIIntelligenceDashboard(QWidget):
         layout.setSpacing(20)
         layout.setContentsMargins(20, 20, 20, 20)
         
-        # Control buttons
+        # Control buttons with theme colors
+        colors = get_theme_manager().get_theme_definition()['colors']
+        primary = colors['primary']
+        primary_hover = colors.get('brand_primaryHover', '#005885')
+        primary_active = colors.get('brand_primaryActive', '#004A70')
+        text_inverse = colors.get('text_inverse', '#FFFFFF')
+        
         controls_layout = QHBoxLayout()
         
         # Train Models button
         self.train_models_btn = QPushButton("🧠 Train Models")
         self.train_models_btn.clicked.connect(self.show_training_dialog)
-        self.train_models_btn.setStyleSheet("""
-            QPushButton {
-                background-color: #0077B5;
-                color: white;
-                border: 2px solid #0077B5;
+        self.train_models_btn.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {primary};
+                color: {text_inverse};
+                border: 2px solid {primary};
                 border-radius: 8px;
                 padding: 10px 20px;
                 font-weight: bold;
                 font-size: 14px;
-            }
-            QPushButton:hover {
-                background-color: #005885;
-            }
-            QPushButton:pressed {
-                background-color: #004A70;
-            }
+            }}
+            QPushButton:hover {{
+                background-color: {primary_hover};
+            }}
+            QPushButton:pressed {{
+                background-color: {primary_active};
+            }}
         """)
         controls_layout.addWidget(self.train_models_btn)
         
         # Export Insights button  
         self.export_insights_btn = QPushButton("📊 Export Insights")
         self.export_insights_btn.clicked.connect(self.export_ai_insights)
-        self.export_insights_btn.setStyleSheet("""
-            QPushButton {
-                background-color: #0077B5;
-                color: white;
-                border: 2px solid #0077B5;
+        self.export_insights_btn.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {primary};
+                color: {text_inverse};
+                border: 2px solid {primary};
                 border-radius: 8px;
                 padding: 10px 20px;
                 font-weight: bold;
                 font-size: 14px;
-            }
-            QPushButton:hover {
-                background-color: #005885;
-            }
-            QPushButton:pressed {
-                background-color: #004A70;
-            }
+            }}
+            QPushButton:hover {{
+                background-color: {primary_hover};
+            }}
+            QPushButton:pressed {{
+                background-color: {primary_active};
+            }}
         """)
         controls_layout.addWidget(self.export_insights_btn)
         
@@ -658,31 +695,36 @@ class AIIntelligenceDashboard(QWidget):
         return tab
     
     def create_ml_intelligence_tab(self) -> QWidget:
-        """Create the ML intelligence management tab"""
+        """Create the ML intelligence and pattern recognition tab"""
         tab = QWidget()
         layout = QVBoxLayout(tab)
         layout.setSpacing(20)
         layout.setContentsMargins(20, 20, 20, 20)
         
+        # Get current theme colors for dynamic styling
+        colors = get_theme_manager().get_theme_definition()['colors']
+        brand_primary = colors.get('brand_primary', '#0077B5')
+        ui_surface = colors.get('ui_surface', '#FFFFFF')
+        
         # ML Status section
         status_group = QGroupBox("🧠 ML Pattern Recognition Status")
-        status_group.setStyleSheet("""
-            QGroupBox {
+        status_group.setStyleSheet(f"""
+            QGroupBox {{
                 font-weight: bold;
-                border: 2px solid #0077B5 !important;
+                border: 2px solid {brand_primary} !important;
                 border-radius: 8px;
                 margin-top: 0px;
                 padding-top: 15px;
                 font-size: 14px;
-                background-color: #FFFFFF;
-            }
-            QGroupBox::title {
+                background-color: {ui_surface};
+            }}
+            QGroupBox::title {{
                 subcontrol-origin: margin;
                 left: 15px;
                 padding: 0 10px 0 10px;
-                color: #0077B5;
-                background-color: #FFFFFF;
-            }
+                color: {brand_primary};
+                background-color: {ui_surface};
+            }}
         """)
         status_layout = QGridLayout(status_group)
         
@@ -702,23 +744,23 @@ class AIIntelligenceDashboard(QWidget):
         
         # Recent patterns table
         patterns_group = QGroupBox("🔍 Recent Pattern Analysis")
-        patterns_group.setStyleSheet("""
-            QGroupBox {
+        patterns_group.setStyleSheet(f"""
+            QGroupBox {{
                 font-weight: bold;
-                border: 2px solid #0077B5 !important;
+                border: 2px solid {brand_primary} !important;
                 border-radius: 8px;
                 margin-top: 0px;
                 padding-top: 15px;
                 font-size: 14px;
-                background-color: #FFFFFF;
-            }
-            QGroupBox::title {
+                background-color: {ui_surface};
+            }}
+            QGroupBox::title {{
                 subcontrol-origin: margin;
                 left: 15px;
                 padding: 0 10px 0 10px;
-                color: #0077B5;
-                background-color: #FFFFFF;
-            }
+                color: {brand_primary};
+                background-color: {ui_surface};
+            }}
         """)
         patterns_layout = QVBoxLayout(patterns_group)
         
@@ -739,25 +781,30 @@ class AIIntelligenceDashboard(QWidget):
         layout.setSpacing(20)
         layout.setContentsMargins(20, 20, 20, 20)
         
+        # Get current theme colors for dynamic styling
+        colors = get_theme_manager().get_theme_definition()['colors']
+        brand_primary = colors.get('brand_primary', '#0077B5')
+        ui_surface = colors.get('ui_surface', '#FFFFFF')
+        
         # Optimization controls
         controls_group = QGroupBox("⚡ Optimization Controls")
-        controls_group.setStyleSheet("""
-            QGroupBox {
+        controls_group.setStyleSheet(f"""
+            QGroupBox {{
                 font-weight: bold;
-                border: 2px solid #0077B5 !important;
+                border: 2px solid {brand_primary} !important;
                 border-radius: 8px;
                 margin-top: 0px;
                 padding-top: 15px;
                 font-size: 14px;
-                background-color: #FFFFFF;
-            }
-            QGroupBox::title {
+                background-color: {ui_surface};
+            }}
+            QGroupBox::title {{
                 subcontrol-origin: margin;
                 left: 15px;
                 padding: 0 10px 0 10px;
-                color: #0077B5;
-                background-color: #FFFFFF;
-            }
+                color: {brand_primary};
+                background-color: {ui_surface};
+            }}
         """)
         controls_layout = QGridLayout(controls_group)
         
@@ -791,23 +838,23 @@ class AIIntelligenceDashboard(QWidget):
         
         # Performance metrics
         perf_group = QGroupBox("📊 Performance Metrics")
-        perf_group.setStyleSheet("""
-            QGroupBox {
+        perf_group.setStyleSheet(f"""
+            QGroupBox {{
                 font-weight: bold;
-                border: 2px solid #0077B5 !important;
+                border: 2px solid {brand_primary} !important;
                 border-radius: 8px;
                 margin-top: 0px;
                 padding-top: 15px;
                 font-size: 14px;
-                background-color: #FFFFFF;
-            }
-            QGroupBox::title {
+                background-color: {ui_surface};
+            }}
+            QGroupBox::title {{
                 subcontrol-origin: margin;
                 left: 15px;
                 padding: 0 10px 0 10px;
-                color: #0077B5;
-                background-color: #FFFFFF;
-            }
+                color: {brand_primary};
+                background-color: {ui_surface};
+            }}
         """)
         perf_layout = QGridLayout(perf_group)
         
@@ -834,25 +881,33 @@ class AIIntelligenceDashboard(QWidget):
         layout.setSpacing(20)
         layout.setContentsMargins(20, 20, 20, 20)
         
+        # Get current theme colors for dynamic styling
+        colors = get_theme_manager().get_theme_definition()['colors']
+        brand_primary = colors.get('brand_primary', '#0077B5')
+        brand_primary_hover = colors.get('brand_primaryHover', '#005885')
+        brand_primary_active = colors.get('brand_primaryActive', '#004A70')
+        ui_surface = colors.get('ui_surface', '#FFFFFF')
+        text_inverse = colors.get('text_inverse', '#FFFFFF')
+        
         # Prediction controls
         pred_controls_group = QGroupBox("🔮 Prediction Controls")
-        pred_controls_group.setStyleSheet("""
-            QGroupBox {
+        pred_controls_group.setStyleSheet(f"""
+            QGroupBox {{
                 font-weight: bold;
-                border: 2px solid #0077B5 !important;
+                border: 2px solid {brand_primary} !important;
                 border-radius: 8px;
                 margin-top: 0px;
                 padding-top: 15px;
                 font-size: 14px;
-                background-color: #FFFFFF;
-            }
-            QGroupBox::title {
+                background-color: {ui_surface};
+            }}
+            QGroupBox::title {{
                 subcontrol-origin: margin;
                 left: 15px;
                 padding: 0 10px 0 10px;
-                color: #0077B5;
-                background-color: #FFFFFF;
-            }
+                color: {brand_primary};
+                background-color: {ui_surface};
+            }}
         """)
         pred_controls_layout = QGridLayout(pred_controls_group)
         
@@ -863,22 +918,22 @@ class AIIntelligenceDashboard(QWidget):
         pred_controls_layout.addWidget(self.forecast_days_spin, 0, 1)
         
         self.run_predictions_btn = QPushButton("🚀 Run Predictions")
-        self.run_predictions_btn.setStyleSheet("""
-            QPushButton {
-                background-color: #0077B5;
-                color: white;
+        self.run_predictions_btn.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {brand_primary};
+                color: {text_inverse};
                 border: none;
                 padding: 10px 20px;
                 border-radius: 8px;
                 font-weight: bold;
                 font-size: 14px;
-            }
-            QPushButton:hover {
-                background-color: #005885;
-            }
-            QPushButton:pressed {
-                background-color: #004A70;
-            }
+            }}
+            QPushButton:hover {{
+                background-color: {brand_primary_hover};
+            }}
+            QPushButton:pressed {{
+                background-color: {brand_primary_active};
+            }}
         """)
         self.run_predictions_btn.clicked.connect(self.run_predictions)
         pred_controls_layout.addWidget(self.run_predictions_btn, 0, 2)
@@ -887,23 +942,23 @@ class AIIntelligenceDashboard(QWidget):
         
         # Predictions table
         predictions_group = QGroupBox("📈 Prediction Results")
-        predictions_group.setStyleSheet("""
-            QGroupBox {
+        predictions_group.setStyleSheet(f"""
+            QGroupBox {{
                 font-weight: bold;
-                border: 2px solid #0077B5 !important;
+                border: 2px solid {brand_primary} !important;
                 border-radius: 8px;
                 margin-top: 0px;
                 padding-top: 15px;
                 font-size: 14px;
-                background-color: #FFFFFF;
-            }
-            QGroupBox::title {
+                background-color: {ui_surface};
+            }}
+            QGroupBox::title {{
                 subcontrol-origin: margin;
                 left: 15px;
                 padding: 0 10px 0 10px;
-                color: #0077B5;
-                background-color: #FFFFFF;
-            }
+                color: {brand_primary};
+                background-color: {ui_surface};
+            }}
         """)
         predictions_layout = QVBoxLayout(predictions_group)
         
@@ -927,10 +982,51 @@ class AIIntelligenceDashboard(QWidget):
         self.data_loader.start()
     
     def setup_auto_refresh(self):
-        """Set up auto-refresh timer"""
+        """Setup automatic data refresh"""
         self.refresh_timer = QTimer()
         self.refresh_timer.timeout.connect(self.refresh_data)
-        self.refresh_timer.start(10000)  # Refresh every 10 seconds
+        self.refresh_timer.start(30000)  # Refresh every 30 seconds
+    
+    def apply_theme(self, theme_definition):
+        """Apply theme to AI Intelligence Dashboard"""
+        colors = theme_definition['colors']
+        fonts = theme_definition['fonts']
+        
+        # Apply theme to main dashboard
+        self.setStyleSheet(f"""
+            AIIntelligenceDashboard {{
+                background: {colors.get('ui_canvas', '#F3F6F8')};
+                color: {colors.get('text_primary', '#2C3E50')};
+                font-family: "{fonts.get('primary', 'Segoe UI')}";
+            }}
+            QTabWidget::pane {{
+                border: none;
+                background-color: {colors.get('ui_canvas', '#F3F6F8')};
+            }}
+            QTabBar::tab {{
+                background-color: {colors.get('ui_surfaceAlt', '#F9FAFB')};
+                padding: 12px 24px;
+                margin-right: 2px;
+                border-top-left-radius: 8px;
+                border-top-right-radius: 8px;
+                font-size: 14px;
+                font-weight: bold;
+                color: {colors.get('text_secondary', '#666666')};
+            }}
+            QTabBar::tab:selected {{
+                background-color: {colors.get('brand_primary', '#0077B5')};
+                color: {colors.get('text_inverse', '#FFFFFF')};
+            }}
+            QTabBar::tab:hover {{
+                background-color: {colors.get('border_light', '#E8EBED')};
+                color: {colors.get('brand_primary', '#0077B5')};
+            }}
+        """)
+        
+        # Refresh UI components to pick up new theme
+        if hasattr(self, 'tab_widget'):
+            # Force refresh of tab widget styling
+            self.tab_widget.setStyleSheet(self.tab_widget.styleSheet())
     
     def update_dashboard_data(self, ai_data: Dict[str, Any]):
         """Update dashboard with new AI data"""

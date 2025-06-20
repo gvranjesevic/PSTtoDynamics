@@ -25,6 +25,9 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt, pyqtSignal, QThread, QTimer, QDate
 from PyQt6.QtGui import QFont, QPixmap, QIcon, QPalette
 
+# Theme manager to access LinkedIn Blue tokens dynamically
+from gui.themes.theme_manager import get_theme_manager
+
 # Setup logging
 logger = logging.getLogger(__name__)
 
@@ -122,17 +125,26 @@ class MetricCard(QFrame):
     
     def setup_ui(self, title: str, value: str, subtitle: str, color: str):
         """Setup metric card UI"""
+        # Get theme colors dynamically
+        colors = get_theme_manager().get_theme_definition()['colors']
+        primary = colors['primary']
+        hover = colors.get('secondary', primary)
+        surface = colors['surface']
+        surface_alt = colors.get('surface_secondary', '#F9FAFB')
+        text_black = colors.get('text_black', '#000000')
+        text_secondary = colors['text_secondary']
+        
         self.setFixedSize(220, 120)
         self.setStyleSheet(f"""
             QFrame {{
-                background-color: #FFFFFF;
-                border: 2px solid #0077B5;
+                background-color: {surface};
+                border: 2px solid {primary};
                 border-radius: 8px;
                 padding: 10px;
             }}
             QFrame:hover {{
-                border-color: #005885;
-                background-color: #F9FAFB;
+                border-color: {hover};
+                background-color: {surface_alt};
             }}
         """)
         
@@ -142,18 +154,18 @@ class MetricCard(QFrame):
         
         # Title
         title_label = QLabel(title)
-        title_label.setStyleSheet("color: #0077B5; font-size: 12px; font-weight: bold;")
+        title_label.setStyleSheet(f"color: {primary}; font-size: 12px; font-weight: bold;")
         layout.addWidget(title_label)
         
         # Value
         self.value_label = QLabel(value)
-        self.value_label.setStyleSheet("color: #000000; font-size: 24px; font-weight: bold;")
+        self.value_label.setStyleSheet(f"color: {text_black}; font-size: 24px; font-weight: bold;")
         layout.addWidget(self.value_label)
         
         # Subtitle
         if subtitle:
             self.subtitle_label = QLabel(subtitle)
-            self.subtitle_label.setStyleSheet("color: #666666; font-size: 10px;")
+            self.subtitle_label.setStyleSheet(f"color: {text_secondary}; font-size: 10px;")
             layout.addWidget(self.subtitle_label)
         else:
             self.subtitle_label = None
@@ -162,13 +174,9 @@ class MetricCard(QFrame):
     
     def darken_color(self, color: str) -> str:
         """Darken a hex color for hover effects"""
-        color_map = {
-            "#0077B5": "#005885",
-            "#e74c3c": "#c0392b", 
-            "#2ecc71": "#27ae60",
-            "#f39c12": "#e67e22"
-        }
-        return color_map.get(color, "#2c3e50")
+        # Use theme manager for consistent hover colors
+        colors = get_theme_manager().get_theme_definition()['colors']
+        return colors.get('secondary', colors['primary'])
     
     def update_value(self, new_value: str, new_subtitle: str = ""):
         """Update the metric value and subtitle"""
@@ -187,17 +195,24 @@ class PerformanceChart(QWidget):
     
     def setup_ui(self):
         """Setup chart UI"""
+        # Get theme colors
+        colors = get_theme_manager().get_theme_definition()['colors']
+        text_primary = colors['text_primary']
+        surface_hover = colors.get('ui_surfaceHover', '#ECF0F1')
+        text_muted = colors.get('text_muted', '#7F8C8D')
+        border_muted = colors.get('border_muted', '#BDC3C7')
+        
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         
         # Title
         title_label = QLabel(self.title)
-        title_label.setStyleSheet("""
+        title_label.setStyleSheet(f"""
             font-size: 14px; 
             font-weight: bold; 
-            color: #2c3e50; 
+            color: {text_primary}; 
             padding: 10px;
-            background-color: #ecf0f1;
+            background-color: {surface_hover};
             border-radius: 6px;
         """)
         layout.addWidget(title_label)
@@ -206,13 +221,13 @@ class PerformanceChart(QWidget):
             # Create PyQtGraph plot
             self.plot_widget = PlotWidget()
             self.plot_widget.setBackground('w')
-            self.plot_widget.setLabel('left', 'Emails per Minute', color='#2c3e50')
-            self.plot_widget.setLabel('bottom', 'Session', color='#2c3e50')
+            self.plot_widget.setLabel('left', 'Emails per Minute', color=text_primary)
+            self.plot_widget.setLabel('bottom', 'Session', color=text_primary)
             self.plot_widget.showGrid(x=True, y=True)
             
             # Style the plot
-            self.plot_widget.getAxis('left').setPen('#2c3e50')
-            self.plot_widget.getAxis('bottom').setPen('#2c3e50')
+            self.plot_widget.getAxis('left').setPen(text_primary)
+            self.plot_widget.getAxis('bottom').setPen(text_primary)
             
             layout.addWidget(self.plot_widget)
             
@@ -221,12 +236,12 @@ class PerformanceChart(QWidget):
         else:
             # Fallback text display
             fallback_text = QLabel("📊 Performance Chart\n(Install PyQtGraph for advanced visualization)")
-            fallback_text.setStyleSheet("""
+            fallback_text.setStyleSheet(f"""
                 font-size: 14px; 
-                color: #7f8c8d; 
+                color: {text_muted}; 
                 padding: 40px;
                 text-align: center;
-                border: 2px dashed #bdc3c7;
+                border: 2px dashed {border_muted};
                 border-radius: 8px;
             """)
             fallback_text.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -246,9 +261,11 @@ class PerformanceChart(QWidget):
         # Clear previous plots
         self.plot_widget.clear()
         
-        # Plot line
-        pen = pg.mkPen(color='#0077B5', width=3)
-        self.plot_widget.plot(x_data, y_data, pen=pen, symbol='o', symbolBrush='#0077B5', symbolSize=8)
+        # Plot line with theme colors
+        colors = get_theme_manager().get_theme_definition()['colors']
+        primary = colors['primary']
+        pen = pg.mkPen(color=primary, width=3)
+        self.plot_widget.plot(x_data, y_data, pen=pen, symbol='o', symbolBrush=primary, symbolSize=8)
         
         # Set axis ranges
         self.plot_widget.setXRange(0, sessions-1)
@@ -270,9 +287,11 @@ class PerformanceChart(QWidget):
         x_data = list(range(len(data)))
         y_data = [item.get('emails_per_minute', 0) for item in data]
         
-        # Plot line
-        pen = pg.mkPen(color='#0077B5', width=3)
-        self.plot_widget.plot(x_data, y_data, pen=pen, symbol='o', symbolBrush='#0077B5', symbolSize=8)
+        # Plot line with theme colors
+        colors = get_theme_manager().get_theme_definition()['colors']
+        primary = colors['primary']
+        pen = pg.mkPen(color=primary, width=3)
+        self.plot_widget.plot(x_data, y_data, pen=pen, symbol='o', symbolBrush=primary, symbolSize=8)
 
 
 class AnalyticsDashboard(QWidget):
@@ -307,31 +326,39 @@ class AnalyticsDashboard(QWidget):
         layout.addWidget(header)
         
         # Build content inside container
-        # Create tab widget
+        # Create tab widget with theme colors
+        colors = get_theme_manager().get_theme_definition()['colors']
+        canvas = colors.get('ui_canvas', '#F3F6F8')
+        surface_alt = colors.get('ui_surfaceAlt', '#F9FAFB')
+        text_secondary = colors['text_secondary']
+        primary = colors['primary']
+        text_inverse = colors.get('text_inverse', '#FFFFFF')
+        border_light = colors.get('border_light', '#E8EBED')
+        
         self.tab_widget = QTabWidget()
-        self.tab_widget.setStyleSheet("""
-            QTabWidget::pane {
+        self.tab_widget.setStyleSheet(f"""
+            QTabWidget::pane {{
                 border: none;
-                background-color: #F3F6F8;
-            }
-            QTabBar::tab {
-                background-color: #F9FAFB;
+                background-color: {canvas};
+            }}
+            QTabBar::tab {{
+                background-color: {surface_alt};
                 padding: 12px 24px;
                 margin-right: 2px;
                 border-top-left-radius: 8px;
                 border-top-right-radius: 8px;
                 font-size: 14px;
                 font-weight: bold;
-                color: #666666;
-            }
-            QTabBar::tab:selected {
-                background-color: #0077B5;
-                color: white;
-            }
-            QTabBar::tab:hover {
-                background-color: #E8EBED;
-                color: #0077B5;
-            }
+                color: {text_secondary};
+            }}
+            QTabBar::tab:selected {{
+                background-color: {primary};
+                color: {text_inverse};
+            }}
+            QTabBar::tab:hover {{
+                background-color: {border_light};
+                color: {primary};
+            }}
         """)
         
         # Dashboard tab
@@ -349,17 +376,22 @@ class AnalyticsDashboard(QWidget):
     
     def create_header(self) -> QWidget:
         """Create dashboard header (standardized to match Settings panel)"""
+        colors = get_theme_manager().get_theme_definition()['colors']
+        primary = colors['primary']
+        primary_border = colors.get('brand_primaryBorder', '#006097')
+        text_inverse = colors.get('text_inverse', '#FFFFFF')
+        
         header = QWidget()
         header.setFixedHeight(60)
-        header.setStyleSheet("""
-            background-color: #0077B5;
-            border-bottom: 1px solid #006097;
+        header.setStyleSheet(f"""
+            background-color: {primary};
+            border-bottom: 1px solid {primary_border};
         """)
         header_layout = QHBoxLayout(header)
         header_layout.setContentsMargins(20, 0, 20, 0)
         title = QLabel("Analytics")
-        title.setStyleSheet("""
-            color: white;
+        title.setStyleSheet(f"""
+            color: {text_inverse};
             font-size: 18px;
             font-weight: bold;
         """)
@@ -473,37 +505,45 @@ class AnalyticsDashboard(QWidget):
         
         # Status info
         status_group = QGroupBox("📋 System Status")
-        status_group.setStyleSheet("""
-            QGroupBox {
+        
+        # Get current theme colors for dynamic styling
+        colors = get_theme_manager().get_theme_definition()['colors']
+        brand_primary = colors.get('brand_primary', '#0077B5')
+        ui_surface = colors.get('ui_surface', '#FFFFFF')
+        ui_surfaceLight = colors.get('ui_surfaceLight', '#F8F9FA')
+        border_muted = colors.get('border_muted', '#BDC3C7')
+        
+        status_group.setStyleSheet(f"""
+            QGroupBox {{
                 font-weight: bold;
-                border: 2px solid #0077B5 !important;
+                border: 2px solid {brand_primary} !important;
                 border-radius: 8px;
                 margin-top: 0px;
                 padding-top: 15px;
                 font-size: 14px;
-                background-color: #FFFFFF;
-            }
-            QGroupBox::title {
+                background-color: {ui_surface};
+            }}
+            QGroupBox::title {{
                 subcontrol-origin: margin;
                 left: 15px;
                 padding: 0 10px 0 10px;
-                color: #0077B5;
-                background-color: #FFFFFF;
-            }
+                color: {brand_primary};
+                background-color: {ui_surface};
+            }}
         """)
         
         status_layout = QVBoxLayout(status_group)
         
         self.status_text = QTextEdit()
         self.status_text.setMaximumHeight(250)
-        self.status_text.setStyleSheet("""
-            QTextEdit {
-                border: 1px solid #bdc3c7;
+        self.status_text.setStyleSheet(f"""
+            QTextEdit {{
+                border: 1px solid {border_muted};
                 border-radius: 6px;
                 padding: 10px;
-                background-color: #f8f9fa;
+                background-color: {ui_surfaceLight};
                 font-size: 12px;
-            }
+            }}
         """)
         status_layout.addWidget(self.status_text)
         

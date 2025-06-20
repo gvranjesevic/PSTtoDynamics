@@ -187,31 +187,105 @@ class ThemeManager(QObject):
             'name': 'LinkedIn Blue',
             'description': 'Professional LinkedIn-inspired blue theme with modern aesthetics',
             'colors': {
-                'primary': '#0077B5',        # LinkedIn signature blue
-                'secondary': '#005885',      # Darker LinkedIn blue
-                'accent': '#00A0DC',         # Lighter LinkedIn blue
-                'success': '#057642',        # LinkedIn green
-                'warning': '#F5C75D',        # LinkedIn gold
-                'error': '#CC1016',          # LinkedIn red
-                'neutral': '#666666',        # LinkedIn gray
-                'background': '#F3F6F8',     # LinkedIn light background
-                'surface': '#FFFFFF',        # Pure white surfaces
-                'surface_secondary': '#F9FAFB', # Slightly off-white
-                'text_primary': '#000000',   # LinkedIn black text
-                'text_secondary': '#666666', # LinkedIn gray text
-                'text_muted': '#999999',     # Muted text
-                'border': '#D0D7DE',         # LinkedIn border gray
-                'border_light': '#E8EBED',   # Lighter border
-                'shadow': 'rgba(0, 119, 181, 0.15)', # LinkedIn blue shadow
-                'hover': '#004471',          # Darker blue for hover states
-                'active': '#003A5C',         # Even darker for active states
-                'focus': '#0077B5',          # LinkedIn blue for focus
-                'disabled': '#CCCCCC'        # Disabled state
+                # Brand Colors
+                'brand_primary': '#0077B5',
+                'brand_primaryHover': '#005885',
+                'brand_primaryActive': '#004A70',
+                'brand_secondary': '#005885',
+                'brand_accent': '#00A0DC',
+                'brand_primaryBorder': '#006097',
+                'brand_primaryHoverAlt': '#004471',
+                'brand_darkHover': '#004471',
+                
+                # UI Surface Colors
+                'ui_surface': '#FFFFFF',
+                'ui_surfaceAlt': '#F9FAFB',
+                'ui_canvas': '#F3F6F8',
+                'ui_surfaceLight': '#F8F9FA',
+                'ui_surfaceHover': '#ECF0F1',
+                'ui_surfaceHoverLight': '#E9ECEF',
+                'ui_surfaceHoverAlt': '#E8F4FD',
+                'ui_disabled': '#CCCCCC',
+                'ui_disabledDark': '#95A5A6',
+                'ui_buttonDark': '#6C757D',
+                'ui_buttonDarker': '#5A6268',
+                'ui_shadow': 'rgba(0,119,181,0.15)',
+                'ui_focus': '#0077B5',
+                
+                # Border Colors
+                'ui_border': '#D0D7DE',
+                'ui_divider': '#DEE2E6',
+                'ui_gridline': '#F0F0F0',
+                'border_light': '#E8EBED',
+                'border_muted': '#BDC3C7',
+                'border_gridlineAlt': '#E1E4E8',
+                
+                # Text Colors
+                'text_primary': '#2C3E50',
+                'text_secondary': '#666666',
+                'text_tertiary': '#7F8C8D',
+                'text_inverse': '#FFFFFF',
+                'text_muted': '#999999',
+                'text_dim': '#6C757D',
+                'text_dark': '#495057',
+                'text_neutral': '#495057',
+                'text_black': '#000000',
+                'text_link': '#0077B5',
+                'text_darkBackground': '#2C3E50',
+                'text_lightOnDark': '#ECF0F1',
+                
+                # State Colors
+                'state_success': '#28A745',
+                'state_successHover': '#229954',
+                'state_successButton': '#27AE60',
+                'state_successDeep': '#196F3D',
+                'state_warning': '#F59E0B',
+                'state_error': '#C0392B',
+                'state_errorButton': '#E74C3C',
+                'state_errorAlt': '#EF4444',
+                'state_info': '#3B82F6',
+                'state_successAlt': '#10B981',
+                'legacy_success': '#2ECC71',
+                
+                # Section Colors
+                'section_infoBorder': '#17A2B8',
+                'section_infoBg': '#E7F8FF',
+                'text_infoDark': '#0C5460',
+                'section_successBg': '#D4EDDA',
+                'section_successBgAlt': '#E8F8F5',
+                'text_successDark': '#155724',
+                'section_warningBorder': '#E67E22',
+                'section_warningBg': '#FEF9E7',
+                'text_warningDark': '#D68910',
+                'section_errorBorder': '#DC3545',
+                'section_errorBg': '#F8D7DA',
+                'text_errorDark': '#721C24',
+                'section_aiBorder': '#8E44AD',
+                'section_aiBg': '#FAF9FF',
+                'text_aiPurple': '#6C3483',
+                
+                # Legacy compatibility
+                'primary': '#0077B5',
+                'secondary': '#005885',
+                'accent': '#00A0DC',
+                'success': '#057642',
+                'warning': '#F5C75D',
+                'error': '#CC1016',
+                'neutral': '#666666',
+                'background': '#F3F6F8',
+                'surface': '#FFFFFF',
+                'surface_secondary': '#F9FAFB',
+                'border': '#D0D7DE',
+                'shadow': 'rgba(0, 119, 181, 0.15)',
+                'hover': '#004471',
+                'active': '#003A5C',
+                'focus': '#0077B5',
+                'disabled': '#CCCCCC'
             },
             'fonts': {
-                'primary': 'Segoe UI',       # Professional font
-                'secondary': 'Arial',        # Fallback
-                'code': 'Consolas',          # Code font
+                'primary': 'Segoe UI',
+                'secondary': 'Arial',
+                'code': 'Consolas',
                 'size_base': 14,
                 'size_small': 12,
                 'size_large': 16,

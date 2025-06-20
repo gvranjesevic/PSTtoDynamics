@@ -48,6 +48,24 @@ except ImportError as e:
     BACKEND_AVAILABLE = False
     logger.warning("⚠️ Backend modules not available in Configuration Manager: {e}")
 
+# Enhanced Components
+try:
+    sys.path.append('gui/themes')
+    sys.path.append('gui/core')
+    from theme_manager import get_theme_manager, ThemeType, apply_theme_to_widget
+    from enhanced_ux import (
+        get_keyboard_navigation_manager, get_notification_center, 
+        add_tooltip, show_notification, NotificationType
+    )
+    from performance_optimizer import (
+        get_performance_monitor, get_cache_manager, create_virtual_table,
+        run_background_task, PerformanceWidget
+    )
+    THEME_MANAGER_AVAILABLE = True
+except ImportError as e:
+    THEME_MANAGER_AVAILABLE = False
+    logger.warning("⚠️ Theme manager not available")
+
 
 class ConnectivityTestThread(QThread):
     """Thread for performing real connectivity tests to Azure AD and Dynamics 365"""
@@ -365,8 +383,27 @@ class DynamicsAuthWidget(QWidget):
         self.setup_ui()
         self.load_settings()
     
+    def apply_theme(self, theme_definition):
+        """Apply theme to authentication widget"""
+        # Re-setup UI with new theme colors
+        self.setup_ui()
+    
     def setup_ui(self):
         """Setup authentication configuration UI"""
+        # Get current theme colors for dynamic styling
+        if THEME_MANAGER_AVAILABLE:
+            colors = get_theme_manager().get_theme_definition()['colors']
+        else:
+            # Fallback colors if theme manager not available
+            colors = {
+                'text_dark': '#2c3e50',
+                'brand_primary': '#0077B5',
+                'ui_surfaceAlt': '#F9FAFB',
+                'ui_surface': '#FFFFFF',
+                'text_secondary': '#666666',
+                'brand_primaryHover': '#005885'
+            }
+        
         layout = QVBoxLayout(self)
         layout.setSpacing(20)
         layout.setContentsMargins(0, 20, 0, 20)
@@ -374,30 +411,30 @@ class DynamicsAuthWidget(QWidget):
         # Header with improved spacing
         header_label = QLabel("🔐 Dynamics 365 Authentication")
         header_label.setFont(QFont("Segoe UI", 16, QFont.Weight.Bold))
-        header_label.setStyleSheet("color: #2c3e50; margin-bottom: 10px;")
+        header_label.setStyleSheet(f"color: {colors['text_dark']}; margin-bottom: 10px;")
         layout.addWidget(header_label)
         
         # Instructions section for finding authentication data
         instructions_group = QGroupBox("📋 How to Find Your Authentication Information")
-        instructions_group.setStyleSheet("""
-            QGroupBox {
+        instructions_group.setStyleSheet(f"""
+            QGroupBox {{
                 font-weight: bold;
-                border: 2px solid #0077B5;
+                border: 2px solid {colors['brand_primary']};
                 border-radius: 8px;
                 margin-top: 0px;
                 padding-top: 15px;
-                background-color: #F9FAFB;
+                background-color: {colors['ui_surfaceAlt']};
                 font-size: 14px;
-            }
-            QGroupBox::title {
+            }}
+            QGroupBox::title {{
                 subcontrol-origin: margin;
                 left: 15px;
                 padding: 0 10px 0 10px;
-                color: #0077B5;
-                background-color: #F9FAFB;
+                color: {colors['brand_primary']};
+                background-color: {colors['ui_surfaceAlt']};
                 font-size: 14px;
                 font-weight: bold;
-            }
+            }}
         """)
         
         instructions_layout = QVBoxLayout(instructions_group)
@@ -459,23 +496,23 @@ class DynamicsAuthWidget(QWidget):
         instructions_text.setWordWrap(True)
         instructions_text.setTextFormat(Qt.TextFormat.RichText)
         instructions_text.setOpenExternalLinks(True)
-        instructions_text.setStyleSheet("""
-            QLabel {
-                color: #666666;
+        instructions_text.setStyleSheet(f"""
+            QLabel {{
+                color: {colors['text_secondary']};
                 font-size: 13px;
                 line-height: 1.6;
                 padding: 10px;
                 background-color: transparent;
-            }
-            QLabel a {
-                color: #0077B5;
+            }}
+            QLabel a {{
+                color: {colors['brand_primary']};
                 text-decoration: none;
                 font-weight: bold;
-            }
-            QLabel a:hover {
-                color: #005885;
+            }}
+            QLabel a:hover {{
+                color: {colors['brand_primaryHover']};
                 text-decoration: underline;
-            }
+            }}
         """)
         
         instructions_layout.addWidget(instructions_text)
@@ -483,23 +520,23 @@ class DynamicsAuthWidget(QWidget):
         
         # Configuration form with LinkedIn Blue theme
         form_group = QGroupBox("Authentication Credentials")
-        form_group.setStyleSheet("""
-            QGroupBox {
+        form_group.setStyleSheet(f"""
+            QGroupBox {{
                 font-weight: bold;
-                border: 2px solid #0077B5;
+                border: 2px solid {colors['brand_primary']};
                 border-radius: 8px;
                 margin-top: 0px;
                 padding-top: 15px;
-                background-color: #FFFFFF;
+                background-color: {colors['ui_surface']};
                 font-size: 14px;
-            }
-            QGroupBox::title {
+            }}
+            QGroupBox::title {{
                 subcontrol-origin: margin;
                 left: 15px;
                 padding: 0 10px 0 10px;
-                color: #0077B5;
-                background-color: #FFFFFF;
-            }
+                color: {colors['brand_primary']};
+                background-color: {colors['ui_surface']};
+            }}
         """)
         
         # Use grid layout for better control
@@ -520,7 +557,11 @@ class DynamicsAuthWidget(QWidget):
         
         # Tenant ID with enhanced styling and help button
         tenant_label = QLabel("Tenant ID:")
-        tenant_label.setStyleSheet("font-weight: bold; color: #2c3e50; font-size: 14px;")
+        # Get current theme colors for dynamic styling
+        colors = get_theme_manager().get_theme_definition()['colors']
+        text_primary = colors.get('text_primary', '#2C3E50')
+        
+        tenant_label.setStyleSheet(f"font-weight: bold; color: {text_primary}; font-size: 14px;")
         tenant_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
         
         tenant_container = QWidget()
@@ -534,27 +575,15 @@ class DynamicsAuthWidget(QWidget):
         
         tenant_help_btn = QPushButton("?")
         tenant_help_btn.setFixedSize(30, 30)
-        tenant_help_btn.setStyleSheet("""
-            QPushButton {
-                background-color: #0077B5;
-                color: white;
-                border: none;
-                border-radius: 15px;
-                font-size: 12px;
-                font-weight: bold;
-            }
-            QPushButton:hover {
-                background-color: #005885;
-            }
-        """)
+        tenant_help_btn.setStyleSheet(self.get_help_button_style())
         tenant_help_btn.setToolTip("Azure Portal → Azure Active Directory → Properties → Tenant ID")
         tenant_help_btn.clicked.connect(lambda: self.show_help_dialog("Tenant ID", 
             "📍 <b>Where to find your Tenant ID:</b><br><br>"
             "1. Go to <a href='https://portal.azure.com'>portal.azure.com</a><br>"
-            "2. Search for 'Azure Active Directory'<br>"
+            "2. Navigate to 'Azure Active Directory'<br>"
             "3. Click on 'Properties' in the left menu<br>"
             "4. Copy the <b>Tenant ID</b> (also called Directory ID)<br><br>"
-            "💡 This uniquely identifies your organization in Azure."))
+            "💡 This uniquely identifies your Azure AD tenant."))
         
         tenant_layout.addWidget(self.tenant_id_edit, 1)
         tenant_layout.addWidget(tenant_help_btn, 0)
@@ -564,7 +593,7 @@ class DynamicsAuthWidget(QWidget):
         
         # Client ID with enhanced styling and help button
         client_label = QLabel("Client ID:")
-        client_label.setStyleSheet("font-weight: bold; color: #2c3e50; font-size: 14px;")
+        client_label.setStyleSheet(f"font-weight: bold; color: {text_primary}; font-size: 14px;")
         client_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
         
         client_container = QWidget()
@@ -596,7 +625,7 @@ class DynamicsAuthWidget(QWidget):
         
         # Client Secret with enhanced styling and help button
         secret_label = QLabel("Client Secret:")
-        secret_label.setStyleSheet("font-weight: bold; color: #2c3e50; font-size: 14px;")
+        secret_label.setStyleSheet(f"font-weight: bold; color: {text_primary}; font-size: 14px;")
         secret_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
         
         secret_container = QWidget()
@@ -630,7 +659,7 @@ class DynamicsAuthWidget(QWidget):
         
         # Organization URL with enhanced styling and help button
         url_label = QLabel("Organization URL:")
-        url_label.setStyleSheet("font-weight: bold; color: #2c3e50; font-size: 14px;")
+        url_label.setStyleSheet(f"font-weight: bold; color: {text_primary}; font-size: 14px;")
         url_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
         
         url_container = QWidget()
@@ -664,25 +693,30 @@ class DynamicsAuthWidget(QWidget):
         layout.addWidget(form_group)
         
         # Test connection button with LinkedIn Blue theme
+        brand_primary = colors.get('brand_primary', '#0077B5')
+        brand_primary_hover = colors.get('brand_primaryHover', '#005885')
+        brand_primary_active = colors.get('brand_primaryActive', '#004A70')
+        text_inverse = colors.get('text_inverse', '#FFFFFF')
+        
         self.test_button = QPushButton("🔍 Test Connection")
         self.test_button.setMinimumHeight(45)
-        self.test_button.setStyleSheet("""
-            QPushButton {
-                background-color: #0077B5;
-                color: white;
+        self.test_button.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {brand_primary};
+                color: {text_inverse};
                 border: none;
                 border-radius: 8px;
                 font-size: 14px;
                 font-weight: bold;
                 padding: 12px 20px;
                 margin: 15px 0px 10px 0px;
-            }
-            QPushButton:hover {
-                background-color: #005885;
-            }
-            QPushButton:pressed {
-                background-color: #004A70;
-            }
+            }}
+            QPushButton:hover {{
+                background-color: {brand_primary_hover};
+            }}
+            QPushButton:pressed {{
+                background-color: {brand_primary_active};
+            }}
         """)
         self.test_button.clicked.connect(self.test_connection)
         layout.addWidget(self.test_button)
@@ -692,43 +726,67 @@ class DynamicsAuthWidget(QWidget):
     
     def get_input_style(self):
         """Get standardized input field styling with LinkedIn Blue theme"""
-        return """
-            QLineEdit {
+        # Get current theme colors for dynamic styling
+        if THEME_MANAGER_AVAILABLE:
+            colors = get_theme_manager().get_theme_definition()['colors']
+        else:
+            # Fallback colors if theme manager not available
+            colors = {
+                'ui_surface': '#FFFFFF',
+                'border_muted': '#bdc3c7',
+                'ui_focus': '#0077B5',
+                'brand_primaryHoverAlt': '#004A70',
+                'text_muted': '#95a5a6'
+            }
+        
+        return f"""
+            QLineEdit {{
                 padding: 12px 18px;
-                border: 2px solid #bdc3c7;
+                border: 2px solid {colors['border_muted']};
                 border-radius: 10px;
                 font-size: 14px;
-                background-color: white;
+                background-color: {colors['ui_surface']};
                 min-height: 20px;
                 font-family: 'Segoe UI', Arial, sans-serif;
-            }
-            QLineEdit:focus {
-                border-color: #0077B5;
+            }}
+            QLineEdit:focus {{
+                border-color: {colors['ui_focus']};
                 border-width: 3px;
-            }
-            QLineEdit:hover {
-                border-color: #004A70;
-            }
-            QLineEdit:placeholder {
-                color: #95a5a6;
+            }}
+            QLineEdit:hover {{
+                border-color: {colors['brand_primaryHoverAlt']};
+            }}
+            QLineEdit:placeholder {{
+                color: {colors['text_muted']};
                 font-style: italic;
-            }
+            }}
         """
     
     def get_help_button_style(self):
         """Get standardized help button styling with LinkedIn Blue theme"""
-        return """
-            QPushButton {
-                background-color: #0077B5;
-                color: white;
+        # Get current theme colors for dynamic styling
+        if THEME_MANAGER_AVAILABLE:
+            colors = get_theme_manager().get_theme_definition()['colors']
+        else:
+            # Fallback colors if theme manager not available
+            colors = {
+                'brand_primary': '#0077B5',
+                'brand_primaryHover': '#005885',
+                'text_inverse': 'white'
+            }
+        
+        return f"""
+            QPushButton {{
+                background-color: {colors['brand_primary']};
+                color: {colors['text_inverse']};
                 border: none;
                 border-radius: 15px;
                 font-size: 12px;
                 font-weight: bold;
-            }
-            QPushButton:hover {
-                background-color: #005885;
-            }
+            }}
+            QPushButton:hover {{
+                background-color: {colors['brand_primaryHover']};
+            }}
         """
     
     def show_help_dialog(self, title: str, content: str):
@@ -800,7 +858,7 @@ class DynamicsAuthWidget(QWidget):
         # Title - minimal
         title = QLabel("Authentication Test Results")
         title.setFont(QFont("Segoe UI", 11, QFont.Weight.Bold))
-        title.setStyleSheet("color: #0077B5; margin-bottom: 2px;")
+        title.setStyleSheet(f"color: {colors.get('brand_primary', '#0077B5')}; margin-bottom: 2px;")
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(title)
         
@@ -829,10 +887,19 @@ class DynamicsAuthWidget(QWidget):
         overall_frame.setMinimumHeight(24)
         overall_frame.setMaximumHeight(28)
         overall_frame.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        # Get theme colors for validation styling
+        colors = get_theme_manager().get_theme_definition()['colors']
+        state_success = colors.get('state_success', '#28A745')
+        state_error = colors.get('state_error', '#C0392B')
+        section_success_bg = colors.get('section_successBg', '#D4EDDA')
+        section_error_bg = colors.get('section_errorBg', '#F8D7DA')
+        text_success_dark = colors.get('text_successDark', '#155724')
+        text_error_dark = colors.get('text_errorDark', '#721C24')
+        
         overall_frame.setStyleSheet(f"""
             QFrame {{
-                background-color: {'#d4edda' if all_valid else '#f8d7da'};
-                border: 2px solid {'#28a745' if all_valid else '#dc3545'};
+                background-color: {section_success_bg if all_valid else section_error_bg};
+                border: 2px solid {state_success if all_valid else state_error};
                 border-radius: 3px;
                 padding: 4px;
                 margin-top: 2px;
@@ -847,10 +914,10 @@ class DynamicsAuthWidget(QWidget):
         overall_icon.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
         overall_icon.setMinimumSize(14, 14)
         overall_icon.setMaximumSize(14, 14)
-        overall_icon.setStyleSheet(f"color: {'#28a745' if all_valid else '#dc3545'}; background-color: transparent;")
+        overall_icon.setStyleSheet(f"color: {state_success if all_valid else state_error}; background-color: transparent;")
         overall_text = QLabel("Ready for connection!" if all_valid else "Authentication incomplete")
         overall_text.setFont(QFont("Segoe UI", 8, QFont.Weight.Bold))
-        overall_text.setStyleSheet(f"color: {'#155724' if all_valid else '#721c24'};")
+        overall_text.setStyleSheet(f"color: {text_success_dark if all_valid else text_error_dark};")
         overall_text.setWordWrap(True)
         
         overall_layout.addWidget(overall_icon)
@@ -866,10 +933,14 @@ class DynamicsAuthWidget(QWidget):
         close_button.setMinimumSize(50, 20)
         close_button.setMaximumSize(70, 24)
         close_button.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
-        close_button.setStyleSheet("""
-            QPushButton {
-                background-color: #0077B5;
-                color: white;
+        brand_primary = colors.get('brand_primary', '#0077B5')
+        brand_primary_hover = colors.get('brand_primaryHover', '#005885')
+        brand_primary_active = colors.get('brand_primaryActive', '#004A70')
+        text_inverse = colors.get('text_inverse', '#FFFFFF')
+        close_button.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {brand_primary};
+                color: {text_inverse};
                 border: none;
                 border-radius: 3px;
                 font-size: 9px;
@@ -877,13 +948,13 @@ class DynamicsAuthWidget(QWidget):
                 padding: 2px 8px;
                 min-width: 50px;
                 min-height: 20px;
-            }
-            QPushButton:hover {
-                background-color: #005885;
-            }
-            QPushButton:pressed {
-                background-color: #004A70;
-            }
+            }}
+            QPushButton:hover {{
+                background-color: {brand_primary_hover};
+            }}
+            QPushButton:pressed {{
+                background-color: {brand_primary_active};
+            }}
         """)
         close_button.clicked.connect(dialog.accept)
         button_layout.addWidget(close_button)
@@ -916,7 +987,7 @@ class DynamicsAuthWidget(QWidget):
         # Title
         title = QLabel("Testing Authentication Components")
         title.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
-        title.setStyleSheet("color: #0077B5;")
+        title.setStyleSheet(f"color: {colors.get('brand_primary', '#0077B5')};")
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(title)
         
@@ -935,19 +1006,21 @@ class DynamicsAuthWidget(QWidget):
         
         # Cancel button (initially hidden)
         cancel_button = QPushButton("Cancel")
-        cancel_button.setStyleSheet("""
-            QPushButton {
-                background-color: #dc3545;
-                color: white;
+        state_error_button = colors.get('state_errorButton', '#DC3545')
+        state_error = colors.get('state_error', '#C0392B')
+        cancel_button.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {state_error_button};
+                color: {text_inverse};
                 border: none;
                 border-radius: 4px;
                 font-size: 10px;
                 font-weight: bold;
                 padding: 8px 20px;
-            }
-            QPushButton:hover {
-                background-color: #c82333;
-            }
+            }}
+            QPushButton:hover {{
+                background-color: {state_error};
+            }}
         """)
         cancel_button.hide()
         layout.addWidget(cancel_button)
@@ -1013,7 +1086,7 @@ class DynamicsAuthWidget(QWidget):
         # Title
         title = QLabel("Complete Authentication Test Results")
         title.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
-        title.setStyleSheet("color: #0077B5; margin-bottom: 4px;")
+        title.setStyleSheet(f"color: {colors.get('brand_primary', '#0077B5')}; margin-bottom: 4px;")
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(title)
         
@@ -1404,6 +1477,22 @@ class ConfigurationManager(QWidget):
         self.setup_ui()
         self.load_all_settings()
     
+    def apply_theme(self, theme_definition):
+        """Apply theme to configuration manager"""
+        colors = theme_definition['colors']
+        
+        # Update main widget styling
+        self.setStyleSheet(f"""
+            ConfigurationManager {{
+                background: {colors['ui_canvas']};
+                color: {colors['text_primary']};
+            }}
+        """)
+        
+        # Refresh the auth widget if it has an apply_theme method
+        if hasattr(self.auth_widget, 'apply_theme'):
+            self.auth_widget.apply_theme(theme_definition)
+    
     def resizeEvent(self, event):
         """Override resize event - simplified like Import Wizard"""
         super().resizeEvent(event)
@@ -1424,17 +1513,28 @@ class ConfigurationManager(QWidget):
     
     def create_header(self) -> QWidget:
         """Create dashboard header (standardized to match Settings panel)"""
+        # Get current theme colors for dynamic styling
+        if THEME_MANAGER_AVAILABLE:
+            colors = get_theme_manager().get_theme_definition()['colors']
+        else:
+            # Fallback colors if theme manager not available
+            colors = {
+                'brand_primary': '#0077B5',
+                'brand_primaryBorder': '#006097',
+                'text_inverse': 'white'
+            }
+        
         header = QWidget()
         header.setFixedHeight(60)
-        header.setStyleSheet("""
-            background-color: #0077B5;
-            border-bottom: 1px solid #006097;
+        header.setStyleSheet(f"""
+            background-color: {colors['brand_primary']};
+            border-bottom: 1px solid {colors['brand_primaryBorder']};
         """)
         header_layout = QHBoxLayout(header)
         header_layout.setContentsMargins(20, 0, 20, 0)
         title = QLabel("Settings")
-        title.setStyleSheet("""
-            color: white;
+        title.setStyleSheet(f"""
+            color: {colors['text_inverse']};
             font-size: 18px;
             font-weight: bold;
         """)
@@ -1447,13 +1547,26 @@ class ConfigurationManager(QWidget):
         """Set up the main content area"""
         layout = self.layout()
         
+        # Get current theme colors for dynamic styling FIRST
+        if THEME_MANAGER_AVAILABLE:
+            colors = get_theme_manager().get_theme_definition()['colors']
+        else:
+            # Fallback colors if theme manager not available
+            colors = {
+                'ui_canvas': '#F3F6F8',
+                'ui_surface': '#FFFFFF',
+                'brand_primary': '#0077B5',
+                'ui_surfaceLight': '#F8F9FA',
+                'ui_divider': '#E1E4E8'
+            }
+        
         # ScrollArea (takes remaining space minus footer) - settings content ONLY
         scroll_area = QScrollArea()
         scroll_area.setWidgetResizable(True)
         scroll_area.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding)
         scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         scroll_area.setFrameShape(QFrame.Shape.NoFrame)
-        scroll_area.setStyleSheet("QScrollArea { border: none; background-color: #F3F6F8; }")
+        scroll_area.setStyleSheet(f"QScrollArea {{ border: none; background-color: {colors['ui_canvas']}; }}")
         
         scroll_widget = QWidget()
         scroll_widget.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Minimum)
@@ -1472,26 +1585,26 @@ class ConfigurationManager(QWidget):
         
         # Add the rest of the settings sections with consistent LinkedIn Blue theme
         email_section = QGroupBox("📧 Email Processing Settings")
-        email_section.setStyleSheet("""
-            QGroupBox {
+        email_section.setStyleSheet(f"""
+            QGroupBox {{
                 font-weight: bold;
-                border: 2px solid #0077B5;
+                border: 2px solid {colors['brand_primary']};
                 border-radius: 8px;
                 margin-top: 0px;
                 padding-top: 15px;
-                background-color: #FFFFFF;
+                background-color: {colors['ui_surface']};
                 font-size: 14px;
                 min-height: 160px;
-            }
-            QGroupBox::title {
+            }}
+            QGroupBox::title {{
                 subcontrol-origin: margin;
                 left: 15px;
                 padding: 0 10px 0 10px;
-                color: #0077B5;
-                background-color: #FFFFFF;
+                color: {colors['brand_primary']};
+                background-color: {colors['ui_surface']};
                 font-size: 14px;
                 font-weight: bold;
-            }
+            }}
         """)
         email_layout = QFormLayout(email_section)
         email_layout.setContentsMargins(20, 15, 20, 15)
@@ -1511,26 +1624,26 @@ class ConfigurationManager(QWidget):
         scroll_layout.addWidget(email_section)
         
         perf_section = QGroupBox("⚡ Performance Settings")
-        perf_section.setStyleSheet("""
-            QGroupBox {
+        perf_section.setStyleSheet(f"""
+            QGroupBox {{
                 font-weight: bold;
-                border: 2px solid #0077B5;
+                border: 2px solid {colors['brand_primary']};
                 border-radius: 8px;
                 margin-top: 0px;
                 padding-top: 15px;
-                background-color: #FFFFFF;
+                background-color: {colors['ui_surface']};
                 font-size: 14px;
                 min-height: 160px;
-            }
-            QGroupBox::title {
+            }}
+            QGroupBox::title {{
                 subcontrol-origin: margin;
                 left: 15px;
                 padding: 0 10px 0 10px;
-                color: #0077B5;
-                background-color: #FFFFFF;
+                color: {colors['brand_primary']};
+                background-color: {colors['ui_surface']};
                 font-size: 14px;
                 font-weight: bold;
-            }
+            }}
         """)
         perf_layout = QFormLayout(perf_section)
         perf_layout.setContentsMargins(20, 15, 20, 15)
@@ -1550,26 +1663,26 @@ class ConfigurationManager(QWidget):
         scroll_layout.addWidget(perf_section)
         
         ai_section = QGroupBox("🧠 AI Intelligence Settings")
-        ai_section.setStyleSheet("""
-            QGroupBox {
+        ai_section.setStyleSheet(f"""
+            QGroupBox {{
                 font-weight: bold;
-                border: 2px solid #0077B5;
+                border: 2px solid {colors['brand_primary']};
                 border-radius: 8px;
                 margin-top: 0px;
                 padding-top: 15px;
-                background-color: #FFFFFF;
+                background-color: {colors['ui_surface']};
                 font-size: 14px;
                 min-height: 160px;
-            }
-            QGroupBox::title {
+            }}
+            QGroupBox::title {{
                 subcontrol-origin: margin;
                 left: 15px;
                 padding: 0 10px 0 10px;
-                color: #0077B5;
-                background-color: #FFFFFF;
+                color: {colors['brand_primary']};
+                background-color: {colors['ui_surface']};
                 font-size: 14px;
                 font-weight: bold;
-            }
+            }}
         """)
         ai_layout = QFormLayout(ai_section)
         ai_layout.setContentsMargins(20, 15, 20, 15)
@@ -1600,11 +1713,11 @@ class ConfigurationManager(QWidget):
         # FOOTER - Apply Import Wizard's successful pattern
         footer = QFrame()  # Use QFrame like Import Wizard
         footer.setFixedHeight(80)  # Match Import Wizard's 80px (not 200px)
-        footer.setStyleSheet("""
-            QFrame {
-                background-color: #F8F9FA;
-            border-top: 1px solid #E1E4E8;
-            }
+        footer.setStyleSheet(f"""
+            QFrame {{
+                background-color: {colors['ui_surfaceLight']};
+            border-top: 1px solid {colors['ui_divider']};
+            }}
         """)
         footer_layout = QHBoxLayout(footer)
         footer_layout.setContentsMargins(20, 15, 20, 15)
@@ -1614,29 +1727,33 @@ class ConfigurationManager(QWidget):
         
         # Status label
         self.status_label = QLabel("Configuration ready")
-        self.status_label.setStyleSheet("color: #666; font-size: 14px;")
+        self.status_label.setStyleSheet(f"color: {colors.get('text_secondary', '#666')}; font-size: 14px;")
         footer_layout.addWidget(self.status_label)
         footer_layout.addStretch()
         
         # Save button
         self.save_button = QPushButton("Save Settings")
-        self.save_button.setStyleSheet("""
-            QPushButton {
-                background-color: #0077B5;
-                color: white;
+        brand_primary = colors.get('brand_primary', '#0077B5')
+        brand_primary_hover = colors.get('brand_primaryHover', '#005885')
+        brand_primary_active = colors.get('brand_primaryActive', '#004A70')
+        text_inverse = colors.get('text_inverse', '#FFFFFF')
+        self.save_button.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {brand_primary};
+                color: {text_inverse};
                 border: none;
                 padding: 12px 24px;
                 border-radius: 6px;
                 font-weight: bold;
                 font-size: 14px;
                 min-width: 140px;
-            }
-            QPushButton:hover {
-                background-color: #005885;
-            }
-            QPushButton:pressed {
-                background-color: #004A70;
-            }
+            }}
+            QPushButton:hover {{
+                background-color: {brand_primary_hover};
+            }}
+            QPushButton:pressed {{
+                background-color: {brand_primary_active};
+            }}
         """)
         self.save_button.clicked.connect(self.save_all_settings)
         footer_layout.addWidget(self.save_button)

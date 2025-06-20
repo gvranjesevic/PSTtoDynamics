@@ -28,6 +28,9 @@ from PyQt6.QtWidgets import (
 from PyQt6.QtCore import Qt, QTimer, pyqtSignal, QThread, QSize
 from PyQt6.QtGui import QFont, QPixmap, QIcon, QPalette
 
+# Theme manager to access LinkedIn Blue tokens dynamically
+from gui.themes.theme_manager import get_theme_manager
+
 # Import backend modules for actual import functionality
 try:
     sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
@@ -128,14 +131,16 @@ class WizardStep(QWidget):
             
             if self.title:
                 title_label = QLabel(self.title)
+                # Use dynamic theme colors
+                colors = get_theme_manager().get_theme_definition()['colors']
                 title_label.setFont(QFont("Segoe UI", 16, QFont.Weight.Bold))
-                title_label.setStyleSheet("color: #2c3e50; margin-bottom: 5px;")
+                title_label.setStyleSheet(f"color: {colors['text_primary']}; margin-bottom: 5px;")
                 header_layout.addWidget(title_label)
             
             if self.description:
                 desc_label = QLabel(self.description)
                 desc_label.setFont(QFont("Segoe UI", 11))
-                desc_label.setStyleSheet("color: #7f8c8d; margin-bottom: 20px;")
+                desc_label.setStyleSheet(f"color: {colors.get('text_tertiary', '#7F8C8D')}; margin-bottom: 20px;")
                 desc_label.setWordWrap(True)
                 header_layout.addWidget(desc_label)
             
@@ -204,18 +209,29 @@ class Step1FileSelection(WizardStep):
     
     def create_file_selection_section(self):
         """Create the file selection section"""
+        # Get theme colors dynamically
+        colors = get_theme_manager().get_theme_definition()['colors']
+        primary = colors['primary']
+        secondary = colors.get('secondary', primary)
+        surface = colors['surface']
+        border_muted = colors.get('border_muted', '#BDC3C7')
+        surface_light = colors.get('ui_surfaceLight', '#F8F9FA')
+        text_neutral = colors.get('text_neutral', '#495057')
+        text_dim = colors.get('text_dim', '#6C757D')
+        divider = colors.get('ui_divider', '#DEE2E6')
+        
         # File selection group - no title to save space
         file_group = QGroupBox("")  # Removed title
         file_group.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
-        file_group.setStyleSheet("""
-            QGroupBox {
+        file_group.setStyleSheet(f"""
+            QGroupBox {{
                 font-weight: bold;
-                border: 2px solid #0077B5;
+                border: 2px solid {primary};
                 border-radius: 10px;
-                margin-top: 0px; /* Controlled by layout spacing */
+                margin-top: 0px;
                 padding-top: 15px;
-                background-color: white;
-            }
+                background-color: {surface};
+            }}
         """)
         
         # Layout for file group - make it expand vertically
@@ -235,19 +251,19 @@ class Step1FileSelection(WizardStep):
         self.file_path_edit.setReadOnly(True)
         self.file_path_edit.setMinimumHeight(60) # Standardized height
         self.file_path_edit.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        self.file_path_edit.setStyleSheet("""
-            QLineEdit {
-                padding: 20px;
-                border: 2px solid #bdc3c7;
-                border-radius: 8px;
+        self.file_path_edit.setStyleSheet(f"""
+            QLineEdit {{
+                padding: 10px 40px 10px 15px;
+                border: 2px solid {border_muted};
+                border-radius: 15px;
                 font-size: 13px;
-                background-color: #f8f9fa;
-                color: #495057;
-            }
-            QLineEdit:focus {
-                border-color: #0077B5;
-                background-color: white;
-            }
+                background-color: {surface_light};
+                color: {text_neutral};
+            }}
+            QLineEdit:focus {{
+                border-color: {primary};
+                background-color: {surface};
+            }}
         """)
         
         # Browse button - Standardized padding and height
@@ -255,25 +271,25 @@ class Step1FileSelection(WizardStep):
         self.browse_button.setMinimumHeight(60) # Standardized height
         self.browse_button.setMinimumWidth(150)
         self.browse_button.setSizePolicy(QSizePolicy.Policy.Fixed, QSizePolicy.Policy.Fixed)
-        self.browse_button.setStyleSheet("""
-            QPushButton {
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #0077B5, stop:1 #005885);
-                color: white;
+        self.browse_button.setStyleSheet(f"""
+            QPushButton {{
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                    stop:0 {primary}, stop:1 {secondary});
+                color: {colors.get('text_inverse', surface)};
                 border: none;
                 border-radius: 8px;
                 font-size: 13px;
                 font-weight: bold;
                 padding: 20px 25px;
-            }
-            QPushButton:hover {
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #E8F4FD, stop:1 #0077B5);
-            }
-            QPushButton:pressed {
-                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #005885, stop:1 #004A70);
-            }
+            }}
+            QPushButton:hover {{
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                    stop:0 {colors.get('ui_surfaceHoverAlt', '#E8F4FD')}, stop:1 {primary});
+            }}
+            QPushButton:pressed {{
+                background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                    stop:0 {secondary}, stop:1 {colors.get('brand_primaryActive', '#004A70')});
+            }}
         """)
         self.browse_button.clicked.connect(self.browse_file)
         
@@ -289,16 +305,16 @@ class Step1FileSelection(WizardStep):
         self.file_info_label.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
         self.file_info_label.setWordWrap(True)
         self.file_info_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
-        self.file_info_label.setStyleSheet("""
-            QLabel {
-                color: #6c757d; 
+        self.file_info_label.setStyleSheet(f"""
+            QLabel {{
+                color: {text_dim}; 
                 padding: 20px; 
-                border: 2px dashed #dee2e6; 
-                border-radius: 10px; 
-                background-color: #f8f9fa;
+                border: 2px dashed {divider}; 
+                border-radius: 8px; 
+                background-color: {surface_light};
                 font-size: 13px;
                 line-height: 1.8;
-            }
+            }}
         """)
         
         # Add without stretch factor - let it size to content
@@ -308,18 +324,24 @@ class Step1FileSelection(WizardStep):
     
     def create_tips_section(self):
         """Create the tips and guidelines section"""
+        # Get theme colors
+        colors = get_theme_manager().get_theme_definition()['colors']
+        info_border = colors.get('section_infoBorder', '#17A2B8')
+        info_bg = colors.get('section_infoBg', '#E7F8FF')
+        info_text = colors.get('text_infoDark', '#0C5460')
+        
         # Tips group - no title to save space
         tips_group = QGroupBox("")  # Removed title
         tips_group.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
-        tips_group.setStyleSheet("""
-            QGroupBox {
+        tips_group.setStyleSheet(f"""
+            QGroupBox {{
                 font-weight: bold;
-                border: 2px solid #17a2b8;
+                border: 2px solid {info_border};
                 border-radius: 10px;
-                margin-top: 0px; /* Controlled by layout spacing */
+                margin-top: 0px;
                 padding-top: 15px;
-                background-color: #e7f8ff;
-            }
+                background-color: {info_bg};
+            }}
         """)
         
         # Layout for tips
@@ -339,14 +361,14 @@ class Step1FileSelection(WizardStep):
             tip_label = QLabel(tip)
             tip_label.setWordWrap(True)
             tip_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
-            tip_label.setStyleSheet("""
-                QLabel {
-                    color: #0c5460; 
+            tip_label.setStyleSheet(f"""
+                QLabel {{
+                    color: {info_text}; 
                     font-size: 13px;
                     line-height: 1.6;
                     padding: 8px 0px;
                     margin: 2px 0px;
-                }
+                }}
             """)
             tips_layout.addWidget(tip_label)
         
@@ -379,30 +401,32 @@ class Step1FileSelection(WizardStep):
 <b>✅ Status:</b> Ready for import"""
             
             self.file_info_label.setText(info_text)
-            self.file_info_label.setStyleSheet("""
-                QLabel {
-                    color: #155724; 
+            colors = get_theme_manager().get_theme_definition()['colors']
+            self.file_info_label.setStyleSheet(f"""
+                QLabel {{
+                    color: {colors.get('text_successDark', '#155724')}; 
                     padding: 20px; 
-                    border: 2px solid #28a745; 
+                    border: 2px solid {colors.get('state_success', '#28A745')}; 
                     border-radius: 6px; 
-                    background-color: #d4edda;
+                    background-color: {colors.get('section_successBg', '#D4EDDA')};
                     font-size: 12px;
                     line-height: 1.6;
-                }
+                }}
             """)
             
         except Exception as e:
             self.file_info_label.setText(f"<b>❌ Error reading file:</b><br/>{str(e)}")
-            self.file_info_label.setStyleSheet("""
-                QLabel {
-                    color: #721c24; 
+            colors = get_theme_manager().get_theme_definition()['colors']
+            self.file_info_label.setStyleSheet(f"""
+                QLabel {{
+                    color: {colors.get('text_errorDark', '#721C24')}; 
                     padding: 20px; 
-                    border: 2px solid #dc3545; 
+                    border: 2px solid {colors.get('section_errorBorder', '#DC3545')}; 
                     border-radius: 6px; 
-                    background-color: #f8d7da;
+                    background-color: {colors.get('section_errorBg', '#F8D7DA')};
                     font-size: 12px;
                     line-height: 1.6;
-                }
+                }}
             """)
     
     def validate_step(self) -> tuple[bool, str]:
@@ -477,25 +501,31 @@ class Step2ImportSettings(WizardStep):
     
     def create_ai_settings_section(self):
         """Create AI Intelligence settings section"""
+        # Get theme colors
+        colors = get_theme_manager().get_theme_definition()['colors']
+        ai_border = colors.get('section_aiBorder', '#8E44AD')
+        ai_bg = colors.get('section_aiBg', '#FAF9FF')
+        ai_text = colors.get('text_aiPurple', '#6C3483')
+        
         ai_group = QGroupBox("🤖 AI Intelligence Settings")
         ai_group.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
-        ai_group.setStyleSheet("""
-            QGroupBox {
+        ai_group.setStyleSheet(f"""
+            QGroupBox {{
                 font-weight: bold;
-                border: 2px solid #8e44ad;
+                border: 2px solid {ai_border};
                 border-radius: 10px;
-                margin-top: 25px; /* Increased margin-top to make space for title */
-                padding-top: 15px; /* Normal content padding */
-                background-color: #faf9ff;
-            }
-            QGroupBox::title {
+                margin-top: 25px;
+                padding-top: 15px;
+                background-color: {ai_bg};
+            }}
+            QGroupBox::title {{
                 subcontrol-origin: margin;
                 left: 15px;
                 padding: 0 10px 0 10px;
-                color: #6c3483;
-                background-color: #faf9ff;
+                color: {ai_text};
+                background-color: {ai_bg};
                 font-size: 14px;
-            }
+            }}
         """)
         
         ai_layout = QVBoxLayout(ai_group)
@@ -529,25 +559,31 @@ class Step2ImportSettings(WizardStep):
     
     def create_processing_section(self):
         """Create processing options section"""
+        # Get theme colors
+        colors = get_theme_manager().get_theme_definition()['colors']
+        warning_border = colors.get('section_warningBorder', '#E67E22')
+        warning_bg = colors.get('section_warningBg', '#FEF9E7')
+        warning_text = colors.get('text_warningDark', '#D68910')
+        
         processing_group = QGroupBox("⚙️ Processing Options")
         processing_group.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
-        processing_group.setStyleSheet("""
-            QGroupBox {
+        processing_group.setStyleSheet(f"""
+            QGroupBox {{
                 font-weight: bold;
-                border: 2px solid #e67e22;
+                border: 2px solid {warning_border};
                 border-radius: 10px;
-                margin-top: 25px; /* Increased margin-top to make space for title */
-                padding-top: 15px; /* Normal content padding */
-                background-color: #fef9e7;
-            }
-            QGroupBox::title {
+                margin-top: 25px;
+                padding-top: 15px;
+                background-color: {warning_bg};
+            }}
+            QGroupBox::title {{
                 subcontrol-origin: margin;
                 left: 15px;
                 padding: 0 10px 0 10px;
-                color: #d68910;
-                background-color: #fef9e7;
+                color: {warning_text};
+                background-color: {warning_bg};
                 font-size: 14px;
-            }
+            }}
         """)
         
         processing_layout = QVBoxLayout(processing_group)
@@ -565,10 +601,10 @@ class Step2ImportSettings(WizardStep):
         batch_text_layout.setSpacing(5)
         
         batch_label = QLabel("📦 Batch Size")
-        batch_label.setStyleSheet("color: #2c3e50; font-size: 14px; font-weight: bold;")
+        batch_label.setStyleSheet(f"color: {colors['text_primary']}; font-size: 14px; font-weight: bold;")
         
         batch_info = QLabel("Emails per batch (recommended: 100)")
-        batch_info.setStyleSheet("color: #6c757d; font-size: 12px;")
+        batch_info.setStyleSheet(f"color: {colors.get('text_dim', '#6C757D')}; font-size: 12px;")
 
         batch_text_layout.addWidget(batch_label)
         batch_text_layout.addWidget(batch_info)
@@ -581,50 +617,55 @@ class Step2ImportSettings(WizardStep):
         self.batch_size_spinner.setValue(100)
         self.batch_size_spinner.setMinimumWidth(120)
         self.batch_size_spinner.setMinimumHeight(45)
-        self.batch_size_spinner.setStyleSheet("""
-            QSpinBox {
-                border: 2px solid #bdc3c7;
-                border-radius: 8px;
+        border_muted = colors.get('border_muted', '#BDC3C7')
+        surface_light = colors.get('ui_surfaceLight', '#F8F9FA')
+        surface_hover_light = colors.get('ui_surfaceHoverLight', '#E9ECEF')
+        text_dim = colors.get('text_dim', '#6C757D')
+        
+        self.batch_size_spinner.setStyleSheet(f"""
+            QSpinBox {{
+                border: 2px solid {border_muted};
+                border-radius: 6px;
                 font-size: 13px;
-                background-color: white;
-                padding-right: 20px; /* Make room for buttons */
+                background-color: {colors['surface']};
+                padding-right: 20px;
                 padding-left: 10px;
-            }
-            QSpinBox:focus {
-                border-color: #e67e22;
-            }
-            QSpinBox::up-button, QSpinBox::down-button {
+            }}
+            QSpinBox:focus {{
+                border-color: {warning_border};
+            }}
+            QSpinBox::up-button, QSpinBox::down-button {{
                 subcontrol-origin: border;
-                background: #f8f9fa;
+                background: {surface_light};
                 width: 20px;
                 border-left-width: 1px;
-                border-left-color: #bdc3c7;
+                border-left-color: {border_muted};
                 border-left-style: solid;
                 border-radius: 0;
-            }
-            QSpinBox::up-button {
+            }}
+            QSpinBox::up-button {{
                 subcontrol-position: top right;
                 border-top-right-radius: 6px;
                 height: 21px;
-            }
-            QSpinBox::down-button {
+            }}
+            QSpinBox::down-button {{
                 subcontrol-position: bottom right;
                 border-bottom-right-radius: 6px;
                 height: 20px;
-            }
-            QSpinBox::up-button:hover, QSpinBox::down-button:hover {
-                background: #e9ecef;
-            }
-            QSpinBox::up-arrow {
-                image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="%236c757d"><path d="m5 3l-4 4h8z"/></svg>');
+            }}
+            QSpinBox::up-button:hover, QSpinBox::down-button:hover {{
+                background: {surface_hover_light};
+            }}
+            QSpinBox::up-arrow {{
+                image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="{text_dim.replace('#', '%23')}"><path d="m5 3l-4 4h8z"/></svg>');
                 width: 10px;
                 height: 10px;
-            }
-            QSpinBox::down-arrow {
-                image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="%236c757d"><path d="m5 7l4-4h-8z"/></svg>');
+            }}
+            QSpinBox::down-arrow {{
+                image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" fill="{text_dim.replace('#', '%23')}"><path d="m5 7l4-4h-8z"/></svg>');
                 width: 10px;
                 height: 10px;
-            }
+            }}
         """)
         
         batch_layout.addLayout(batch_text_layout, 1) # Add text with stretch
@@ -652,25 +693,31 @@ class Step2ImportSettings(WizardStep):
     
     def create_analytics_section(self):
         """Create analytics settings section"""
+        # Get theme colors
+        colors = get_theme_manager().get_theme_definition()['colors']
+        success_button = colors.get('state_successButton', '#27AE60')
+        success_bg_alt = colors.get('section_successBgAlt', '#E8F8F5')
+        success_deep = colors.get('text_successDeep', '#196F3D')
+        
         analytics_group = QGroupBox("📊 Analytics Settings")
         analytics_group.setFont(QFont("Segoe UI", 12, QFont.Weight.Bold))
-        analytics_group.setStyleSheet("""
-            QGroupBox {
+        analytics_group.setStyleSheet(f"""
+            QGroupBox {{
                 font-weight: bold;
-                border: 2px solid #27ae60;
+                border: 2px solid {success_button};
                 border-radius: 10px;
-                margin-top: 25px; /* Increased margin-top to make space for title */
-                padding-top: 15px; /* Normal content padding */
-                background-color: #e8f8f5;
-            }
-            QGroupBox::title {
+                margin-top: 25px;
+                padding-top: 15px;
+                background-color: {success_bg_alt};
+            }}
+            QGroupBox::title {{
                 subcontrol-origin: margin;
                 left: 15px;
                 padding: 0 10px 0 10px;
-                color: #196f3d;
-                background-color: #e8f8f5;
+                color: {success_deep};
+                background-color: {success_bg_alt};
                 font-size: 14px;
-            }
+            }}
         """)
         
         analytics_layout = QVBoxLayout(analytics_group)
@@ -703,6 +750,14 @@ class Step2ImportSettings(WizardStep):
     
     def create_styled_checkbox(self, title, description):
         """Create a styled checkbox with title and description"""
+        # Get theme colors
+        colors = get_theme_manager().get_theme_definition()['colors']
+        text_primary = colors['text_primary']
+        border_muted = colors.get('border_muted', '#BDC3C7')
+        primary = colors['primary']
+        text_dim = colors.get('text_dim', '#6C757D')
+        surface = colors['surface']
+        
         container = QWidget()
         container.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
         
@@ -714,7 +769,7 @@ class Step2ImportSettings(WizardStep):
         checkbox.setStyleSheet(f"""
             QCheckBox {{
                 font-size: 13px;
-                color: #2c3e50;
+                color: {text_primary};
                 font-weight: 600;
                 spacing: 12px;
             }}
@@ -722,27 +777,27 @@ class Step2ImportSettings(WizardStep):
                 width: 20px;
                 height: 20px;
                 border-radius: 4px;
-                border: 2px solid #bdc3c7;
-                background-color: white;
+                border: 2px solid {border_muted};
+                background-color: {surface};
             }}
             QCheckBox::indicator:checked {{
-                background-color: #0077B5;
-                border-color: #0077B5;
+                background-color: {primary};
+                border-color: {primary};
                 image: url(data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTIiIGhlaWdodD0iOSIgdmlld0JveD0iMCAwIDEyIDkiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxwYXRoIGQ9Ik0xIDQuNUw0LjUgOEwxMSAxIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgo8L3N2Zz4K);
             }}
             QCheckBox::indicator:hover {{
-                border-color: #0077B5;
+                border-color: {primary};
             }}
         """)
         
         desc_label = QLabel(description)
-        desc_label.setStyleSheet("""
-            QLabel {
-                color: #6c757d; 
+        desc_label.setStyleSheet(f"""
+            QLabel {{
+                color: {text_dim}; 
                 font-size: 12px;
                 margin-left: 32px;
                 line-height: 1.4;
-            }
+            }}
         """)
         desc_label.setWordWrap(True)
         
@@ -783,6 +838,12 @@ class Step3ImportProgress(WizardStep):
     
     def setup_progress_ui(self):
         """Setup progress monitoring interface"""
+        # Get theme colors
+        colors = get_theme_manager().get_theme_definition()['colors']
+        border_muted = colors.get('border_muted', '#BDC3C7')
+        primary = colors['primary']
+        text_primary = colors['text_primary']
+        
         layout = QVBoxLayout(self.content_area)
         
         # Progress overview
@@ -793,24 +854,24 @@ class Step3ImportProgress(WizardStep):
         # Main progress bar
         self.main_progress = QProgressBar()
         self.main_progress.setMinimumHeight(30)
-        self.main_progress.setStyleSheet("""
-            QProgressBar {
-                border: 2px solid #bdc3c7;
+        self.main_progress.setStyleSheet(f"""
+            QProgressBar {{
+                border: 2px solid {border_muted};
                 border-radius: 8px;
                 text-align: center;
                 font-weight: bold;
                 font-size: 12px;
-            }
-            QProgressBar::chunk {
-                background-color: #0077B5;
+            }}
+            QProgressBar::chunk {{
+                background-color: {primary};
                 border-radius: 6px;
-            }
+            }}
         """)
         
         # Status label
         self.status_label = QLabel("Ready to start import...")
         self.status_label.setFont(QFont("Segoe UI", 11))
-        self.status_label.setStyleSheet("color: #2c3e50; padding: 10px;")
+        self.status_label.setStyleSheet(f"color: {text_primary}; padding: 10px;")
         self.status_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         
         progress_layout.addWidget(self.main_progress)
@@ -826,17 +887,20 @@ class Step3ImportProgress(WizardStep):
         self.log_area = QTextEdit()
         self.log_area.setMinimumHeight(200)
         self.log_area.setReadOnly(True)
-        self.log_area.setStyleSheet("""
-            QTextEdit {
-                background-color: #2c3e50;
-                color: #ecf0f1;
+        text_dark_bg = colors.get('text_darkBackground', '#2C3E50')
+        text_light_on_dark = colors.get('text_lightOnDark', '#ECF0F1')
+        
+        self.log_area.setStyleSheet(f"""
+            QTextEdit {{
+                background-color: {text_dark_bg};
+                color: {text_light_on_dark};
                 border: none;
                 border-radius: 6px;
                 padding: 10px;
                 font-family: 'Consolas', monospace;
                 font-size: 10px;
                 line-height: 1.4;
-            }
+            }}
         """)
         
         log_layout.addWidget(self.log_area)
@@ -845,46 +909,53 @@ class Step3ImportProgress(WizardStep):
         # Control buttons
         control_layout = QHBoxLayout()
         
+        success_button = colors.get('state_successButton', '#27AE60')
+        success_hover = colors.get('state_successHover', '#229954')
+        error_button = colors.get('state_errorButton', '#E74C3C')
+        error_hover = colors.get('state_error', '#C0392B')
+        disabled_dark = colors.get('ui_disabledDark', '#95A5A6')
+        text_inverse = colors.get('text_inverse', '#FFFFFF')
+        
         self.start_button = QPushButton("🚀 Start Import")
         self.start_button.setMinimumHeight(40)
-        self.start_button.setStyleSheet("""
-            QPushButton {
-                background-color: #27ae60;
-                color: white;
+        self.start_button.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {success_button};
+                color: {text_inverse};
                 border: none;
                 border-radius: 6px;
                 font-size: 12px;
                 font-weight: bold;
                 padding: 10px 20px;
-            }
-            QPushButton:hover {
-                background-color: #229954;
-            }
-            QPushButton:disabled {
-                background-color: #95a5a6;
-            }
+            }}
+            QPushButton:hover {{
+                background-color: {success_hover};
+            }}
+            QPushButton:disabled {{
+                background-color: {disabled_dark};
+            }}
         """)
         self.start_button.clicked.connect(self.start_import)
         
         self.stop_button = QPushButton("⏹️ Stop Import")
         self.stop_button.setMinimumHeight(40)
         self.stop_button.setEnabled(False)
-        self.stop_button.setStyleSheet("""
-            QPushButton {
-                background-color: #e74c3c;
-                color: white;
+        self.stop_button.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {error_button};
+                color: {text_inverse};
                 border: none;
                 border-radius: 6px;
                 font-size: 12px;
                 font-weight: bold;
                 padding: 10px 20px;
-            }
-            QPushButton:hover {
-                background-color: #c0392b;
-            }
-            QPushButton:disabled {
-                background-color: #95a5a6;
-            }
+            }}
+            QPushButton:hover {{
+                background-color: {error_hover};
+            }}
+            QPushButton:disabled {{
+                background-color: {disabled_dark};
+            }}
         """)
         self.stop_button.clicked.connect(self.stop_import)
         
@@ -1024,18 +1095,24 @@ class ImportWizard(QWidget):
         self.update_navigation_ui()
     
     def create_header(self) -> QWidget:
-        """Create wizard header (standardized to match Settings panel)"""
+        """Create wizard header"""
+        # Get current theme colors for dynamic styling
+        colors = get_theme_manager().get_theme_definition()['colors']
+        brand_primary = colors.get('brand_primary', '#0077B5')
+        brand_primary_border = colors.get('brand_primaryBorder', '#006097')
+        text_inverse = colors.get('text_inverse', '#FFFFFF')
+        
         header = QWidget()
         header.setFixedHeight(60)
-        header.setStyleSheet("""
-            background-color: #0077B5;
-            border-bottom: 1px solid #006097;
+        header.setStyleSheet(f"""
+            background-color: {brand_primary};
+            border-bottom: 1px solid {brand_primary_border};
         """)
         header_layout = QHBoxLayout(header)
         header_layout.setContentsMargins(20, 0, 20, 0)
         title = QLabel("Import Wizard")
-        title.setStyleSheet("""
-            color: white;
+        title.setStyleSheet(f"""
+            color: {text_inverse};
             font-size: 18px;
             font-weight: bold;
         """)
@@ -1046,12 +1123,17 @@ class ImportWizard(QWidget):
     
     def create_navigation_sidebar(self) -> QWidget:
         """Create responsive step navigation sidebar"""
+        # Get current theme colors for dynamic styling
+        colors = get_theme_manager().get_theme_definition()['colors']
+        ui_surface_light = colors.get('ui_surfaceLight', '#F8F9FA')
+        ui_divider = colors.get('ui_divider', '#DEE2E6')
+        
         sidebar = QFrame()
-        sidebar.setStyleSheet("""
-            QFrame {
-                background-color: #f8f9fa;
-                border-right: 1px solid #dee2e6;
-            }
+        sidebar.setStyleSheet(f"""
+            QFrame {{
+                background-color: {ui_surface_light};
+                border-right: 1px solid {ui_divider};
+            }}
         """)
         sidebar.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding)
         
@@ -1091,6 +1173,18 @@ class ImportWizard(QWidget):
     
     def create_nav_step(self, number: str, title: str, description: str, active: bool = False) -> QWidget:
         """Create a responsive navigation step widget"""
+        # Get current theme colors for dynamic styling
+        colors = get_theme_manager().get_theme_definition()['colors']
+        ui_surface = colors.get('ui_surface', '#FFFFFF')
+        brand_primary = colors.get('brand_primary', '#0077B5')
+        text_primary = colors.get('text_primary', '#2C3E50')
+        border_muted = colors.get('border_muted', '#BDC3C7')
+        ui_surfaceAlt = colors.get('ui_surfaceAlt', '#F9FAFB')
+        ui_border = colors.get('ui_border', '#D0D7DE')
+        text_secondary = colors.get('text_secondary', '#666666')
+        brand_primary_hover = colors.get('brand_primaryHover', '#005885')
+        ui_surfaceHoverAlt = colors.get('ui_surfaceHoverAlt', '#E8F4FD')
+        
         widget = QFrame()
         widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
         widget.setMinimumHeight(75)
@@ -1098,43 +1192,43 @@ class ImportWizard(QWidget):
         if active:
             widget.setStyleSheet(f"""
                 QWidget {{
-                    background-color: white;
-                    border: 2px solid #0077B5;
+                    background-color: {ui_surface};
+                    border: 2px solid {brand_primary};
                     border-radius: 10px;
                     padding: 15px;
                 }}
                 QLabel {{
-                    color: #2c3e50;
+                    color: {text_primary};
                     font-size: 13px;
                 }}
                 QLineEdit, QComboBox {{
-                    border: 2px solid #bdc3c7;
-                    border-color: #0077B5;
+                    border: 2px solid {border_muted};
+                    border-color: {brand_primary};
                     border-radius: 6px;
                     padding: 8px;
                     font-size: 13px;
                 }}
                 QLineEdit:focus, QComboBox:focus {{
-                    border-color: #0077B5;
+                    border-color: {brand_primary};
                     background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                        stop:0 #0077B5, stop:1 #005885);
+                        stop:0 {brand_primary}, stop:1 {brand_primary_hover});
                 }}
                 QLineEdit:hover, QComboBox:hover {{
-                    border-color: #0077B5;
+                    border-color: {brand_primary};
                     background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-                        stop:0 #E8F4FD, stop:1 #0077B5);
+                        stop:0 {ui_surfaceHoverAlt}, stop:1 {brand_primary});
                 }}
             """)
         else:
-            widget.setStyleSheet("""
-                QFrame {
-                    background-color: #F9FAFB;
+            widget.setStyleSheet(f"""
+                QFrame {{
+                    background-color: {ui_surfaceAlt};
                     border-radius: 8px;
-                    border: 2px solid #D0D7DE;
-                }
-                QLabel {
-                    color: #666666;
-                }
+                    border: 2px solid {ui_border};
+                }}
+                QLabel {{
+                    color: {text_secondary};
+                }}
             """)
         
         layout = QHBoxLayout(widget)
@@ -1178,13 +1272,21 @@ class ImportWizard(QWidget):
     
     def create_footer(self) -> QWidget:
         """Create wizard footer with navigation buttons"""
+        # Get current theme colors for dynamic styling
+        colors = get_theme_manager().get_theme_definition()['colors']
+        ui_surface_light = colors.get('ui_surfaceLight', '#F8F9FA')
+        ui_divider = colors.get('ui_divider', '#DEE2E6')
+        ui_button_dark = colors.get('ui_buttonDark', '#6C757D')
+        ui_button_darker = colors.get('ui_buttonDarker', '#5A6268')
+        text_inverse = colors.get('text_inverse', '#FFFFFF')
+        
         footer = QFrame()
         footer.setFixedHeight(80)
-        footer.setStyleSheet("""
-            QFrame {
-                background-color: #f8f9fa;
-                border-top: 1px solid #dee2e6;
-            }
+        footer.setStyleSheet(f"""
+            QFrame {{
+                background-color: {ui_surface_light};
+                border-top: 1px solid {ui_divider};
+            }}
         """)
         
         layout = QHBoxLayout(footer)
@@ -1193,19 +1295,19 @@ class ImportWizard(QWidget):
         # Cancel button
         self.cancel_button = QPushButton("❌ Cancel")
         self.cancel_button.setMinimumHeight(40)
-        self.cancel_button.setStyleSheet("""
-            QPushButton {
-                background-color: #6c757d;
-                color: white;
+        self.cancel_button.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {ui_button_dark};
+                color: {text_inverse};
                 border: none;
                 border-radius: 8px;
                 font-size: 14px;
                 font-weight: bold;
                 padding: 10px 20px;
-            }
-            QPushButton:hover {
-                background-color: #5a6268;
-            }
+            }}
+            QPushButton:hover {{
+                background-color: {ui_button_darker};
+            }}
         """)
         self.cancel_button.clicked.connect(self.cancel_wizard)
         
@@ -1216,43 +1318,46 @@ class ImportWizard(QWidget):
         self.back_button = QPushButton("⬅️ Back")
         self.back_button.setMinimumHeight(40)
         self.back_button.setEnabled(False)
-        self.back_button.setStyleSheet("""
-            QPushButton {
-                background-color: #6c757d;
-                color: white;
+        self.back_button.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {ui_button_dark};
+                color: {text_inverse};
                 border: none;
                 border-radius: 8px;
                 font-size: 14px;
                 font-weight: bold;
                 padding: 10px 20px;
-            }
-            QPushButton:hover {
-                background-color: #5a6268;
-            }
-            QPushButton:disabled {
-                background-color: #adb5bd;
-            }
+            }}
+            QPushButton:hover {{
+                background-color: {ui_button_darker};
+            }}
+            QPushButton:disabled {{
+                background-color: {ui_button_darker};
+            }}
         """)
         self.back_button.clicked.connect(self.previous_step)
         
         self.next_button = QPushButton("Next ➡️")
         self.next_button.setMinimumHeight(40)
-        self.next_button.setStyleSheet("""
-            QPushButton {
-                background-color: #0077B5;
-                color: white;
+        brand_primary = colors.get('brand_primary', '#0077B5')
+        brand_primary_hover = colors.get('brand_primaryHover', '#005885')
+        brand_primary_active = colors.get('brand_primaryActive', '#004A70')
+        self.next_button.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {brand_primary};
+                color: {text_inverse};
                 border: none;
                 border-radius: 8px;
                 font-size: 14px;
                 font-weight: bold;
                 padding: 10px 20px;
-            }
-            QPushButton:hover {
-                background-color: #005885;
-            }
-            QPushButton:pressed {
-                background-color: #004A70;
-            }
+            }}
+            QPushButton:hover {{
+                background-color: {brand_primary_hover};
+            }}
+            QPushButton:pressed {{
+                background-color: {brand_primary_active};
+            }}
         """)
         self.next_button.clicked.connect(self.next_step)
         
@@ -1263,41 +1368,50 @@ class ImportWizard(QWidget):
     
     def update_navigation_ui(self):
         """Update navigation UI based on current step"""
+        # Get current theme colors for dynamic styling
+        colors = get_theme_manager().get_theme_definition()['colors']
+        brand_primary = colors.get('brand_primary', '#0077B5')
+        brand_primary_hover = colors.get('brand_primaryHover', '#005885')
+        text_inverse = colors.get('text_inverse', '#FFFFFF')
+        ui_surfaceAlt = colors.get('ui_surfaceAlt', '#F9FAFB')
+        ui_border = colors.get('ui_border', '#D0D7DE')
+        text_secondary = colors.get('text_secondary', '#666666')
+        
         # Update navigation sidebar
         for i, nav_button in enumerate(self.nav_buttons):
             if i == self.current_step:
-                nav_button.setStyleSheet("""
-                    QFrame {
-                        background-color: #0077B5;
+                nav_button.setStyleSheet(f"""
+                    QFrame {{
+                        background-color: {brand_primary};
                         border-radius: 8px;
-                        border: 2px solid #005885;
-                    }
-                    QLabel {
-                        color: white;
-                    }
+                        border: 2px solid {brand_primary_hover};
+                    }}
+                    QLabel {{
+                        color: {text_inverse};
+                    }}
                 """)
             elif i < self.current_step:
-                nav_button.setStyleSheet("""
-                    QFrame {
-                        background-color: #0077B5;
+                nav_button.setStyleSheet(f"""
+                    QFrame {{
+                        background-color: {brand_primary};
                         border-radius: 8px;
-                        border: 2px solid #005885;
+                        border: 2px solid {brand_primary_hover};
                         opacity: 0.7;
-                    }
-                    QLabel {
-                        color: white;
-                    }
+                    }}
+                    QLabel {{
+                        color: {text_inverse};
+                    }}
                 """)
             else:
-                nav_button.setStyleSheet("""
-                    QFrame {
-                        background-color: #F9FAFB;
+                nav_button.setStyleSheet(f"""
+                    QFrame {{
+                        background-color: {ui_surfaceAlt};
                         border-radius: 8px;
-                        border: 2px solid #D0D7DE;
-                    }
-                    QLabel {
-                        color: #666666;
-                    }
+                        border: 2px solid {ui_border};
+                    }}
+                    QLabel {{
+                        color: {text_secondary};
+                    }}
                 """)
         
         # Update buttons

@@ -205,9 +205,17 @@ class WindowsOverlayManager:
         try:
             # Update status bar if main window has one
             if hasattr(self.main_window, 'update_status'):
+                # Get theme color dynamically
+                try:
+                    from gui.themes.theme_manager import get_theme_manager
+                    colors = get_theme_manager().get_theme_definition()['colors']
+                    brand_primary = colors.get('brand_primary', '#0077B5')
+                except Exception:
+                    brand_primary = '#0077B5'  # Fallback
+                
                 self.main_window.update_status(
                     "Window position adjusted to avoid Windows Voice Access overlay", 
-                    "#0077B5"
+                    brand_primary
                 )
             
             logger.info("💡 Window repositioning notification shown")
