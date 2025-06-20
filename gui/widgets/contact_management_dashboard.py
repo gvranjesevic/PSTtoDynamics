@@ -1167,7 +1167,7 @@ class ContactManagementDashboard(QWidget):
                 font-weight: bold;
                 font-style: italic;
                 padding: 8px 12px;
-                min-width: 120px;
+                min-width: 180px;
             }}
         """)
         controls_layout.addWidget(self.status_label)
