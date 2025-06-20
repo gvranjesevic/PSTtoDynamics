@@ -137,7 +137,7 @@ class MetricCard(QFrame):
         """)
         
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(15, 12, 15, 12)
+        layout.setContentsMargins(20, 20, 20, 20)
         layout.setSpacing(8)
         
         # Title

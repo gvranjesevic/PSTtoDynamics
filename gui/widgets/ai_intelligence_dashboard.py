@@ -187,7 +187,7 @@ class AIMetricCard(QFrame):
         """)
         
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(16, 12, 16, 12)
+        layout.setContentsMargins(20, 20, 20, 20)
         layout.setSpacing(8)
         
         # Header with icon and title

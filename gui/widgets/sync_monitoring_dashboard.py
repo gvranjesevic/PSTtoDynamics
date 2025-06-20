@@ -411,13 +411,12 @@ class SyncMonitoringDashboard(QWidget):
             QTabWidget::pane {
                 border: none;
                 background-color: #F3F6F8;
-                margin-top: 0px;
             }
             QTabBar::tab {
-                background-color: transparent;
-                color: #6C757D;
+                background-color: #F9FAFB;
+                color: #666666;
                 padding: 12px 24px;
-                border: none;
+                margin-right: 2px;
                 border-top-left-radius: 8px;
                 border-top-right-radius: 8px;
                 font-size: 14px;
@@ -425,6 +424,7 @@ class SyncMonitoringDashboard(QWidget):
             }
             QTabBar::tab:hover {
                 background-color: #E8EBED;
+                color: #0077B5;
             }
             QTabBar::tab:selected {
                 background-color: #0077B5;
